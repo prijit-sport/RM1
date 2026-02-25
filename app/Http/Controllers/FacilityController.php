@@ -1,0 +1,66 @@
+<?php
+namespace App\Http\Controllers;
+use App\Models\Facility;
+use Illuminate\Http\Request;
+
+class FacilityController extends Controller
+{
+    public function index()
+    {
+        $facilities = Facility::paginate(10);
+        return view('facilities.index', compact('facilities'));
+    }
+
+    public function create()
+    {
+        return view('facilities.create');
+    }
+
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|max:100',
+            'type' => 'required|max:50',
+            'location' => 'required|max:100',
+            'description' => 'nullable|max:500',
+            'status' => 'required|in:active,inactive,maintenance',
+            'maintenance_schedule' => 'nullable|max:100',
+            'last_maintenance_date' => 'nullable|date',
+            'next_maintenance_date' => 'nullable|date',
+        ]);
+        Facility::create($validated);
+        return redirect()->route('facilities.index')->with('success', 'Facility เพิ่มสำเร็จ');
+    }
+
+    public function show(Facility $facility)
+    {
+        return view('facilities.show', compact('facility'));
+    }
+
+    public function edit(Facility $facility)
+    {
+        return view('facilities.edit', compact('facility'));
+    }
+
+    public function update(Request $request, Facility $facility)
+    {
+        $validated = $request->validate([
+            'name' => 'required|max:100',
+            'type' => 'required|max:50',
+            'location' => 'required|max:100',
+            'description' => 'nullable|max:500',
+            'status' => 'required|in:active,inactive,maintenance',
+            'maintenance_schedule' => 'nullable|max:100',
+            'last_maintenance_date' => 'nullable|date',
+            'next_maintenance_date' => 'nullable|date',
+        ]);
+        $facility->update($validated);
+        return redirect()->route('facilities.show', $facility)->with('success', 'Facility อัปเดตสำเร็จ');
+    }
+
+    public function destroy(Facility $facility)
+    {
+        $facility->delete();
+        return redirect()->route('facilities.index')->with('success', 'Facility ลบสำเร็จ');
+    }
+}

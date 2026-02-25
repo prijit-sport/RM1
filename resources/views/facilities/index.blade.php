@@ -1,0 +1,1 @@
+<h1>🏩 Facilities (Coming Soon)</h1><p><a href="/">← กลับ</a></p>

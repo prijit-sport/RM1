@@ -1,0 +1,91 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Guest;
+use Illuminate\Http\Request;
+
+class GuestController extends Controller
+{
+    /**
+     * Display a listing of the guests.
+     */
+    public function index()
+    {
+        $guests = Guest::paginate(10);
+        return view('guests.index', compact('guests'));
+    }
+
+    /**
+     * Show the form for creating a new guest.
+     */
+    public function create()
+    {
+        return view('guests.create');
+    }
+
+    /**
+     * Store a newly created guest in storage.
+     */
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'first_name' => 'required|max:50',
+            'last_name' => 'required|max:50',
+            'email' => 'required|email|unique:guests',
+            'phone' => 'required|max:20',
+            'address' => 'nullable|max:255',
+            'city' => 'nullable|max:100',
+            'country' => 'nullable|max:100',
+            'id_number' => 'required|unique:guests|max:50',
+        ]);
+
+        Guest::create($validated);
+        return redirect()->route('guests.index')->with('success', 'แขกถูกสร้างสำเร็จ');
+    }
+
+    /**
+     * Display the specified guest.
+     */
+    public function show(Guest $guest)
+    {
+        return view('guests.show', compact('guest'));
+    }
+
+    /**
+     * Show the form for editing the specified guest.
+     */
+    public function edit(Guest $guest)
+    {
+        return view('guests.edit', compact('guest'));
+    }
+
+    /**
+     * Update the specified guest in storage.
+     */
+    public function update(Request $request, Guest $guest)
+    {
+        $validated = $request->validate([
+            'first_name' => 'required|max:50',
+            'last_name' => 'required|max:50',
+            'email' => 'required|email|unique:guests,email,' . $guest->id,
+            'phone' => 'required|max:20',
+            'address' => 'nullable|max:255',
+            'city' => 'nullable|max:100',
+            'country' => 'nullable|max:100',
+            'id_number' => 'required|unique:guests,id_number,' . $guest->id . '|max:50',
+        ]);
+
+        $guest->update($validated);
+        return redirect()->route('guests.show', $guest)->with('success', 'แขกถูกอัปเดตสำเร็จ');
+    }
+
+    /**
+     * Remove the specified guest from storage.
+     */
+    public function destroy(Guest $guest)
+    {
+        $guest->delete();
+        return redirect()->route('guests.index')->with('success', 'แขกถูกลบสำเร็จ');
+    }
+}
