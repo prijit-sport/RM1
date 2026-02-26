@@ -155,8 +155,8 @@
                         <tr>
                             <td><strong>#{{ $booking->room->room_number }}</strong></td>
                             <td>{{ $booking->guest->full_name }}</td>
-                            <td>{{ $booking->check_in_date->format('d/m/Y') }}</td>
-                            <td>{{ $booking->check_out_date->format('d/m/Y') }}</td>
+                            <td>{{ \Carbon\Carbon::parse($booking->check_in_date)->format('d/m/Y') }}</td>
+                            <td>{{ \Carbon\Carbon::parse($booking->check_out_date)->format('d/m/Y') }}</td>
                             <td>฿{{ number_format($booking->total_price, 2) }}</td>
                             <td>
                                 <span class="status {{ $booking->status }}">
