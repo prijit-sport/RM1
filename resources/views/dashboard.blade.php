@@ -268,26 +268,26 @@
             </div>
             @endif
 
-        <div class="stats">
-            <div class="stats-grid">
-                <div class="stat">
-                    <div class="stat-number">{{ $roomCount ?? 0 }}</div>
-                    <div class="stat-label">ห้องทั้งหมด</div>
-                </div>
-                <div class="stat">
-                    <div class="stat-number">{{ $guestCount ?? 0 }}</div>
-                    <div class="stat-label">แขกทั้งหมด</div>
-                </div>
-                <div class="stat">
-                    <div class="stat-number">{{ $bookingCount ?? 0 }}</div>
-                    <div class="stat-label">การจองทั้งหมด</div>
-                </div>
-                <div class="stat">
-                    <div class="stat-number">{{ $occupiedCount ?? 0 }}</div>
-                    <div class="stat-label">ห้องที่ใช้งาน</div>
+            <div class="stats">
+                <div class="stats-grid">
+                    <div class="stat">
+                        <div class="stat-number">{{ $roomCount ?? 0 }}</div>
+                        <div class="stat-label">ห้องทั้งหมด</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number">{{ $guestCount ?? 0 }}</div>
+                        <div class="stat-label">แขกทั้งหมด</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number">{{ $bookingCount ?? 0 }}</div>
+                        <div class="stat-label">การจองทั้งหมด</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-number">{{ $occupiedCount ?? 0 }}</div>
+                        <div class="stat-label">ห้องที่ใช้งาน</div>
+                    </div>
                 </div>
             </div>
-        </div>
         </div>
     </div>
 </body>
