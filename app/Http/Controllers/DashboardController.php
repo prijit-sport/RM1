@@ -15,11 +15,6 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        // Redirect to login if not authenticated
-        if (!auth()->check()) {
-            return redirect()->route('login');
-        }
-
         // KPI Data
         $roomCount = Room::count();
         $guestCount = Guest::count();
@@ -110,15 +105,5 @@ class DashboardController extends Controller
             'chartData',
             'expiringContracts'
         ));
-    }
-
-    public function home()
-    {
-        // Redirect to login if not authenticated
-        if (!auth()->check()) {
-            return redirect()->route('login');
-        }
-
-        return redirect()->route('dashboard');
     }
 }
