@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>จัดการสัญญา</title>
+    <title>จัดการการบำรุงรักษา</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI'; background: #f5f5f5; }
@@ -29,36 +29,36 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>📜 จัดการสัญญา</h1>
-            <a href="{{ route('contracts.create') }}" class="btn">➕ เพิ่มสัญญา</a>
+            <h1>🔧 จัดการการบำรุงรักษา</h1>
+            <a href="{{ route('maintenances.create') }}" class="btn">➕ เพิ่มการบำรุงรักษา</a>
         </div>
         <div class="table-container">
             <table>
                 <thead>
                     <tr>
-                        <th>เลขที่สัญญา</th>
-                        <th>ผู้รับเหมา</th>
-                        <th>วันเริ่มต้น</th>
-                        <th>วันสิ้นสุด</th>
-                        <th>จำนวนเงิน</th>
+                        <th>ห้อง</th>
+                        <th>ประเภทปัญหา</th>
+                        <th>วันที่แจ้ง</th>
+                        <th>ผู้รับผิดชอบ</th>
                         <th>สถานะ</th>
+                        <th>ค่าใช้จ่าย</th>
                         <th>การกระทำ</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse ($contracts as $contract)
+                    @forelse ($maintenances as $maintenance)
                         <tr>
-                            <td>{{ $contract->contract_number }}</td>
-                            <td>{{ $contract->contractor_name }}</td>
-                            <td>{{ optional($contract->start_date)->format('d/m/Y') }}</td>
-                            <td>{{ optional($contract->end_date)->format('d/m/Y') }}</td>
-                            <td>฿{{ number_format($contract->amount, 2) }}</td>
-                            <td><span class="status {{ $contract->status }}">{{ ucfirst($contract->status) }}</span></td>
+                            <td>{{ optional($maintenance->room)->room_number ?? '-' }}</td>
+                            <td>{{ $maintenance->issue_type }}</td>
+                            <td>{{ optional($maintenance->reported_date)->format('d/m/Y') }}</td>
+                            <td>{{ $maintenance->assigned_to ?? '-' }}</td>
+                            <td><span class="status {{ $maintenance->status }}">{{ ucfirst(str_replace('_', ' ', $maintenance->status)) }}</span></td>
+                            <td>{{ $maintenance->cost ? number_format($maintenance->cost, 2) : '-' }}</td>
                             <td>
                                 <div class="actions">
-                                    <a href="{{ route('contracts.show', $contract) }}" class="btn btn-secondary">ดู</a>
-                                    <a href="{{ route('contracts.edit', $contract) }}" class="btn btn-secondary">แก้ไข</a>
-                                    <form action="{{ route('contracts.destroy', $contract) }}" method="POST" style="display:inline;">
+                                    <a href="{{ route('maintenances.show', $maintenance) }}" class="btn btn-secondary">ดู</a>
+                                    <a href="{{ route('maintenances.edit', $maintenance) }}" class="btn btn-secondary">แก้ไข</a>
+                                    <form action="{{ route('maintenances.destroy', $maintenance) }}" method="POST" style="display:inline;">
                                         @csrf @method('DELETE')
                                         <button type="submit" class="btn btn-danger" onclick="return confirm('ลบ?')">ลบ</button>
                                     </form>

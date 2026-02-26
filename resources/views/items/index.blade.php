@@ -69,8 +69,8 @@
                 </tbody>
             </table>
         </div>
-        <div style="margin-top: 20px;">
-            <a href="/" class="btn btn-secondary">← กลับ</a>
+        <div style="margin-top: 30px;">
+            <a href="/" class="btn btn-secondary">← กลับไปแดชบอร์ด</a>
         </div>
     </div>
 </body>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>จัดการสัญญา</title>
+    <title>จัดการใบแจ้งหนี้</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI'; background: #f5f5f5; }
@@ -29,36 +29,36 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>📜 จัดการสัญญา</h1>
-            <a href="{{ route('contracts.create') }}" class="btn">➕ เพิ่มสัญญา</a>
+            <h1>📄 จัดการใบแจ้งหนี้</h1>
+            <a href="{{ route('invoices.create') }}" class="btn">➕ เพิ่มใบแจ้งหนี้</a>
         </div>
         <div class="table-container">
             <table>
                 <thead>
                     <tr>
-                        <th>เลขที่สัญญา</th>
-                        <th>ผู้รับเหมา</th>
-                        <th>วันเริ่มต้น</th>
-                        <th>วันสิ้นสุด</th>
-                        <th>จำนวนเงิน</th>
+                        <th>เลขที่ใบแจ้งหนี้</th>
+                        <th>การจอง</th>
+                        <th>ยอดรวม</th>
+                        <th>วันที่ออก</th>
+                        <th>วันครบกำหนด</th>
                         <th>สถานะ</th>
                         <th>การกระทำ</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse ($contracts as $contract)
+                    @forelse ($invoices as $invoice)
                         <tr>
-                            <td>{{ $contract->contract_number }}</td>
-                            <td>{{ $contract->contractor_name }}</td>
-                            <td>{{ optional($contract->start_date)->format('d/m/Y') }}</td>
-                            <td>{{ optional($contract->end_date)->format('d/m/Y') }}</td>
-                            <td>฿{{ number_format($contract->amount, 2) }}</td>
-                            <td><span class="status {{ $contract->status }}">{{ ucfirst($contract->status) }}</span></td>
+                            <td>{{ $invoice->invoice_number }}</td>
+                            <td>#{{ $invoice->booking_id }}</td>
+                            <td>฿{{ number_format($invoice->total, 2) }}</td>
+                            <td>{{ optional($invoice->issue_date)->format('d/m/Y') }}</td>
+                            <td>{{ optional($invoice->due_date)->format('d/m/Y') }}</td>
+                            <td><span class="status {{ $invoice->status }}">{{ ucfirst($invoice->status) }}</span></td>
                             <td>
                                 <div class="actions">
-                                    <a href="{{ route('contracts.show', $contract) }}" class="btn btn-secondary">ดู</a>
-                                    <a href="{{ route('contracts.edit', $contract) }}" class="btn btn-secondary">แก้ไข</a>
-                                    <form action="{{ route('contracts.destroy', $contract) }}" method="POST" style="display:inline;">
+                                    <a href="{{ route('invoices.show', $invoice) }}" class="btn btn-secondary">ดู</a>
+                                    <a href="{{ route('invoices.edit', $invoice) }}" class="btn btn-secondary">แก้ไข</a>
+                                    <form action="{{ route('invoices.destroy', $invoice) }}" method="POST" style="display:inline;">
                                         @csrf @method('DELETE')
                                         <button type="submit" class="btn btn-danger" onclick="return confirm('ลบ?')">ลบ</button>
                                     </form>

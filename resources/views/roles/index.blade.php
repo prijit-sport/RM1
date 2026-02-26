@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>จัดการสัญญา</title>
+    <title>จัดการบทบาท</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI'; background: #f5f5f5; }
@@ -29,36 +29,28 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>📜 จัดการสัญญา</h1>
-            <a href="{{ route('contracts.create') }}" class="btn">➕ เพิ่มสัญญา</a>
+            <h1>👤 จัดการบทบาท</h1>
+            <a href="{{ route('roles.create') }}" class="btn">➕ เพิ่มบทบาท</a>
         </div>
         <div class="table-container">
             <table>
                 <thead>
                     <tr>
-                        <th>เลขที่สัญญา</th>
-                        <th>ผู้รับเหมา</th>
-                        <th>วันเริ่มต้น</th>
-                        <th>วันสิ้นสุด</th>
-                        <th>จำนวนเงิน</th>
-                        <th>สถานะ</th>
+                        <th>ชื่อบทบาท</th>
+                        <th>รายละเอียด</th>
                         <th>การกระทำ</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse ($contracts as $contract)
+                    @forelse ($roles as $role)
                         <tr>
-                            <td>{{ $contract->contract_number }}</td>
-                            <td>{{ $contract->contractor_name }}</td>
-                            <td>{{ optional($contract->start_date)->format('d/m/Y') }}</td>
-                            <td>{{ optional($contract->end_date)->format('d/m/Y') }}</td>
-                            <td>฿{{ number_format($contract->amount, 2) }}</td>
-                            <td><span class="status {{ $contract->status }}">{{ ucfirst($contract->status) }}</span></td>
+                            <td>{{ $role->name }}</td>
+                            <td>{{ $role->description ?? '-' }}</td>
                             <td>
                                 <div class="actions">
-                                    <a href="{{ route('contracts.show', $contract) }}" class="btn btn-secondary">ดู</a>
-                                    <a href="{{ route('contracts.edit', $contract) }}" class="btn btn-secondary">แก้ไข</a>
-                                    <form action="{{ route('contracts.destroy', $contract) }}" method="POST" style="display:inline;">
+                                    <a href="{{ route('roles.show', $role) }}" class="btn btn-secondary">ดู</a>
+                                    <a href="{{ route('roles.edit', $role) }}" class="btn btn-secondary">แก้ไข</a>
+                                    <form action="{{ route('roles.destroy', $role) }}" method="POST" style="display:inline;">
                                         @csrf @method('DELETE')
                                         <button type="submit" class="btn btn-danger" onclick="return confirm('ลบ?')">ลบ</button>
                                     </form>
@@ -66,7 +58,7 @@
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="7" style="text-align: center; padding: 30px;">ไม่มีข้อมูล</td></tr>
+                        <tr><td colspan="3" style="text-align: center; padding: 30px;">ไม่มีข้อมูล</td></tr>
                     @endforelse
                 </tbody>
             </table>

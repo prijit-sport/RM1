@@ -104,7 +104,7 @@
             <div class="pagination">{{ $meters->links() }}</div>
         @endif
 
-        <div style="margin-top: 20px;">
+        <div style="margin-top: 30px;">
             <a href="/" class="btn btn-secondary">← กลับไปแดชบอร์ด</a>
         </div>
     </div>
