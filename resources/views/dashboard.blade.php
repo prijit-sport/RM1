@@ -134,11 +134,14 @@
             margin-top: 40px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.2);
         }
-        .stat-item {
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+        }
+        .stat {
             text-align: center;
             padding: 20px;
-            display: inline-block;
-            width: 25%;
         }
         .stat-number {
             font-size: 2.5em;
@@ -153,8 +156,13 @@
             .header h1 {
                 font-size: 2em;
             }
-            .stat-item {
-                width: 50%;
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        @media (max-width: 480px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
             }
         }
     </style>
@@ -261,21 +269,23 @@
             @endif
 
         <div class="stats">
-            <div class="stat-item">
-                <div class="stat-number">{{ $roomCount ?? 0 }}</div>
-                <div class="stat-label">ห้องทั้งหมด</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-number">{{ $guestCount ?? 0 }}</div>
-                <div class="stat-label">แขกทั้งหมด</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-number">{{ $bookingCount ?? 0 }}</div>
-                <div class="stat-label">การจองทั้งหมด</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-number">{{ $occupiedCount ?? 0 }}</div>
-                <div class="stat-label">ห้องที่ใช้งาน</div>
+            <div class="stats-grid">
+                <div class="stat">
+                    <div class="stat-number">{{ $roomCount ?? 0 }}</div>
+                    <div class="stat-label">ห้องทั้งหมด</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">{{ $guestCount ?? 0 }}</div>
+                    <div class="stat-label">แขกทั้งหมด</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">{{ $bookingCount ?? 0 }}</div>
+                    <div class="stat-label">การจองทั้งหมด</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">{{ $occupiedCount ?? 0 }}</div>
+                    <div class="stat-label">ห้องที่ใช้งาน</div>
+                </div>
             </div>
         </div>
         </div>
