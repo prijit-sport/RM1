@@ -1,7 +1,9 @@
 <?php
+
 namespace App\Http\Controllers;
-use App\Models\Role;
+
 use App\Models\Permission;
+use App\Models\Role;
 use Illuminate\Http\Request;
 
 class RoleController extends Controller
@@ -28,7 +30,7 @@ class RoleController extends Controller
 
         $role = Role::create([
             'name' => $validated['name'],
-            'description' => $validated['description'],
+            'description' => $validated['description'] ?? null,
         ]);
 
         if ($request->has('permissions')) {
@@ -59,7 +61,7 @@ class RoleController extends Controller
 
         $role->update([
             'name' => $validated['name'],
-            'description' => $validated['description'],
+            'description' => $validated['description'] ?? null,
         ]);
 
         if ($request->has('permissions')) {
@@ -73,5 +75,37 @@ class RoleController extends Controller
     {
         $role->delete();
         return redirect()->route('roles.index')->with('success', 'Role ลบสำเร็จ');
+    }
+
+    public function export(Request $request)
+    {
+        $roles = Role::with('permissions')->orderBy('id', 'desc')->get();
+        $filename = 'roles_export_' . date('Y-m-d') . '.csv';
+
+        return response()->stream(function () use ($roles) {
+            $rows = [];
+            $rows[] = ['Name', 'Description', 'Permissions'];
+
+            foreach ($roles as $role) {
+                $rows[] = [
+                    $role->name,
+                    $role->description ?? '-',
+                    $role->permissions->pluck('name')->implode(', '),
+                ];
+            }
+
+            $handle = fopen('php://output', 'wb');
+            fwrite($handle, chr(0xFF) . chr(0xFE));
+            foreach ($rows as $row) {
+                $line = '"' . implode('","', array_map(function ($value) {
+                    return str_replace('"', '""', (string) $value);
+                }, $row)) . '"' . "\r\n";
+                fwrite($handle, mb_convert_encoding($line, 'UTF-16LE', 'UTF-8'));
+            }
+            fclose($handle);
+        }, 200, [
+            'Content-Type' => 'text/csv; charset=UTF-16LE',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ]);
     }
 }

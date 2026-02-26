@@ -13,17 +13,14 @@ class MeterController extends Controller
     {
         $query = Meter::with('room');
 
-        // Search by meter number
         if ($request->filled('search')) {
             $query->where('meter_number', 'like', '%' . $request->search . '%');
         }
 
-        // Filter by type
         if ($request->filled('type')) {
             $query->where('type', $request->type);
         }
 
-        // Filter by status
         if ($request->filled('status')) {
             $query->where('is_active', $request->status);
         }
@@ -57,7 +54,6 @@ class MeterController extends Controller
         ]);
 
         $validated['is_active'] = (bool) ($validated['is_active'] ?? true);
-
         $meter = Meter::create($validated);
 
         return redirect()->route('meters.show', $meter)->with('success', 'เพิ่มมิเตอร์สำเร็จ');
@@ -95,7 +91,6 @@ class MeterController extends Controller
         ]);
 
         $validated['is_active'] = (bool) ($validated['is_active'] ?? false);
-
         $meter->update($validated);
 
         return redirect()->route('meters.show', $meter)->with('success', 'อัปเดตมิเตอร์สำเร็จ');
@@ -124,23 +119,14 @@ class MeterController extends Controller
         }
 
         $meters = $query->orderBy('id', 'desc')->get();
-
         $filename = 'meters_' . date('Ymd_His') . '.csv';
-        $headers = [
-            'Content-Type' => 'text/csv; charset=utf-8',
-            'Content-Disposition' => "attachment; filename=\"$filename\"",
-        ];
 
-        $columns = ['ห้อง', 'ประเภท', 'เลขมิเตอร์', 'หน่วย', 'สถานะ', 'วันที่ติดตั้ง', 'หมายเหตุ'];
-
-        $callback = function () use ($meters) {
-            $file = fopen('php://output', 'w');
-            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF)); // UTF-8 BOM
-            
-            fputcsv($file, ['ห้อง', 'ประเภท', 'เลขมิเตอร์', 'หน่วย', 'สถานะ', 'วันที่ติดตั้ง', 'หมายเหตุ']);
+        return response()->stream(function () use ($meters) {
+            $rows = [];
+            $rows[] = ['ห้อง', 'ประเภท', 'เลขมิเตอร์', 'หน่วย', 'สถานะ', 'วันที่ติดตั้ง', 'หมายเหตุ'];
 
             foreach ($meters as $meter) {
-                fputcsv($file, [
+                $rows[] = [
                     $meter->room->room_number ?? '-',
                     $meter->type === 'water' ? 'น้ำ' : 'ไฟฟ้า',
                     $meter->meter_number,
@@ -148,12 +134,21 @@ class MeterController extends Controller
                     $meter->is_active ? 'ใช้งาน' : 'ปิดใช้งาน',
                     $meter->installed_at ? $meter->installed_at->format('d/m/Y') : '-',
                     $meter->notes ?? '-',
-                ]);
+                ];
             }
-            fclose($file);
-        };
 
-        return response()->stream($callback, 200, $headers);
+            $handle = fopen('php://output', 'wb');
+            fwrite($handle, chr(0xFF) . chr(0xFE));
+            foreach ($rows as $row) {
+                $line = '"' . implode('","', array_map(function ($value) {
+                    return str_replace('"', '""', (string) $value);
+                }, $row)) . '"' . "\r\n";
+                fwrite($handle, mb_convert_encoding($line, 'UTF-16LE', 'UTF-8'));
+            }
+            fclose($handle);
+        }, 200, [
+            'Content-Type' => 'text/csv; charset=UTF-16LE',
+            'Content-Disposition' => "attachment; filename=\"$filename\"",
+        ]);
     }
 }
-

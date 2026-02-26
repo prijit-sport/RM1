@@ -12,7 +12,7 @@ class MeterReadingController extends Controller
     public function index(Meter $meter, Request $request)
     {
         $meter->load('room');
-        
+
         $query = MeterReading::with('recordedBy')
             ->where('meter_id', $meter->id);
 
@@ -25,7 +25,6 @@ class MeterReadingController extends Controller
         }
 
         $readings = $query->latest('reading_date')->paginate(15);
-
         return view('meter_readings.index', compact('meter', 'readings'));
     }
 
@@ -51,7 +50,6 @@ class MeterReadingController extends Controller
         $validated['recorded_by'] = auth()->id();
 
         MeterReading::create($validated);
-
         return redirect()->route('meters.readings.index', $meter)->with('success', 'บันทึกเลขมิเตอร์สำเร็จ');
     }
 
@@ -79,7 +77,6 @@ class MeterReadingController extends Controller
         ]);
 
         $validated['recorded_by'] = auth()->id();
-
         $reading->update($validated);
 
         return redirect()->route('meters.readings.index', $meter)->with('success', 'แก้ไขเลขมิเตอร์สำเร็จ');
@@ -106,30 +103,33 @@ class MeterReadingController extends Controller
         }
 
         $readings = $query->latest('reading_date')->get();
-
         $filename = 'meter_readings_' . $meter->meter_number . '_' . date('Ymd_His') . '.csv';
-        $headers = [
-            'Content-Type' => 'text/csv; charset=utf-8',
-            'Content-Disposition' => "attachment; filename=\"$filename\"",
-        ];
 
-        $callback = function () use ($readings) {
-            $file = fopen('php://output', 'w');
-            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
-            
-            fputcsv($file, ['วันที่', 'เลขมิเตอร์', 'ผู้บันทึก', 'หมายเหตุ']);
+        return response()->stream(function () use ($readings) {
+            $rows = [];
+            $rows[] = ['วันที่', 'เลขมิเตอร์', 'ผู้บันทึก', 'หมายเหตุ'];
 
             foreach ($readings as $reading) {
-                fputcsv($file, [
+                $rows[] = [
                     $reading->reading_date ? $reading->reading_date->format('d/m/Y') : '-',
-                    number_format((float)$reading->reading_value, 2),
+                    number_format((float) $reading->reading_value, 2),
                     $reading->recordedBy->name ?? '-',
                     $reading->notes ?? '-',
-                ]);
+                ];
             }
-            fclose($file);
-        };
 
-        return response()->stream($callback, 200, $headers);
+            $handle = fopen('php://output', 'wb');
+            fwrite($handle, chr(0xFF) . chr(0xFE));
+            foreach ($rows as $row) {
+                $line = '"' . implode('","', array_map(function ($value) {
+                    return str_replace('"', '""', (string) $value);
+                }, $row)) . '"' . "\r\n";
+                fwrite($handle, mb_convert_encoding($line, 'UTF-16LE', 'UTF-8'));
+            }
+            fclose($handle);
+        }, 200, [
+            'Content-Type' => 'text/csv; charset=UTF-16LE',
+            'Content-Disposition' => "attachment; filename=\"$filename\"",
+        ]);
     }
 }

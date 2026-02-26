@@ -120,10 +120,10 @@ class RoomController extends Controller
     public function export(Request $request)
     {
         $rooms = Room::all();
-        
+
         $csvData = [];
         $csvData[] = ['Room Number', 'Room Type', 'Price/Night', 'Capacity', 'Status', 'Description'];
-        
+
         foreach ($rooms as $room) {
             $csvData[] = [
                 $room->room_number,
@@ -134,23 +134,23 @@ class RoomController extends Controller
                 $room->description,
             ];
         }
-        
+
         $filename = 'rooms_export_' . date('Y-m-d') . '.csv';
-        
-        $handle = fopen('php://output', 'w');
-        foreach ($csvData as $row) {
-            fputcsv($handle, $row);
-        }
-        fclose($handle);
-        
+
         return response()->stream(function () use ($csvData) {
-            $handle = fopen('php://output', 'w');
+            $handle = fopen('php://output', 'wb');
+            fwrite($handle, chr(0xFF) . chr(0xFE));
+
             foreach ($csvData as $row) {
-                fputcsv($handle, $row);
+                $line = '"' . implode('","', array_map(function ($value) {
+                    return str_replace('"', '""', (string) $value);
+                }, $row)) . '"' . "\r\n";
+                fwrite($handle, mb_convert_encoding($line, 'UTF-16LE', 'UTF-8'));
             }
+
             fclose($handle);
         }, 200, [
-            'Content-Type' => 'text/csv',
+            'Content-Type' => 'text/csv; charset=UTF-16LE',
             'Content-Disposition' => 'attachment; filename="' . $filename . '"',
         ]);
     }

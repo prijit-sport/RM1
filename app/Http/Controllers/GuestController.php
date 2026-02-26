@@ -92,10 +92,10 @@ class GuestController extends Controller
     public function export(Request $request)
     {
         $guests = Guest::all();
-        
+
         $csvData = [];
         $csvData[] = ['First Name', 'Last Name', 'Email', 'Phone', 'Address', 'City', 'Country', 'ID Number'];
-        
+
         foreach ($guests as $guest) {
             $csvData[] = [
                 $guest->first_name,
@@ -108,17 +108,23 @@ class GuestController extends Controller
                 $guest->id_number,
             ];
         }
-        
+
         $filename = 'guests_export_' . date('Y-m-d') . '.csv';
-        
+
         return response()->stream(function () use ($csvData) {
-            $handle = fopen('php://output', 'w');
+            $handle = fopen('php://output', 'wb');
+            fwrite($handle, chr(0xFF) . chr(0xFE));
+
             foreach ($csvData as $row) {
-                fputcsv($handle, $row);
+                $line = '"' . implode('","', array_map(function ($value) {
+                    return str_replace('"', '""', (string) $value);
+                }, $row)) . '"' . "\r\n";
+                fwrite($handle, mb_convert_encoding($line, 'UTF-16LE', 'UTF-8'));
             }
+
             fclose($handle);
         }, 200, [
-            'Content-Type' => 'text/csv',
+            'Content-Type' => 'text/csv; charset=UTF-16LE',
             'Content-Disposition' => 'attachment; filename="' . $filename . '"',
         ]);
     }

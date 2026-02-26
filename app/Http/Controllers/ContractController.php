@@ -1,5 +1,7 @@
 <?php
+
 namespace App\Http\Controllers;
+
 use App\Models\Contract;
 use Illuminate\Http\Request;
 
@@ -28,6 +30,7 @@ class ContractController extends Controller
             'status' => 'required|in:draft,active,completed,cancelled',
             'notes' => 'nullable|max:500',
         ]);
+
         Contract::create($validated);
         return redirect()->route('contracts.index')->with('success', 'สัญญาเพิ่มสำเร็จ');
     }
@@ -54,6 +57,7 @@ class ContractController extends Controller
             'status' => 'required|in:draft,active,completed,cancelled',
             'notes' => 'nullable|max:500',
         ]);
+
         $contract->update($validated);
         return redirect()->route('contracts.show', $contract)->with('success', 'สัญญาอัปเดตสำเร็จ');
     }
@@ -62,5 +66,53 @@ class ContractController extends Controller
     {
         $contract->delete();
         return redirect()->route('contracts.index')->with('success', 'สัญญาลบสำเร็จ');
+    }
+
+    public function export(Request $request)
+    {
+        $contracts = Contract::orderBy('id', 'desc')->get();
+        $filename = 'contracts_export_' . date('Y-m-d') . '.csv';
+
+        return response()->stream(function () use ($contracts) {
+            $rows = [];
+            $rows[] = ['Contract Number', 'Contractor', 'Description', 'Start Date', 'End Date', 'Amount', 'Status', 'Notes'];
+
+            foreach ($contracts as $contract) {
+                $rows[] = [
+                    $contract->contract_number,
+                    $contract->contractor_name,
+                    $contract->description ?? '-',
+                    optional($contract->start_date)->format('d/m/Y'),
+                    optional($contract->end_date)->format('d/m/Y'),
+                    $contract->amount,
+                    $contract->status,
+                    $contract->notes ?? '-',
+                ];
+            }
+
+            $handle = fopen('php://output', 'wb');
+            fwrite($handle, chr(0xFF) . chr(0xFE));
+            foreach ($rows as $row) {
+                $line = '"' . implode('","', array_map(function ($value) {
+                    return str_replace('"', '""', (string) $value);
+                }, $row)) . '"' . "\r\n";
+                fwrite($handle, mb_convert_encoding($line, 'UTF-16LE', 'UTF-8'));
+            }
+            fclose($handle);
+        }, 200, [
+            'Content-Type' => 'text/csv; charset=UTF-16LE',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ]);
+    }
+
+    public function generatePdf($id)
+    {
+        return redirect()->route('contracts.show', $id)->with('info', 'PDF generation coming soon');
+    }
+
+    public function expiring()
+    {
+        $contracts = Contract::whereDate('end_date', '<=', now()->addDays(30))->orderBy('end_date')->paginate(10);
+        return view('contracts.index', compact('contracts'));
     }
 }

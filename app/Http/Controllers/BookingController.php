@@ -3,24 +3,18 @@
 namespace App\Http\Controllers;
 
 use App\Models\Booking;
-use App\Models\Room;
 use App\Models\Guest;
+use App\Models\Room;
 use Illuminate\Http\Request;
 
 class BookingController extends Controller
 {
-    /**
-     * Display a listing of the bookings.
-     */
     public function index()
     {
         $bookings = Booking::with(['room', 'guest'])->paginate(10);
         return view('bookings.index', compact('bookings'));
     }
 
-    /**
-     * Show the form for creating a new booking.
-     */
     public function create()
     {
         $rooms = Room::where('status', 'available')->get();
@@ -28,9 +22,6 @@ class BookingController extends Controller
         return view('bookings.create', compact('rooms', 'guests'));
     }
 
-    /**
-     * Store a newly created booking in storage.
-     */
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -42,7 +33,6 @@ class BookingController extends Controller
             'notes' => 'nullable|max:500',
         ]);
 
-        // Calculate total price
         $room = Room::find($validated['room_id']);
         $checkInDate = new \DateTime($validated['check_in_date']);
         $checkOutDate = new \DateTime($validated['check_out_date']);
@@ -53,17 +43,11 @@ class BookingController extends Controller
         return redirect()->route('bookings.index')->with('success', 'การจองถูกสร้างสำเร็จ');
     }
 
-    /**
-     * Display the specified booking.
-     */
     public function show(Booking $booking)
     {
         return view('bookings.show', compact('booking'));
     }
 
-    /**
-     * Show the form for editing the specified booking.
-     */
     public function edit(Booking $booking)
     {
         $rooms = Room::all();
@@ -71,9 +55,6 @@ class BookingController extends Controller
         return view('bookings.edit', compact('booking', 'rooms', 'guests'));
     }
 
-    /**
-     * Update the specified booking in storage.
-     */
     public function update(Request $request, Booking $booking)
     {
         $validated = $request->validate([
@@ -85,7 +66,6 @@ class BookingController extends Controller
             'notes' => 'nullable|max:500',
         ]);
 
-        // Recalculate total price
         $room = Room::find($validated['room_id']);
         $checkInDate = new \DateTime($validated['check_in_date']);
         $checkOutDate = new \DateTime($validated['check_out_date']);
@@ -96,12 +76,46 @@ class BookingController extends Controller
         return redirect()->route('bookings.show', $booking)->with('success', 'การจองถูกอัปเดตสำเร็จ');
     }
 
-    /**
-     * Remove the specified booking from storage.
-     */
     public function destroy(Booking $booking)
     {
         $booking->delete();
         return redirect()->route('bookings.index')->with('success', 'การจองถูกลบสำเร็จ');
+    }
+
+    public function export(Request $request)
+    {
+        $bookings = Booking::with(['room', 'guest'])->orderBy('id', 'desc')->get();
+        $filename = 'bookings_export_' . date('Y-m-d') . '.csv';
+
+        return response()->stream(function () use ($bookings) {
+            $rows = [];
+            $rows[] = ['Booking ID', 'Room', 'Guest', 'Check In', 'Check Out', 'Total Price', 'Status', 'Notes'];
+
+            foreach ($bookings as $booking) {
+                $rows[] = [
+                    $booking->id,
+                    $booking->room->room_number ?? '-',
+                    trim(($booking->guest->first_name ?? '') . ' ' . ($booking->guest->last_name ?? '')) ?: '-',
+                    optional($booking->check_in_date)->format('d/m/Y'),
+                    optional($booking->check_out_date)->format('d/m/Y'),
+                    $booking->total_price,
+                    $booking->status,
+                    $booking->notes ?? '-',
+                ];
+            }
+
+            $handle = fopen('php://output', 'wb');
+            fwrite($handle, chr(0xFF) . chr(0xFE));
+            foreach ($rows as $row) {
+                $line = '"' . implode('","', array_map(function ($value) {
+                    return str_replace('"', '""', (string) $value);
+                }, $row)) . '"' . "\r\n";
+                fwrite($handle, mb_convert_encoding($line, 'UTF-16LE', 'UTF-8'));
+            }
+            fclose($handle);
+        }, 200, [
+            'Content-Type' => 'text/csv; charset=UTF-16LE',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ]);
     }
 }

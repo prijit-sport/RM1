@@ -89,7 +89,7 @@ Route::middleware(['auth', 'manager_or_admin'])->group(function () {
     Route::resource('meters', MeterController::class);
     Route::get('meters/export', [MeterController::class, 'export'])->name('meters.export');
     Route::resource('meters.readings', MeterReadingController::class);
-    Route::get('meters/{id}/readings/export', [MeterReadingController::class, 'export'])->name('meters.readings.export');
+    Route::get('meters/{meter}/readings/export', [MeterReadingController::class, 'export'])->name('meters.readings.export');
 });
 
 // Admin-only routes
