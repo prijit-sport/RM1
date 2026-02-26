@@ -17,9 +17,9 @@ class Booking extends Model
         'notes',
     ];
 
-    protected $dates = [
-        'check_in_date',
-        'check_out_date',
+    protected $casts = [
+        'check_in_date' => 'datetime',
+        'check_out_date' => 'datetime',
     ];
 
     /**
