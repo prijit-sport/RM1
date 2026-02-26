@@ -1,203 +1,137 @@
-<!DOCTYPE html>
-<html lang="th">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>จัดการการจอง</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #f5f5f5;
-        }
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        .header h1 {
-            color: #333;
-        }
-        .btn {
-            display: inline-block;
-            padding: 10px 20px;
-            background: #667eea;
-            color: white;
-            text-decoration: none;
-            border-radius: 5px;
-            border: none;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-        .btn:hover {
-            background: #764ba2;
-        }
-        .btn-secondary {
-            background: #6c757d;
-        }
-        .btn-secondary:hover {
-            background: #5a6268;
-        }
-        .btn-danger {
-            background: #dc3545;
-        }
-        .btn-danger:hover {
-            background: #c82333;
-        }
-        .table-container {
-            background: white;
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        th {
-            background: #667eea;
-            color: white;
-            padding: 15px;
-            text-align: left;
-            font-weight: 600;
-        }
-        td {
-            padding: 15px;
-            border-bottom: 1px solid #eee;
-        }
-        tr:hover {
-            background: #f9f9f9;
-        }
-        .status {
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 0.9em;
-            font-weight: 600;
-        }
-        .status.pending {
-            background: #fff3cd;
-            color: #856404;
-        }
-        .status.confirmed {
-            background: #d1ecf1;
-            color: #0c5460;
-        }
-        .status.checked_in {
-            background: #d4edda;
-            color: #155724;
-        }
-        .status.checked_out {
-            background: #e2e3e5;
-            color: #383d41;
-        }
-        .status.cancelled {
-            background: #f8d7da;
-            color: #721c24;
-        }
-        .actions {
-            display: flex;
-            gap: 10px;
-        }
-        .alert {
-            padding: 15px;
-            margin-bottom: 20px;
-            border-radius: 5px;
-        }
-        .alert-success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>📅 จัดการการจอง</h1>
-            <a href="{{ route('bookings.create') }}" class="btn">➕ เพิ่มการจองใหม่</a>
-        </div>
+@extends('layouts.app')
 
-        @if (session('success'))
-            <div class="alert alert-success">
-                {{ session('success') }}
-            </div>
-        @endif
+@section('title', 'จัดการการจอง')
 
-        <div class="table-container">
-            <table>
-                <thead>
-                    <tr>
-                        <th>ห้อง</th>
-                        <th>แขก</th>
-                        <th>เช็คอิน</th>
-                        <th>เช็คเอาท์</th>
-                        <th>ราคา</th>
-                        <th>สถานะ</th>
-                        <th>การกระทำ</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse ($bookings as $booking)
-                        <tr>
-                            <td><strong>#{{ $booking->room->room_number }}</strong></td>
-                            <td>{{ $booking->guest->full_name }}</td>
-                            <td>{{ \Carbon\Carbon::parse($booking->check_in_date)->format('d/m/Y') }}</td>
-                            <td>{{ \Carbon\Carbon::parse($booking->check_out_date)->format('d/m/Y') }}</td>
-                            <td>฿{{ number_format($booking->total_price, 2) }}</td>
-                            <td>
-                                <span class="status {{ $booking->status }}">
-                                    @php
-                                        $statusLabels = [
-                                            'pending' => 'รอการยืนยัน',
-                                            'confirmed' => 'ยืนยันแล้ว',
-                                            'checked_in' => 'เช็คอินแล้ว',
-                                            'checked_out' => 'เช็คเอาท์แล้ว',
-                                            'cancelled' => 'ยกเลิก',
-                                        ];
-                                    @endphp
-                                    {{ $statusLabels[$booking->status] ?? $booking->status }}
-                                </span>
-                            </td>
-                            <td>
-                                <div class="actions">
-                                    <a href="{{ route('bookings.show', $booking) }}" class="btn btn-secondary">ดู</a>
-                                    <a href="{{ route('bookings.edit', $booking) }}" class="btn btn-secondary">แก้ไข</a>
-                                    <form action="{{ route('bookings.destroy', $booking) }}" method="POST" style="display:inline;">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-danger" onclick="return confirm('แน่ใจหรือ?')">ลบ</button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="7" style="text-align: center; padding: 30px;">
-                                ไม่มีข้อมูลการจอง - <a href="{{ route('bookings.create') }}">เพิ่มการจองใหม่</a>
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
+@section('page-title', 'จัดการการจอง')
 
-        <div style="margin-top: 30px;">
-            <a href="/" class="btn btn-secondary">← กลับไปแดชบอร์ด</a>
-        </div>
+@section('content')
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0">รายการการจอง</h4>
+    <div class="d-flex gap-2">
+        <a href="{{ route('bookings.export') }}" class="btn btn-outline-success">
+            <i class="bi bi-download me-1"></i>Export
+        </a>
+        <a href="{{ route('bookings.create') }}" class="btn btn-primary-custom">
+            <i class="bi bi-plus-lg me-1"></i>เพิ่มการจองใหม่
+        </a>
     </div>
-</body>
-</html>
+</div>
+
+<!-- Search and Filter -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" action="{{ route('bookings.index') }}" class="row g-3">
+            <div class="col-md-3">
+                <input type="text" name="search" class="form-control" placeholder="ค้นหาชื่อแขก..." value="{{ request('search') }}">
+            </div>
+            <div class="col-md-3">
+                <select name="status" class="form-select">
+                    <option value="">ทุกสถานะ</option>
+                    <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>รอการยืนยัน</option>
+                    <option value="confirmed" {{ request('status') == 'confirmed' ? 'selected' : '' }}>ยืนยันแล้ว</option>
+                    <option value="checked_in" {{ request('status') == 'checked_in' ? 'selected' : '' }}>เช็คอินแล้ว</option>
+                    <option value="checked_out" {{ request('status') == 'checked_out' ? 'selected' : '' }}>เช็คเอาท์แล้ว</option>
+                    <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>ยกเลิก</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-search me-1"></i>ค้นหา
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Bookings Table -->
+<div class="table-card">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>ห้อง</th>
+                    <th>แขก</th>
+                    <th>เช็คอิน</th>
+                    <th>เช็คเอาท์</th>
+                    <th>ราคา</th>
+                    <th>สถานะ</th>
+                    <th>การกระทำ</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse ($bookings as $booking)
+                    <tr>
+                        <td><strong>#{{ $booking->room->room_number }}</strong></td>
+                        <td>{{ $booking->guest->first_name }} {{ $booking->guest->last_name }}</td>
+                        <td>{{ \Carbon\Carbon::parse($booking->check_in_date)->format('d/m/Y') }}</td>
+                        <td>{{ \Carbon\Carbon::parse($booking->check_out_date)->format('d/m/Y') }}</td>
+                        <td>฿{{ number_format($booking->total_price, 2) }}</td>
+                        <td>
+                            @php
+                                $statusClasses = [
+                                    'pending' => 'bg-warning',
+                                    'confirmed' => 'bg-info',
+                                    'checked_in' => 'bg-success',
+                                    'checked_out' => 'bg-secondary',
+                                    'cancelled' => 'bg-danger',
+                                ];
+                                $statusLabels = [
+                                    'pending' => 'รอการยืนยัน',
+                                    'confirmed' => 'ยืนยันแล้ว',
+                                    'checked_in' => 'เช็คอินแล้ว',
+                                    'checked_out' => 'เช็คเอาท์แล้ว',
+                                    'cancelled' => 'ยกเลิก',
+                                ];
+                            @endphp
+                            <span class="badge {{ $statusClasses[$booking->status] ?? '' }}">
+                                {{ $statusLabels[$booking->status] ?? $booking->status }}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="d-flex gap-2">
+                                <a href="{{ route('bookings.show', $booking) }}" class="btn btn-sm btn-outline-info">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="{{ route('bookings.edit', $booking) }}" class="btn btn-sm btn-outline-warning">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                @if($booking->status == 'pending')
+                                    <form action="{{ route('bookings.confirm', $booking) }}" method="POST" class="d-inline">
+                                        @csrf
+                                        <button type="submit" class="btn btn-sm btn-outline-success" onclick="return confirm('ยืนยันการจองนี้?')">
+                                            <i class="bi bi-check-lg"></i>
+                                        </button>
+                                    </form>
+                                @endif
+                                @if($booking->status != 'cancelled' && $booking->status != 'checked_out')
+                                    <form action="{{ route('bookings.cancel', $booking) }}" method="POST" class="d-inline">
+                                        @csrf
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('ยกเลิกการจองนี้?')">
+                                            <i class="bi bi-x-lg"></i>
+                                        </button>
+                                    </form>
+                                @endif
+                            </div>
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="7" class="text-center py-4">
+                            <i class="bi bi-inbox fs-1 text-muted"></i>
+                            <p class="text-muted mt-2">ไม่มีข้อมูลการจอง</p>
+                            <a href="{{ route('bookings.create') }}" class="btn btn-primary-custom mt-2">เพิ่มการจองใหม่</a>
+                        </td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Pagination -->
+@if ($bookings->hasPages())
+    <div class="d-flex justify-content-center mt-4">
+        {{ $bookings->links('pagination::bootstrap-5') }}
+    </div>
+@endif
+@endsection

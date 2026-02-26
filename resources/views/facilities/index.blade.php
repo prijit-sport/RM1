@@ -1,75 +1,111 @@
-<!DOCTYPE html>
-<html lang="th">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>จัดการสิ่งอำนวยความสะดวก</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI'; background: #f5f5f5; }
-        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
-        .header { display: flex; justify-content: space-between; margin-bottom: 30px; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .btn { display: inline-block; padding: 10px 20px; background: #667eea; color: white; text-decoration: none; border-radius: 5px; border: none; cursor: pointer; }
-        .btn:hover { background: #764ba2; }
-        .table-container { background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        table { width: 100%; border-collapse: collapse; }
-        th { background: #667eea; color: white; padding: 15px; text-align: left; }
-        td { padding: 15px; border-bottom: 1px solid #eee; }
-        tr:hover { background: #f9f9f9; }
-        .status { padding: 5px 10px; border-radius: 20px; font-size: 0.9em; font-weight: 600; }
-        .status.active { background: #d4edda; color: #155724; }
-        .status.inactive { background: #f8d7da; color: #721c24; }
-        .actions { display: flex; gap: 10px; }
-        .btn-secondary { background: #6c757d; }
-        .btn-secondary:hover { background: #5a6268; }
-        .btn-danger { background: #dc3545; }
-        .btn-danger:hover { background: #c82333; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>🏢 จัดการสิ่งอำนวยความสะดวก</h1>
-            <a href="{{ route('facilities.create') }}" class="btn">➕ เพิ่มสิ่งอำนวยความสะดวก</a>
-        </div>
-        <div class="table-container">
-            <table>
-                <thead>
-                    <tr>
-                        <th>ชื่อ</th>
-                        <th>ประเภท</th>
-                        <th>ที่ตั้ง</th>
-                        <th>สถานะ</th>
-                        <th>การกระทำ</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse ($facilities as $facility)
-                        <tr>
-                            <td>{{ $facility->name }}</td>
-                            <td>{{ $facility->type }}</td>
-                            <td>{{ $facility->location }}</td>
-                            <td><span class="status {{ $facility->status }}">{{ ucfirst($facility->status) }}</span></td>
-                            <td>
-                                <div class="actions">
-                                    <a href="{{ route('facilities.show', $facility) }}" class="btn btn-secondary">ดู</a>
-                                    <a href="{{ route('facilities.edit', $facility) }}" class="btn btn-secondary">แก้ไข</a>
-                                    <form action="{{ route('facilities.destroy', $facility) }}" method="POST" style="display:inline;">
-                                        @csrf @method('DELETE')
-                                        <button type="submit" class="btn btn-danger" onclick="return confirm('ลบ?')">ลบ</button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr><td colspan="5" style="text-align: center; padding: 30px;">ไม่มีข้อมูล</td></tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-        <div style="margin-top: 30px;">
-            <a href="/" class="btn btn-secondary">← กลับไปแดชบอร์ด</a>
-        </div>
+@extends('layouts.app')
+
+@section('title', 'จัดการสิ่งอำนวยความสะดวก')
+
+@section('page-title', 'จัดการสิ่งอำนวยความสะดวก')
+
+@section('content')
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0">รายการสิ่งอำนวยความสะดวก</h4>
+    <div class="d-flex gap-2">
+        <a href="{{ route('facilities.export') }}" class="btn btn-outline-success">
+            <i class="bi bi-download me-1"></i>Export
+        </a>
+        <a href="{{ route('facilities.create') }}" class="btn btn-primary-custom">
+            <i class="bi bi-plus-lg me-1"></i>เพิ่มสิ่งอำนวยความสะดวก
+        </a>
     </div>
-</body>
-</html>
+</div>
+
+<!-- Search and Filter -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" action="{{ route('facilities.index') }}" class="row g-3">
+            <div class="col-md-4">
+                <input type="text" name="search" class="form-control" placeholder="ค้นหาชื่อ..." value="{{ request('search') }}">
+            </div>
+            <div class="col-md-3">
+                <select name="status" class="form-select">
+                    <option value="">ทุกสถานะ</option>
+                    <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>ใช้งาน</option>
+                    <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>ไม่ใช้งาน</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-search me-1"></i>ค้นหา
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Facilities Table -->
+<div class="table-card">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>ชื่อ</th>
+                    <th>ประเภท</th>
+                    <th>ที่ตั้ง</th>
+                    <th>สถานะ</th>
+                    <th>การกระทำ</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse ($facilities as $facility)
+                    <tr>
+                        <td><strong>{{ $facility->name }}</strong></td>
+                        <td>{{ $facility->type }}</td>
+                        <td>{{ $facility->location }}</td>
+                        <td>
+                            @php
+                                $statusClasses = [
+                                    'active' => 'bg-success',
+                                    'inactive' => 'bg-secondary',
+                                ];
+                            @endphp
+                            <span class="badge {{ $statusClasses[$facility->status] ?? '' }}">
+                                {{ $facility->status == 'active' ? 'ใช้งาน' : 'ไม่ใช้งาน' }}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="d-flex gap-2">
+                                <a href="{{ route('facilities.show', $facility) }}" class="btn btn-sm btn-outline-info">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="{{ route('facilities.edit', $facility) }}" class="btn btn-sm btn-outline-warning">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <form action="{{ route('facilities.destroy', $facility) }}" method="POST" class="d-inline">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('แน่ใจหรือไม่ที่จะลบ?')">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="5" class="text-center py-4">
+                            <i class="bi bi-inbox fs-1 text-muted"></i>
+                            <p class="text-muted mt-2">ไม่มีข้อมูลสิ่งอำนวยความสะดวก</p>
+                            <a href="{{ route('facilities.create') }}" class="btn btn-primary-custom mt-2">เพิ่มสิ่งอำนวยความสะดวก</a>
+                        </td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Pagination -->
+@if ($facilities->hasPages())
+    <div class="d-flex justify-content-center mt-4">
+        {{ $facilities->links('pagination::bootstrap-5') }}
+    </div>
+@endif
+@endsection

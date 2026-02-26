@@ -1,77 +1,121 @@
-<!DOCTYPE html>
-<html lang="th">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>จัดการสินค้า</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI'; background: #f5f5f5; }
-        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
-        .header { display: flex; justify-content: space-between; margin-bottom: 30px; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .btn { display: inline-block; padding: 10px 20px; background: #667eea; color: white; text-decoration: none; border-radius: 5px; border: none; cursor: pointer; }
-        .btn:hover { background: #764ba2; }
-        .table-container { background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        table { width: 100%; border-collapse: collapse; }
-        th { background: #667eea; color: white; padding: 15px; text-align: left; }
-        td { padding: 15px; border-bottom: 1px solid #eee; }
-        tr:hover { background: #f9f9f9; }
-        .status { padding: 5px 10px; border-radius: 20px; font-size: 0.9em; font-weight: 600; }
-        .status.active { background: #d4edda; color: #155724; }
-        .status.inactive { background: #f8d7da; color: #721c24; }
-        .actions { display: flex; gap: 10px; }
-        .btn-secondary { background: #6c757d; }
-        .btn-secondary:hover { background: #5a6268; }
-        .btn-danger { background: #dc3545; }
-        .btn-danger:hover { background: #c82333; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>💼 จัดการสินค้า</h1>
-            <a href="{{ route('items.create') }}" class="btn">➕ เพิ่มสินค้า</a>
-        </div>
-        <div class="table-container">
-            <table>
-                <thead>
-                    <tr>
-                        <th>ชื่อสินค้า</th>
-                        <th>หมวด</th>
-                        <th>ราคา</th>
-                        <th>จำนวน</th>
-                        <th>สถานะ</th>
-                        <th>การกระทำ</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse ($items as $item)
-                        <tr>
-                            <td>{{ $item->name }}</td>
-                            <td>{{ $item->category }}</td>
-                            <td>฿{{ number_format($item->price, 2) }}</td>
-                            <td>{{ $item->quantity }}</td>
-                            <td><span class="status {{ $item->status }}">{{ ucfirst($item->status) }}</span></td>
-                            <td>
-                                <div class="actions">
-                                    <a href="{{ route('items.show', $item) }}" class="btn btn-secondary">ดู</a>
-                                    <a href="{{ route('items.edit', $item) }}" class="btn btn-secondary">แก้ไข</a>
-                                    <form action="{{ route('items.destroy', $item) }}" method="POST" style="display:inline;">
-                                        @csrf @method('DELETE')
-                                        <button type="submit" class="btn btn-danger" onclick="return confirm('ลบ?')">ลบ</button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr><td colspan="6" style="text-align: center; padding: 30px;">ไม่มีข้อมูล</td></tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-        <div style="margin-top: 30px;">
-            <a href="/" class="btn btn-secondary">← กลับไปแดชบอร์ด</a>
-        </div>
+@extends('layouts.app')
+
+@section('title', 'จัดการสินค้า')
+
+@section('page-title', 'จัดการสินค้า')
+
+@section('content')
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0">รายการสินค้า</h4>
+    <div class="d-flex gap-2">
+        <a href="{{ route('items.export') }}" class="btn btn-outline-success">
+            <i class="bi bi-download me-1"></i>Export
+        </a>
+        <a href="{{ route('items.create') }}" class="btn btn-primary-custom">
+            <i class="bi bi-plus-lg me-1"></i>เพิ่มสินค้า
+        </a>
     </div>
-</body>
-</html>
+</div>
+
+<!-- Search and Filter -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" action="{{ route('items.index') }}" class="row g-3">
+            <div class="col-md-4">
+                <input type="text" name="search" class="form-control" placeholder="ค้นหาชื่อสินค้า..." value="{{ request('search') }}">
+            </div>
+            <div class="col-md-3">
+                <select name="category" class="form-select">
+                    <option value="">ทุกหมวดหมู่</option>
+                    <option value="อุปกรณ์สำนักงาน" {{ request('category') == 'อุปกรณ์สำนักงาน' ? 'selected' : '' }}>อุปกรณ์สำนักงาน</option>
+                    <option value="เฟอร์นิเจอร์" {{ request('category') == 'เฟอร์นิเจอร์' ? 'selected' : '' }}>เฟอร์นิเจอร์</option>
+                    <option value="อิเล็กทรอนิกส์" {{ request('category') == 'อิเล็กทรอนิกส์' ? 'selected' : '' }}>อิเล็กทรอนิกส์</option>
+                    <option value="อื่นๆ" {{ request('category') == 'อื่นๆ' ? 'selected' : '' }}>อื่นๆ</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-search me-1"></i>ค้นหา
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Items Table -->
+<div class="table-card">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>ชื่อสินค้า</th>
+                    <th>หมวด</th>
+                    <th>ราคา</th>
+                    <th>จำนวน</th>
+                    <th>สถานะ</th>
+                    <th>การกระทำ</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse ($items as $item)
+                    <tr>
+                        <td><strong>{{ $item->name }}</strong></td>
+                        <td>{{ $item->category }}</td>
+                        <td>฿{{ number_format($item->price, 2) }}</td>
+                        <td>{{ $item->quantity }}</td>
+                        <td>
+                            @php
+                                $statusClasses = [
+                                    'active' => 'bg-success',
+                                    'inactive' => 'bg-secondary',
+                                    'out_of_stock' => 'bg-danger',
+                                ];
+                                $statusLabels = [
+                                    'active' => 'ใช้งาน',
+                                    'inactive' => 'ไม่ใช้งาน',
+                                    'out_of_stock' => 'สินค้าหมด',
+                                ];
+                            @endphp
+                            <span class="badge {{ $statusClasses[$item->status] ?? '' }}">
+                                {{ $statusLabels[$item->status] ?? $item->status }}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="d-flex gap-2">
+                                <a href="{{ route('items.show', $item) }}" class="btn btn-sm btn-outline-info">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="{{ route('items.edit', $item) }}" class="btn btn-sm btn-outline-warning">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <form action="{{ route('items.destroy', $item) }}" method="POST" class="d-inline">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('แน่ใจหรือไม่ที่จะลบ?')">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="6" class="text-center py-4">
+                            <i class="bi bi-inbox fs-1 text-muted"></i>
+                            <p class="text-muted mt-2">ไม่มีข้อมูลสินค้า</p>
+                            <a href="{{ route('items.create') }}" class="btn btn-primary-custom mt-2">เพิ่มสินค้า</a>
+                        </td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Pagination -->
+@if ($items->hasPages())
+    <div class="d-flex justify-content-center mt-4">
+        {{ $items->links('pagination::bootstrap-5') }}
+    </div>
+@endif
+@endsection

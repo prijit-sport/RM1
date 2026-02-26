@@ -9,9 +9,26 @@ use Illuminate\Validation\Rule;
 
 class MeterController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $meters = Meter::with('room')->orderBy('id', 'desc')->paginate(10);
+        $query = Meter::with('room');
+
+        // Search by meter number
+        if ($request->filled('search')) {
+            $query->where('meter_number', 'like', '%' . $request->search . '%');
+        }
+
+        // Filter by type
+        if ($request->filled('type')) {
+            $query->where('type', $request->type);
+        }
+
+        // Filter by status
+        if ($request->filled('status')) {
+            $query->where('is_active', $request->status);
+        }
+
+        $meters = $query->orderBy('id', 'desc')->paginate(10);
         return view('meters.index', compact('meters'));
     }
 
@@ -88,6 +105,55 @@ class MeterController extends Controller
     {
         $meter->delete();
         return redirect()->route('meters.index')->with('success', 'ลบมิเตอร์สำเร็จ');
+    }
+
+    public function export(Request $request)
+    {
+        $query = Meter::with('room');
+
+        if ($request->filled('search')) {
+            $query->where('meter_number', 'like', '%' . $request->search . '%');
+        }
+
+        if ($request->filled('type')) {
+            $query->where('type', $request->type);
+        }
+
+        if ($request->filled('status')) {
+            $query->where('is_active', $request->status);
+        }
+
+        $meters = $query->orderBy('id', 'desc')->get();
+
+        $filename = 'meters_' . date('Ymd_His') . '.csv';
+        $headers = [
+            'Content-Type' => 'text/csv; charset=utf-8',
+            'Content-Disposition' => "attachment; filename=\"$filename\"",
+        ];
+
+        $columns = ['ห้อง', 'ประเภท', 'เลขมิเตอร์', 'หน่วย', 'สถานะ', 'วันที่ติดตั้ง', 'หมายเหตุ'];
+
+        $callback = function () use ($meters) {
+            $file = fopen('php://output', 'w');
+            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF)); // UTF-8 BOM
+            
+            fputcsv($file, ['ห้อง', 'ประเภท', 'เลขมิเตอร์', 'หน่วย', 'สถานะ', 'วันที่ติดตั้ง', 'หมายเหตุ']);
+
+            foreach ($meters as $meter) {
+                fputcsv($file, [
+                    $meter->room->room_number ?? '-',
+                    $meter->type === 'water' ? 'น้ำ' : 'ไฟฟ้า',
+                    $meter->meter_number,
+                    $meter->unit ?? '-',
+                    $meter->is_active ? 'ใช้งาน' : 'ปิดใช้งาน',
+                    $meter->installed_at ? $meter->installed_at->format('d/m/Y') : '-',
+                    $meter->notes ?? '-',
+                ]);
+            }
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 }
 

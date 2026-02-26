@@ -1,79 +1,126 @@
-<!DOCTYPE html>
-<html lang="th">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>จัดการใบแจ้งหนี้</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI'; background: #f5f5f5; }
-        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
-        .header { display: flex; justify-content: space-between; margin-bottom: 30px; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .btn { display: inline-block; padding: 10px 20px; background: #667eea; color: white; text-decoration: none; border-radius: 5px; border: none; cursor: pointer; }
-        .btn:hover { background: #764ba2; }
-        .table-container { background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        table { width: 100%; border-collapse: collapse; }
-        th { background: #667eea; color: white; padding: 15px; text-align: left; }
-        td { padding: 15px; border-bottom: 1px solid #eee; }
-        tr:hover { background: #f9f9f9; }
-        .status { padding: 5px 10px; border-radius: 20px; font-size: 0.9em; font-weight: 600; }
-        .status.active { background: #d4edda; color: #155724; }
-        .status.inactive { background: #f8d7da; color: #721c24; }
-        .actions { display: flex; gap: 10px; }
-        .btn-secondary { background: #6c757d; }
-        .btn-secondary:hover { background: #5a6268; }
-        .btn-danger { background: #dc3545; }
-        .btn-danger:hover { background: #c82333; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>📄 จัดการใบแจ้งหนี้</h1>
-            <a href="{{ route('invoices.create') }}" class="btn">➕ เพิ่มใบแจ้งหนี้</a>
-        </div>
-        <div class="table-container">
-            <table>
-                <thead>
-                    <tr>
-                        <th>เลขที่ใบแจ้งหนี้</th>
-                        <th>การจอง</th>
-                        <th>ยอดรวม</th>
-                        <th>วันที่ออก</th>
-                        <th>วันครบกำหนด</th>
-                        <th>สถานะ</th>
-                        <th>การกระทำ</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse ($invoices as $invoice)
-                        <tr>
-                            <td>{{ $invoice->invoice_number }}</td>
-                            <td>#{{ $invoice->booking_id }}</td>
-                            <td>฿{{ number_format($invoice->total, 2) }}</td>
-                            <td>{{ optional($invoice->issue_date)->format('d/m/Y') }}</td>
-                            <td>{{ optional($invoice->due_date)->format('d/m/Y') }}</td>
-                            <td><span class="status {{ $invoice->status }}">{{ ucfirst($invoice->status) }}</span></td>
-                            <td>
-                                <div class="actions">
-                                    <a href="{{ route('invoices.show', $invoice) }}" class="btn btn-secondary">ดู</a>
-                                    <a href="{{ route('invoices.edit', $invoice) }}" class="btn btn-secondary">แก้ไข</a>
-                                    <form action="{{ route('invoices.destroy', $invoice) }}" method="POST" style="display:inline;">
-                                        @csrf @method('DELETE')
-                                        <button type="submit" class="btn btn-danger" onclick="return confirm('ลบ?')">ลบ</button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr><td colspan="7" style="text-align: center; padding: 30px;">ไม่มีข้อมูล</td></tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-        <div style="margin-top: 30px;">
-            <a href="/" class="btn btn-secondary">← กลับไปแดชบอร์ด</a>
-        </div>
+@extends('layouts.app')
+
+@section('title', 'จัดการใบแจ้งหนี้')
+
+@section('page-title', 'จัดการใบแจ้งหนี้')
+
+@section('content')
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0">รายการใบแจ้งหนี้</h4>
+    <div class="d-flex gap-2">
+        <a href="{{ route('invoices.bulk-create') }}" class="btn btn-outline-primary">
+            <i class="bi bi-plus-circle me-1"></i>สร้างหลายใบ
+        </a>
+        <a href="{{ route('invoices.export') }}" class="btn btn-outline-success">
+            <i class="bi bi-download me-1"></i>Export
+        </a>
+        <a href="{{ route('invoices.create') }}" class="btn btn-primary-custom">
+            <i class="bi bi-plus-lg me-1"></i>เพิ่มใบแจ้งหนี้
+        </a>
     </div>
-</body>
-</html>
+</div>
+
+<!-- Search and Filter -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" action="{{ route('invoices.index') }}" class="row g-3">
+            <div class="col-md-3">
+                <input type="text" name="search" class="form-control" placeholder="ค้นหาเลขที่ใบแจ้งหนี้..." value="{{ request('search') }}">
+            </div>
+            <div class="col-md-3">
+                <select name="status" class="form-select">
+                    <option value="">ทุกสถานะ</option>
+                    <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>รอชำระ</option>
+                    <option value="paid" {{ request('status') == 'paid' ? 'selected' : '' }}>ชำระแล้ว</option>
+                    <option value="overdue" {{ request('status') == 'overdue' ? 'selected' : '' }}>เกินกำหนด</option>
+                    <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>ยกเลิก</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-search me-1"></i>ค้นหา
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Invoices Table -->
+<div class="table-card">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>เลขที่ใบแจ้งหนี้</th>
+                    <th>การจอง</th>
+                    <th>ยอดรวม</th>
+                    <th>วันที่ออก</th>
+                    <th>วันครบกำหนด</th>
+                    <th>สถานะ</th>
+                    <th>การกระทำ</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse ($invoices as $invoice)
+                    <tr>
+                        <td><strong>{{ $invoice->invoice_number }}</strong></td>
+                        <td>#{{ $invoice->booking_id }}</td>
+                        <td>฿{{ number_format($invoice->total, 2) }}</td>
+                        <td>{{ optional($invoice->issue_date)->format('d/m/Y') }}</td>
+                        <td>{{ optional($invoice->due_date)->format('d/m/Y') }}</td>
+                        <td>
+                            @php
+                                $statusClasses = [
+                                    'pending' => 'bg-warning',
+                                    'paid' => 'bg-success',
+                                    'overdue' => 'bg-danger',
+                                    'cancelled' => 'bg-secondary',
+                                ];
+                            @endphp
+                            <span class="badge {{ $statusClasses[$invoice->status] ?? '' }}">
+                                {{ ucfirst($invoice->status) }}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="d-flex gap-2">
+                                <a href="{{ route('invoices.show', $invoice) }}" class="btn btn-sm btn-outline-info">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="{{ route('invoices.edit', $invoice) }}" class="btn btn-sm btn-outline-warning">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                @if($invoice->status == 'pending')
+                                    <form action="{{ route('invoices.markAsPaid', $invoice) }}" method="POST" class="d-inline">
+                                        @csrf
+                                        <button type="submit" class="btn btn-sm btn-outline-success" onclick="return confirm('ยืนยันการชำระเงิน?')">
+                                            <i class="bi bi-check-lg"></i>
+                                        </button>
+                                    </form>
+                                @endif
+                                <a href="{{ route('invoices.pdf', $invoice) }}" class="btn btn-sm btn-outline-danger" target="_blank">
+                                    <i class="bi bi-file-pdf"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="7" class="text-center py-4">
+                            <i class="bi bi-inbox fs-1 text-muted"></i>
+                            <p class="text-muted mt-2">ไม่มีข้อมูลใบแจ้งหนี้</p>
+                            <a href="{{ route('invoices.create') }}" class="btn btn-primary-custom mt-2">เพิ่มใบแจ้งหนี้</a>
+                        </td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Pagination -->
+@if ($invoices->hasPages())
+    <div class="d-flex justify-content-center mt-4">
+        {{ $invoices->links('pagination::bootstrap-5') }}
+    </div>
+@endif
+@endsection
