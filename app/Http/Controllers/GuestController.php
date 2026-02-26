@@ -88,4 +88,38 @@ class GuestController extends Controller
         $guest->delete();
         return redirect()->route('guests.index')->with('success', 'แขกถูกลบสำเร็จ');
     }
+
+    public function export(Request $request)
+    {
+        $guests = Guest::all();
+        
+        $csvData = [];
+        $csvData[] = ['First Name', 'Last Name', 'Email', 'Phone', 'Address', 'City', 'Country', 'ID Number'];
+        
+        foreach ($guests as $guest) {
+            $csvData[] = [
+                $guest->first_name,
+                $guest->last_name,
+                $guest->email,
+                $guest->phone,
+                $guest->address,
+                $guest->city,
+                $guest->country,
+                $guest->id_number,
+            ];
+        }
+        
+        $filename = 'guests_export_' . date('Y-m-d') . '.csv';
+        
+        return response()->stream(function () use ($csvData) {
+            $handle = fopen('php://output', 'w');
+            foreach ($csvData as $row) {
+                fputcsv($handle, $row);
+            }
+            fclose($handle);
+        }, 200, [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ]);
+    }
 }

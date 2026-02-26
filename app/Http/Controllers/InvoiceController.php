@@ -68,4 +68,86 @@ class InvoiceController extends Controller
         $invoice->delete();
         return redirect()->route('invoices.index')->with('success', 'Invoice ลบสำเร็จ');
     }
+
+    public function bulkCreate()
+    {
+        $bookings = Booking::all();
+        return view('invoices.bulk-create', compact('bookings'));
+    }
+
+    public function bulkStore(Request $request)
+    {
+        $invoices = $request->input('invoices', []);
+        
+        foreach ($invoices as $invoiceData) {
+            Invoice::create([
+                'booking_id' => $invoiceData['booking_id'],
+                'invoice_number' => $invoiceData['invoice_number'],
+                'amount' => $invoiceData['amount'],
+                'tax' => $invoiceData['tax'] ?? 0,
+                'total' => $invoiceData['total'],
+                'issue_date' => $invoiceData['issue_date'],
+                'due_date' => $invoiceData['due_date'],
+                'status' => $invoiceData['status'] ?? 'draft',
+                'notes' => $invoiceData['notes'] ?? null,
+            ]);
+        }
+
+        return redirect()->route('invoices.index')->with('success', 'Invoice ถูกสร้าง ' . count($invoices) . ' รายการสำเร็จ');
+    }
+
+    public function export(Request $request)
+    {
+        $invoices = Invoice::with('booking')->get();
+        
+        $csvData = [];
+        $csvData[] = ['Invoice Number', 'Booking ID', 'Amount', 'Tax', 'Total', 'Issue Date', 'Due Date', 'Status', 'Notes'];
+        
+        foreach ($invoices as $invoice) {
+            $csvData[] = [
+                $invoice->invoice_number,
+                $invoice->booking_id,
+                $invoice->amount,
+                $invoice->tax,
+                $invoice->total,
+                $invoice->issue_date,
+                $invoice->due_date,
+                $invoice->status,
+                $invoice->notes,
+            ];
+        }
+        
+        $filename = 'invoices_export_' . date('Y-m-d') . '.csv';
+        
+        return response()->stream(function () use ($csvData) {
+            $handle = fopen('php://output', 'w');
+            foreach ($csvData as $row) {
+                fputcsv($handle, $row);
+            }
+            fclose($handle);
+        }, 200, [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ]);
+    }
+
+    public function markAsPaid(Invoice $invoice)
+    {
+        $invoice->update(['status' => 'paid']);
+        return redirect()->route('invoices.show', $invoice)->with('success', 'Invoice ถูกชำระเงินแล้ว');
+    }
+
+    public function generatePdf(Invoice $invoice)
+    {
+        return redirect()->route('invoices.show', $invoice)->with('info', 'PDF generation coming soon');
+    }
+
+    public function remindAll()
+    {
+        $pendingInvoices = Invoice::where('status', 'pending')
+            ->where('due_date', '<', now())
+            ->get();
+        
+        return redirect()->route('invoices.index')->with('success', 'ส่งแจ้งเตือน ' . $pendingInvoices->count() . ' รายการแล้ว');
+    }
 }

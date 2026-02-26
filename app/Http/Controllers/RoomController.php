@@ -84,4 +84,74 @@ class RoomController extends Controller
         $room->delete();
         return redirect()->route('rooms.index')->with('success', 'ห้องถูกลบสำเร็จ');
     }
+
+    /**
+     * Show the form for bulk creating rooms.
+     */
+    public function bulkCreate()
+    {
+        return view('rooms.bulk-create');
+    }
+
+    /**
+     * Store multiple rooms at once.
+     */
+    public function bulkStore(Request $request)
+    {
+        $rooms = $request->input('rooms', []);
+        
+        foreach ($rooms as $roomData) {
+            Room::create([
+                'room_number' => $roomData['room_number'],
+                'room_type' => $roomData['room_type'],
+                'price_per_night' => $roomData['price_per_night'],
+                'capacity' => $roomData['capacity'],
+                'status' => $roomData['status'] ?? 'available',
+                'description' => $roomData['description'] ?? null,
+            ]);
+        }
+
+        return redirect()->route('rooms.index')->with('success', 'ห้องถูกสร้าง ' . count($rooms) . ' ห้องสำเร็จ');
+    }
+
+    /**
+     * Export rooms to CSV.
+     */
+    public function export(Request $request)
+    {
+        $rooms = Room::all();
+        
+        $csvData = [];
+        $csvData[] = ['Room Number', 'Room Type', 'Price/Night', 'Capacity', 'Status', 'Description'];
+        
+        foreach ($rooms as $room) {
+            $csvData[] = [
+                $room->room_number,
+                $room->room_type,
+                $room->price_per_night,
+                $room->capacity,
+                $room->status,
+                $room->description,
+            ];
+        }
+        
+        $filename = 'rooms_export_' . date('Y-m-d') . '.csv';
+        
+        $handle = fopen('php://output', 'w');
+        foreach ($csvData as $row) {
+            fputcsv($handle, $row);
+        }
+        fclose($handle);
+        
+        return response()->stream(function () use ($csvData) {
+            $handle = fopen('php://output', 'w');
+            foreach ($csvData as $row) {
+                fputcsv($handle, $row);
+            }
+            fclose($handle);
+        }, 200, [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ]);
+    }
 }
