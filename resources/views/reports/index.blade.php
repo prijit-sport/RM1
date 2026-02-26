@@ -1,252 +1,177 @@
-<!DOCTYPE html>
-<html lang="th">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>รายงาน</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #f5f5f5;
-        }
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        .header {
-            margin-bottom: 30px;
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        .header h1 {
-            color: #333;
-            margin-bottom: 5px;
-        }
-        .header p {
-            color: #666;
-            font-size: 0.9em;
-        }
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-        .stat-card {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        .stat-card.primary {
-            border-left: 5px solid #667eea;
-        }
-        .stat-card.success {
-            border-left: 5px solid #28a745;
-        }
-        .stat-card.warning {
-            border-left: 5px solid #ffc107;
-        }
-        .stat-card.danger {
-            border-left: 5px solid #dc3545;
-        }
-        .stat-card.info {
-            border-left: 5px solid #17a2b8;
-        }
-        .stat-label {
-            color: #666;
-            font-size: 0.9em;
-            margin-bottom: 8px;
-        }
-        .stat-value {
-            font-size: 2em;
-            font-weight: bold;
-            color: #333;
-        }
-        .content-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
-            gap: 20px;
-        }
-        .card {
-            background: white;
-            border-radius: 10px;
-            padding: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        .card h2 {
-            color: #333;
-            margin-bottom: 15px;
-            font-size: 1.3em;
-            border-bottom: 2px solid #667eea;
-            padding-bottom: 10px;
-        }
-        .room-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 0;
-            border-bottom: 1px solid #eee;
-        }
-        .room-item:last-child {
-            border-bottom: none;
-        }
-        .room-name {
-            font-weight: 600;
-            color: #333;
-        }
-        .room-count {
-            background: #667eea;
-            color: white;
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 0.9em;
-        }
-        .btn {
-            display: inline-block;
-            padding: 10px 20px;
-            background: #667eea;
-            color: white;
-            text-decoration: none;
-            border-radius: 5px;
-            margin-top: 20px;
-        }
-        .btn:hover {
-            background: #764ba2;
-        }
-        .btn-secondary {
-            background: #6c757d;
-        }
-        .btn-secondary:hover {
-            background: #5a6268;
-        }
-        @media (max-width: 768px) {
-            .content-grid {
-                grid-template-columns: 1fr;
-            }
-            .stat-value {
-                font-size: 1.5em;
-            }
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>📊 รายงานสถิติและรายได้</h1>
-            <p>วันที่: {{ now()->format('d/m/Y H:i') }}</p>
-        </div>
+@extends('layouts.app')
 
-        <!-- Key Statistics -->
-        <div class="stats-grid">
-            <!-- Rooms Stats -->
-            <div class="stat-card primary">
-                <div class="stat-label">🛏️ ห้องทั้งหมด</div>
-                <div class="stat-value">{{ $total_rooms }}</div>
-            </div>
+@section('title', 'รายงาน')
 
-            <div class="stat-card success">
-                <div class="stat-label">✓ ห้องว่าง</div>
-                <div class="stat-value">{{ $available_rooms }}</div>
-            </div>
+@section('page-title', 'รายงานสถิติและรายได้')
 
-            <div class="stat-card warning">
-                <div class="stat-label">👤 ห้องใช้งาน</div>
-                <div class="stat-value">{{ $occupied_rooms }}</div>
-            </div>
+@section('content')
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="mb-1">📊 รายงานสถิติและรายได้</h4>
+        <p class="text-muted mb-0">วันที่: {{ now()->format('d/m/Y H:i') }}</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{{ route('reports.export') }}" class="btn btn-success">
+            <i class="bi bi-download me-1"></i>ส่งออก CSV
+        </a>
+    </div>
+</div>
 
-            <div class="stat-card danger">
-                <div class="stat-label">🔧 ระหว่างซ่อม</div>
-                <div class="stat-value">{{ $maintenance_rooms }}</div>
-            </div>
-
-            <!-- Occupancy Rate -->
-            <div class="stat-card info">
-                <div class="stat-label">📈 อัตราการเข้าพัก</div>
-                <div class="stat-value">{{ $occupancy_rate }}%</div>
-            </div>
-
-            <!-- Today Stats -->
-            <div class="stat-card primary">
-                <div class="stat-label">📥 เช็คอินวันนี้</div>
-                <div class="stat-value">{{ $today_check_ins }}</div>
-            </div>
-
-            <div class="stat-card success">
-                <div class="stat-label">📤 เช็คเอาท์วันนี้</div>
-                <div class="stat-value">{{ $today_check_outs }}</div>
-            </div>
-
-            <!-- Revenue -->
-            <div class="stat-card warning">
-                <div class="stat-label">💰 รายได้รวม</div>
-                <div class="stat-value">฿{{ number_format($total_revenue, 0) }}</div>
-            </div>
-
-            <!-- Bookings This Month -->
-            <div class="stat-card info">
-                <div class="stat-label">📋 การจองเดือนนี้</div>
-                <div class="stat-value">{{ $bookings_this_month }}</div>
-            </div>
-
-            <!-- Total Bookings -->
-            <div class="stat-card primary">
-                <div class="stat-label">📊 การจองทั้งหมด</div>
-                <div class="stat-value">{{ $total_bookings }}</div>
+<!-- Key Statistics -->
+<div class="row g-4 mb-4">
+    <!-- Rooms Stats -->
+    <div class="col-md-6 col-lg-4">
+        <div class="card stat-card border-start border-5 border-primary">
+            <div class="card-body">
+                <div class="text-muted mb-2">🛏️ ห้องทั้งหมด</div>
+                <div class="fs-2 fw-bold text-primary">{{ $total_rooms }}</div>
             </div>
         </div>
+    </div>
 
-        <!-- Status Breakdown -->
-        <div class="content-grid">
-            <div class="card">
-                <h2>📝 สถานะการจอง</h2>
-                <div class="room-item">
-                    <span class="room-name">รอการยืนยัน</span>
-                    <span class="room-count">{{ $pending_bookings }}</span>
-                </div>
-                <div class="room-item">
-                    <span class="room-name">ยืนยันแล้ว</span>
-                    <span class="room-count">{{ $confirmed_bookings }}</span>
-                </div>
-                <div class="room-item">
-                    <span class="room-name">เช็คอินแล้ว</span>
-                    <span class="room-count">{{ $checked_in }}</span>
-                </div>
-                <div class="room-item">
-                    <span class="room-name">เช็คเอาท์แล้ว</span>
-                    <span class="room-count">{{ $checked_out }}</span>
-                </div>
-                <div class="room-item">
-                    <span class="room-name">ยกเลิก</span>
-                    <span class="room-count">{{ $cancelled }}</span>
+    <div class="col-md-6 col-lg-4">
+        <div class="card stat-card border-start border-5 border-success">
+            <div class="card-body">
+                <div class="text-muted mb-2">✓ ห้องว่าง</div>
+                <div class="fs-2 fw-bold text-success">{{ $available_rooms }}</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-lg-4">
+        <div class="card stat-card border-start border-5 border-warning">
+            <div class="card-body">
+                <div class="text-muted mb-2">👤 ห้องใช้งาน</div>
+                <div class="fs-2 fw-bold text-warning">{{ $occupied_rooms }}</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-lg-4">
+        <div class="card stat-card border-start border-5 border-danger">
+            <div class="card-body">
+                <div class="text-muted mb-2">🔧 ระหว่างซ่อม</div>
+                <div class="fs-2 fw-bold text-danger">{{ $maintenance_rooms }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Occupancy Rate -->
+    <div class="col-md-6 col-lg-4">
+        <div class="card stat-card border-start border-5 border-info">
+            <div class="card-body">
+                <div class="text-muted mb-2">📈 อัตราการเข้าพัก</div>
+                <div class="fs-2 fw-bold text-info">{{ $occupancy_rate }}%</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Today Stats -->
+    <div class="col-md-6 col-lg-4">
+        <div class="card stat-card border-start border-5 border-primary">
+            <div class="card-body">
+                <div class="text-muted mb-2">📥 เช็คอินวันนี้</div>
+                <div class="fs-2 fw-bold text-primary">{{ $today_check_ins }}</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-lg-4">
+        <div class="card stat-card border-start border-5 border-success">
+            <div class="card-body">
+                <div class="text-muted mb-2">📤 เช็คเอาท์วันนี้</div>
+                <div class="fs-2 fw-bold text-success">{{ $today_check_outs }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Revenue -->
+    <div class="col-md-6 col-lg-4">
+        <div class="card stat-card border-start border-5 border-warning">
+            <div class="card-body">
+                <div class="text-muted mb-2">💰 รายได้รวม</div>
+                <div class="fs-2 fw-bold text-warning">฿{{ number_format($total_revenue, 0) }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bookings This Month -->
+    <div class="col-md-6 col-lg-4">
+        <div class="card stat-card border-start border-5 border-info">
+            <div class="card-body">
+                <div class="text-muted mb-2">📋 การจองเดือนนี้</div>
+                <div class="fs-2 fw-bold text-info">{{ $bookings_this_month }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Total Bookings -->
+    <div class="col-md-6 col-lg-4">
+        <div class="card stat-card border-start border-5 border-primary">
+            <div class="card-body">
+                <div class="text-muted mb-2">📊 การจองทั้งหมด</div>
+                <div class="fs-2 fw-bold text-primary">{{ $total_bookings }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Status Breakdown -->
+<div class="row g-4">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header bg-white py-3">
+                <h5 class="mb-0">📝 สถานะการจอง</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    <div class="list-group-item d-flex justify-content-between align-items-center py-3">
+                        <span>รอการยืนยัน</span>
+                        <span class="badge bg-secondary rounded-pill">{{ $pending_bookings }}</span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between align-items-center py-3">
+                        <span>ยืนยันแล้ว</span>
+                        <span class="badge bg-primary rounded-pill">{{ $confirmed_bookings }}</span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between align-items-center py-3">
+                        <span>เช็คอินแล้ว</span>
+                        <span class="badge bg-success rounded-pill">{{ $checked_in }}</span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between align-items-center py-3">
+                        <span>เช็คเอาท์แล้ว</span>
+                        <span class="badge bg-info rounded-pill">{{ $checked_out }}</span>
+                    </div>
+                    <div class="list-group-item d-flex justify-content-between align-items-center py-3">
+                        <span>ยกเลิก</span>
+                        <span class="badge bg-danger rounded-pill">{{ $cancelled }}</span>
+                    </div>
                 </div>
             </div>
+        </div>
+    </div>
 
-            <!-- Popular Rooms -->
-            <div class="card">
-                <h2>🏆 ห้องยอดนิยม</h2>
+    <!-- Popular Rooms -->
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header bg-white py-3">
+                <h5 class="mb-0">🏆 ห้องยอดนิยม</h5>
+            </div>
+            <div class="card-body p-0">
                 @forelse ($popular_rooms as $room)
-                    <div class="room-item">
-                        <span class="room-name">#{{ $room->room_number }} - {{ $room->room_type }}</span>
-                        <span class="room-count">{{ $room->bookings_count }} การจอง</span>
+                    <div class="list-group-item d-flex justify-content-between align-items-center py-3">
+                        <span>
+                            <strong>#{{ $room->room_number }}</strong> - {{ $room->room_type }}
+                        </span>
+                        <span class="badge bg-primary rounded-pill">{{ $room->bookings_count }} การจอง</span>
                     </div>
                 @empty
-                    <p style="color: #666; text-align: center; padding: 20px;">ยังไม่มีข้อมูล</p>
+                    <div class="text-center py-4 text-muted">
+                        <i class="bi bi-inbox fs-1"></i>
+                        <p class="mt-2">ยังไม่มีข้อมูล</p>
+                    </div>
                 @endforelse
             </div>
         </div>
-
-        <div style="margin-top: 30px;">
-            <a href="/" class="btn btn-secondary">← กลับไปแดชบอร์ด</a>
-        </div>
     </div>
-</body>
-</html>
+</div>
+@endsection

@@ -1,108 +1,107 @@
-<!DOCTYPE html>
-<html lang="th">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>บันทึกเลขมิเตอร์</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f5f5; }
-        .container { max-width: 1100px; margin: 0 auto; padding: 20px; }
-        .header { display:flex; justify-content: space-between; align-items: center; margin-bottom: 15px; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); gap: 12px; }
-        .header h1 { color: #333; }
-        .subtitle { color:#666; font-size: 0.95em; margin-top: 6px; }
-        .btn { display: inline-block; padding: 10px 16px; background: #667eea; color: white; text-decoration: none; border-radius: 5px; border: none; cursor: pointer; transition: background 0.2s; font-weight: 700; }
-        .btn:hover { background: #764ba2; color:white; }
-        .btn-secondary { background: #6c757d; }
-        .btn-secondary:hover { background: #5a6268; }
-        .btn-danger { background: #dc3545; }
-        .btn-danger:hover { background: #c82333; }
-        .btn-small { padding: 8px 12px; font-size: 0.9em; }
-        .table-container { background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        table { width: 100%; border-collapse: collapse; }
-        th { background: #667eea; color: white; padding: 12px 15px; text-align:left; font-weight: 700; }
-        td { padding: 12px 15px; border-bottom: 1px solid #eee; vertical-align: top; }
-        tr:hover { background: #f9f9f9; }
-        .actions { display:flex; flex-wrap: wrap; gap: 8px; }
-        .alert { padding: 15px; margin-bottom: 15px; border-radius: 5px; }
-        .alert-success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-        .pagination { margin-top: 20px; text-align: center; }
-        .badge { display:inline-block; padding: 4px 10px; border-radius: 999px; font-size: 0.85em; font-weight: 800; }
-        .badge-water { background: #d9f2ff; color: #0b5ed7; }
-        .badge-electric { background: #fff3cd; color: #856404; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        @if (session('success'))
-            <div class="alert alert-success">{{ session('success') }}</div>
-        @endif
+@extends('layouts.app')
 
-        <div class="header">
-            <div>
-                <h1>บันทึกเลขมิเตอร์</h1>
-                <div class="subtitle">
-                    ห้อง <strong>{{ $meter->room->room_number ?? '-' }}</strong>
-                    |
-                    @if($meter->type === 'water')
-                        <span class="badge badge-water">น้ำ</span>
-                    @else
-                        <span class="badge badge-electric">ไฟ</span>
-                    @endif
-                    |
-                    เลขมิเตอร์: <strong>{{ $meter->meter_number }}</strong>
-                </div>
-            </div>
-            <div class="actions">
-                <a class="btn btn-secondary btn-small" href="{{ route('meters.show', $meter) }}">← กลับ</a>
-                <a class="btn btn-small" href="{{ route('meters.readings.create', $meter) }}">➕ เพิ่มเลข</a>
-            </div>
-        </div>
+@section('title', 'บันทึกเลขมิเตอร์')
 
-        <div class="table-container">
-            <table>
-                <thead>
-                    <tr>
-                        <th>วันที่</th>
-                        <th>เลขมิเตอร์</th>
-                        <th>ผู้บันทึก</th>
-                        <th>หมายเหตุ</th>
-                        <th>การกระทำ</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse ($readings as $reading)
-                        <tr>
-                            <td>{{ $reading->reading_date?->format('d/m/Y') ?? '-' }}</td>
-                            <td><strong>{{ number_format((float)$reading->reading_value, 2) }}</strong></td>
-                            <td>{{ $reading->recordedBy->name ?? '-' }}</td>
-                            <td>{{ $reading->notes ?? '-' }}</td>
-                            <td>
-                                <div class="actions">
-                                    <a class="btn btn-secondary btn-small" href="{{ route('meters.readings.edit', [$meter, $reading]) }}">แก้ไข</a>
-                                    <form action="{{ route('meters.readings.destroy', [$meter, $reading]) }}" method="POST" style="display:inline;">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-danger btn-small" onclick="return confirm('แน่ใจหรือ?')">ลบ</button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="5" style="text-align:center; padding: 30px;">
-                                ยังไม่มีรายการเลขมิเตอร์
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
+@section('page-title', 'บันทึกเลขมิเตอร์')
 
-        @if ($readings->hasPages())
-            <div class="pagination">{{ $readings->links() }}</div>
-        @endif
+@section('content')
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="mb-1">บันทึกเลขมิเตอร์</h4>
+        <p class="text-muted mb-0">
+            ห้อง <strong>{{ $meter->room->room_number ?? '-' }}</strong>
+            @if($meter->type === 'water')
+                <span class="badge bg-info">น้ำ</span>
+            @else
+                <span class="badge bg-warning">ไฟฟ้า</span>
+            @endif
+            | เลขมิเตอร์: <strong>{{ $meter->meter_number }}</strong>
+        </p>
     </div>
-</body>
-</html>
+    <div class="d-flex gap-2">
+        <a href="{{ route('meters.show', $meter) }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>กลับ
+        </a>
+        <a href="{{ route('meters.readings.export', $meter) . '?' . http_build_query(request()->only(['date', 'search'])) }}" class="btn btn-success">
+            <i class="bi bi-download me-1"></i>ส่งออก CSV
+        </a>
+        <a href="{{ route('meters.readings.create', $meter) }}" class="btn btn-primary-custom">
+            <i class="bi bi-plus-lg me-1"></i>เพิ่มเลข
+        </a>
+    </div>
+</div>
 
+<!-- Search and Filter -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" action="{{ route('meters.readings.index', $meter) }}" class="row g-3">
+            <div class="col-md-6">
+                <input type="date" name="date" class="form-control" value="{{ request('date') }}">
+            </div>
+            <div class="col-md-4">
+                <input type="text" name="search" class="form-control" placeholder="ค้นหาหมายเหตุ..." value="{{ request('search') }}">
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-search me-1"></i>ค้นหา
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Readings Table -->
+<div class="table-card">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>วันที่</th>
+                    <th>เลขมิเตอร์</th>
+                    <th>ผู้บันทึก</th>
+                    <th>หมายเหตุ</th>
+                    <th>การกระทำ</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse ($readings as $reading)
+                    <tr>
+                        <td>{{ $reading->reading_date?->format('d/m/Y') ?? '-' }}</td>
+                        <td><strong>{{ number_format((float)$reading->reading_value, 2) }}</strong></td>
+                        <td>{{ $reading->recordedBy->name ?? '-' }}</td>
+                        <td>{{ $reading->notes ?? '-' }}</td>
+                        <td>
+                            <div class="d-flex gap-2">
+                                <a href="{{ route('meters.readings.edit', [$meter, $reading]) }}" class="btn btn-sm btn-outline-warning">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <form action="{{ route('meters.readings.destroy', [$meter, $reading]) }}" method="POST" class="d-inline">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('แน่ใจหรือไม่ที่จะลบ?')">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="5" class="text-center py-4">
+                            <i class="bi bi-inbox fs-1 text-muted"></i>
+                            <p class="text-muted mt-2">ไม่มีรายการบันทึกเลขมิเตอร์</p>
+                        </td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Pagination -->
+@if ($readings->hasPages())
+    <div class="d-flex justify-content-center mt-4">
+        {{ $readings->links('pagination::bootstrap-5') }}
+    </div>
+@endif
+@endsection

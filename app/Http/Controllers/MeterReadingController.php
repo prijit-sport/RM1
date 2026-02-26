@@ -9,13 +9,22 @@ use Illuminate\Validation\Rule;
 
 class MeterReadingController extends Controller
 {
-    public function index(Meter $meter)
+    public function index(Meter $meter, Request $request)
     {
         $meter->load('room');
-        $readings = MeterReading::with('recordedBy')
-            ->where('meter_id', $meter->id)
-            ->latest('reading_date')
-            ->paginate(15);
+        
+        $query = MeterReading::with('recordedBy')
+            ->where('meter_id', $meter->id);
+
+        if ($request->filled('date')) {
+            $query->whereDate('reading_date', $request->date);
+        }
+
+        if ($request->filled('search')) {
+            $query->where('notes', 'like', '%' . $request->search . '%');
+        }
+
+        $readings = $query->latest('reading_date')->paginate(15);
 
         return view('meter_readings.index', compact('meter', 'readings'));
     }
@@ -82,5 +91,45 @@ class MeterReadingController extends Controller
         $reading->delete();
         return redirect()->route('meters.readings.index', $meter)->with('success', 'ลบรายการเลขมิเตอร์สำเร็จ');
     }
-}
 
+    public function export(Meter $meter, Request $request)
+    {
+        $query = MeterReading::with('recordedBy')
+            ->where('meter_id', $meter->id);
+
+        if ($request->filled('date')) {
+            $query->whereDate('reading_date', $request->date);
+        }
+
+        if ($request->filled('search')) {
+            $query->where('notes', 'like', '%' . $request->search . '%');
+        }
+
+        $readings = $query->latest('reading_date')->get();
+
+        $filename = 'meter_readings_' . $meter->meter_number . '_' . date('Ymd_His') . '.csv';
+        $headers = [
+            'Content-Type' => 'text/csv; charset=utf-8',
+            'Content-Disposition' => "attachment; filename=\"$filename\"",
+        ];
+
+        $callback = function () use ($readings) {
+            $file = fopen('php://output', 'w');
+            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
+            
+            fputcsv($file, ['วันที่', 'เลขมิเตอร์', 'ผู้บันทึก', 'หมายเหตุ']);
+
+            foreach ($readings as $reading) {
+                fputcsv($file, [
+                    $reading->reading_date ? $reading->reading_date->format('d/m/Y') : '-',
+                    number_format((float)$reading->reading_value, 2),
+                    $reading->recordedBy->name ?? '-',
+                    $reading->notes ?? '-',
+                ]);
+            }
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+}
