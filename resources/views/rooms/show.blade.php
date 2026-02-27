@@ -133,7 +133,7 @@
 
                 <div class="info-item">
                     <div class="info-label">ประเภทห้อง</div>
-                    <div class="info-value">{{ $room->room_type }}</div>
+                                        <div class="info-value">{{ enum_bi('room_type', $room->room_type) }}</div>
                 </div>
 
                 <div class="info-item">
@@ -150,13 +150,8 @@
                     <div class="info-label">สถานะ</div>
                     <span class="status {{ $room->status }}">
                         @php
-                            $statusLabels = [
-                                'available' => 'ว่าง',
-                                'occupied' => 'ใช้งาน',
-                                'maintenance' => 'ซ่อมบำรุง',
-                            ];
                         @endphp
-                        {{ $statusLabels[$room->status] ?? $room->status }}
+                        {{ enum_th('room_status', $room->status) }}
                     </span>
                 </div>
 
@@ -186,3 +181,6 @@
     </div>
 </body>
 </html>
+
+
+

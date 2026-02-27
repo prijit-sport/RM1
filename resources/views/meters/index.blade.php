@@ -9,7 +9,7 @@
     <h4 class="mb-0">รายการมิเตอร์</h4>
     <div class="d-flex gap-2">
         <a href="{{ route('meters.export') }}" class="btn btn-outline-success">
-            <i class="bi bi-download me-1"></i>Export
+            <i class="bi bi-download me-1"></i>{{ __("ui.export") }}
         </a>
         <a href="{{ route('meters.create') }}" class="btn btn-primary-custom">
             <i class="bi bi-plus-lg me-1"></i>เพิ่มมิเตอร์
@@ -40,7 +40,7 @@
             </div>
             <div class="col-md-2">
                 <button type="submit" class="btn btn-primary w-100">
-                    <i class="bi bi-search me-1"></i>ค้นหา
+                    <i class="bi bi-search me-1"></i>{{ __("ui.search") }}
                 </button>
             </div>
         </form>
@@ -123,3 +123,6 @@
     </div>
 @endif
 @endsection
+
+
+

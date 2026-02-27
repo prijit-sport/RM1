@@ -72,61 +72,29 @@ class ReportController extends Controller
         $occupancy_rate = $total_rooms > 0 ? round(($occupied_rooms / $total_rooms) * 100, 2) : 0;
         $total_revenue = Booking::where('status', '!=', 'cancelled')->sum('total_price');
 
-        $filename = 'report_' . date('Ymd_His') . '.csv';
-        $headers = [
-            'Content-Type' => 'text/csv; charset=UTF-16LE',
-            'Content-Disposition' => "attachment; filename=\"$filename\"",
+        $filename = 'report_' . date('Ymd_His') . '.xlsx';
+
+        $rows = [
+            ['Report Summary (สรุปรายงาน)'],
+            ['Generated At (วันที่สร้างรายงาน)', now()->format('d/m/Y H:i')],
+            [],
+            ['Category (หมวด)', 'Metric (รายการ)', 'Value (ค่า)'],
+            ['Room (ห้อง)', 'Total Rooms (ห้องทั้งหมด)', $total_rooms],
+            ['Room (ห้อง)', 'Available Rooms (ห้องว่าง)', $available_rooms],
+            ['Room (ห้อง)', 'Occupied Rooms (ห้องมีผู้พัก)', $occupied_rooms],
+            ['Room (ห้อง)', 'Maintenance Rooms (ห้องซ่อมบำรุง)', $maintenance_rooms],
+            ['Room (ห้อง)', 'Occupancy Rate (อัตราการเข้าพัก)', $occupancy_rate . '%'],
+            [],
+            ['Booking (การจอง)', 'Total Bookings (การจองทั้งหมด)', $total_bookings],
+            ['Booking (การจอง)', 'Pending (รอดำเนินการ)', $pending_bookings],
+            ['Booking (การจอง)', 'Confirmed (ยืนยันแล้ว)', $confirmed_bookings],
+            ['Booking (การจอง)', 'Checked In (เช็คอินแล้ว)', $checked_in],
+            ['Booking (การจอง)', 'Checked Out (เช็คเอาท์แล้ว)', $checked_out],
+            ['Booking (การจอง)', 'Cancelled (ยกเลิก)', $cancelled],
+            [],
+            ['Revenue (รายได้)', 'Total Revenue (รายได้รวม)', number_format($total_revenue, 2)],
         ];
 
-        $callback = function () use (
-            $total_rooms,
-            $occupied_rooms,
-            $available_rooms,
-            $maintenance_rooms,
-            $total_bookings,
-            $pending_bookings,
-            $confirmed_bookings,
-            $checked_in,
-            $checked_out,
-            $cancelled,
-            $occupancy_rate,
-            $total_revenue
-        ) {
-            $rows = [
-                ['รายงานสถิติและรายได้'],
-                ['วันที่', now()->format('d/m/Y H:i')],
-                [],
-                ['หมวด', 'รายการ', 'จำนวน'],
-                ['ห้อง', 'ห้องทั้งหมด', $total_rooms],
-                ['ห้อง', 'ห้องว่าง', $available_rooms],
-                ['ห้อง', 'ห้องใช้งาน', $occupied_rooms],
-                ['ห้อง', 'ระหว่างซ่อม', $maintenance_rooms],
-                ['ห้อง', 'อัตราการเข้าพัก', $occupancy_rate . '%'],
-                [],
-                ['การจอง', 'ทั้งหมด', $total_bookings],
-                ['การจอง', 'รอการยืนยัน', $pending_bookings],
-                ['การจอง', 'ยืนยันแล้ว', $confirmed_bookings],
-                ['การจอง', 'เช็คอินแล้ว', $checked_in],
-                ['การจอง', 'เช็คเอาท์แล้ว', $checked_out],
-                ['การจอง', 'ยกเลิก', $cancelled],
-                [],
-                ['รายได้', 'รายได้รวม', number_format($total_revenue, 2) . ' บาท'],
-            ];
-
-            $file = fopen('php://output', 'wb');
-            fwrite($file, chr(0xFF) . chr(0xFE));
-
-            foreach ($rows as $row) {
-                $line = '"' . implode('","', array_map(function ($value) {
-                    return str_replace('"', '""', (string) $value);
-                }, $row)) . '"' . "\r\n";
-
-                fwrite($file, mb_convert_encoding($line, 'UTF-16LE', 'UTF-8'));
-            }
-
-            fclose($file);
-        };
-
-        return response()->stream($callback, 200, $headers);
+        return xlsx_download($filename, $rows);
     }
 }

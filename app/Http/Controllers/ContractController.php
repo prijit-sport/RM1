@@ -71,38 +71,25 @@ class ContractController extends Controller
     public function export(Request $request)
     {
         $contracts = Contract::orderBy('id', 'desc')->get();
-        $filename = 'contracts_export_' . date('Y-m-d') . '.csv';
+        $filename = 'contracts_export_' . date('Y-m-d') . '.xlsx';
 
-        return response()->stream(function () use ($contracts) {
-            $rows = [];
-            $rows[] = ['Contract Number', 'Contractor', 'Description', 'Start Date', 'End Date', 'Amount', 'Status', 'Notes'];
+        $rows = [];
+        $rows[] = ['Contract Number (เลขที่สัญญา)', 'Contractor (ผู้รับจ้าง)', 'Description (รายละเอียด)', 'Start Date (วันที่เริ่ม)', 'End Date (วันที่สิ้นสุด)', 'Amount (จำนวนเงิน)', 'Status (สถานะ)', 'Notes (หมายเหตุ)'];
 
-            foreach ($contracts as $contract) {
-                $rows[] = [
-                    $contract->contract_number,
-                    $contract->contractor_name,
-                    $contract->description ?? '-',
-                    optional($contract->start_date)->format('d/m/Y'),
-                    optional($contract->end_date)->format('d/m/Y'),
-                    $contract->amount,
-                    $contract->status,
-                    $contract->notes ?? '-',
-                ];
-            }
+        foreach ($contracts as $contract) {
+            $rows[] = [
+                $contract->contract_number,
+                $contract->contractor_name,
+                $contract->description ?? '-',
+                optional($contract->start_date)->format('d/m/Y'),
+                optional($contract->end_date)->format('d/m/Y'),
+                $contract->amount,
+                $contract->status,
+                $contract->notes ?? '-',
+            ];
+        }
 
-            $handle = fopen('php://output', 'wb');
-            fwrite($handle, chr(0xFF) . chr(0xFE));
-            foreach ($rows as $row) {
-                $line = '"' . implode('","', array_map(function ($value) {
-                    return str_replace('"', '""', (string) $value);
-                }, $row)) . '"' . "\r\n";
-                fwrite($handle, mb_convert_encoding($line, 'UTF-16LE', 'UTF-8'));
-            }
-            fclose($handle);
-        }, 200, [
-            'Content-Type' => 'text/csv; charset=UTF-16LE',
-            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
-        ]);
+        return xlsx_download($filename, $rows);
     }
 
     public function generatePdf($id)
@@ -116,3 +103,4 @@ class ContractController extends Controller
         return view('contracts.index', compact('contracts'));
     }
 }
+

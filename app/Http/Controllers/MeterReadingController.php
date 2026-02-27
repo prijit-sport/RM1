@@ -103,33 +103,20 @@ class MeterReadingController extends Controller
         }
 
         $readings = $query->latest('reading_date')->get();
-        $filename = 'meter_readings_' . $meter->meter_number . '_' . date('Ymd_His') . '.csv';
+        $filename = 'meter_readings_' . $meter->meter_number . '_' . date('Ymd_His') . '.xlsx';
 
-        return response()->stream(function () use ($readings) {
-            $rows = [];
-            $rows[] = ['วันที่', 'เลขมิเตอร์', 'ผู้บันทึก', 'หมายเหตุ'];
+        $rows = [];
+        $rows[] = ['Date (วันที่)', 'Meter Reading (เลขมิเตอร์)', 'Recorded By (ผู้บันทึก)', 'Notes (หมายเหตุ)'];
 
-            foreach ($readings as $reading) {
-                $rows[] = [
-                    $reading->reading_date ? $reading->reading_date->format('d/m/Y') : '-',
-                    number_format((float) $reading->reading_value, 2),
-                    $reading->recordedBy->name ?? '-',
-                    $reading->notes ?? '-',
-                ];
-            }
+        foreach ($readings as $reading) {
+            $rows[] = [
+                $reading->reading_date ? $reading->reading_date->format('d/m/Y') : '-',
+                number_format((float) $reading->reading_value, 2),
+                $reading->recordedBy->name ?? '-',
+                $reading->notes ?? '-',
+            ];
+        }
 
-            $handle = fopen('php://output', 'wb');
-            fwrite($handle, chr(0xFF) . chr(0xFE));
-            foreach ($rows as $row) {
-                $line = '"' . implode('","', array_map(function ($value) {
-                    return str_replace('"', '""', (string) $value);
-                }, $row)) . '"' . "\r\n";
-                fwrite($handle, mb_convert_encoding($line, 'UTF-16LE', 'UTF-8'));
-            }
-            fclose($handle);
-        }, 200, [
-            'Content-Type' => 'text/csv; charset=UTF-16LE',
-            'Content-Disposition' => "attachment; filename=\"$filename\"",
-        ]);
+        return xlsx_download($filename, $rows);
     }
 }

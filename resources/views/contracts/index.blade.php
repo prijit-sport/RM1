@@ -12,7 +12,7 @@
             <i class="bi bi-exclamation-triangle me-1"></i>สัญญาหมดอายุเร็ว
         </a>
         <a href="{{ route('contracts.export') }}" class="btn btn-outline-success">
-            <i class="bi bi-download me-1"></i>Export
+            <i class="bi bi-download me-1"></i>{{ __("ui.export") }}
         </a>
         <a href="{{ route('contracts.create') }}" class="btn btn-primary-custom">
             <i class="bi bi-plus-lg me-1"></i>เพิ่มสัญญา
@@ -37,7 +37,7 @@
             </div>
             <div class="col-md-2">
                 <button type="submit" class="btn btn-primary w-100">
-                    <i class="bi bi-search me-1"></i>ค้นหา
+                    <i class="bi bi-search me-1"></i>{{ __("ui.search") }}
                 </button>
             </div>
         </form>
@@ -76,7 +76,7 @@
                                 ];
                             @endphp
                             <span class="badge {{ $statusClasses[$contract->status] ?? '' }}">
-                                {{ ucfirst($contract->status) }}
+                                {{ enum_bi('contract_status', $contract->status, ucfirst($contract->status)) }}
                             </span>
                         </td>
                         <td>
@@ -114,3 +114,9 @@
     </div>
 @endif
 @endsection
+
+
+
+
+
+

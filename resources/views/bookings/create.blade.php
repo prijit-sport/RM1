@@ -97,11 +97,11 @@
 
                 <div class="form-group">
                     <label for="room_id">ห้อง *</label>
-                    <select id="room_id" name="room_id" required>
+                                        <select id="room_id" name="room_id" required>
                         <option value="">-- เลือกห้อง --</option>
                         @foreach ($rooms as $room)
                             <option value="{{ $room->id }}" {{ old('room_id') == $room->id ? 'selected' : '' }}>
-                                #{{ $room->room_number }} - {{ $room->room_type }} (฿{{ $room->price_per_night }}/คืน)
+                                #{{ $room->room_number }} - {{ enum_bi('room_type', $room->room_type) }} (฿{{ $room->price_per_night }}/คืน)
                             </option>
                         @endforeach
                     </select>
@@ -172,3 +172,6 @@
     </div>
 </body>
 </html>
+
+
+

@@ -107,11 +107,11 @@
                     <label for="room_type">ประเภทห้อง *</label>
                     <select id="room_type" name="room_type" required>
                         <option value="">-- เลือกประเภท --</option>
-                        <option value="Single" {{ old('room_type') == 'Single' ? 'selected' : '' }}>Single</option>
-                        <option value="Double" {{ old('room_type') == 'Double' ? 'selected' : '' }}>Double</option>
-                        <option value="Twin" {{ old('room_type') == 'Twin' ? 'selected' : '' }}>Twin</option>
-                        <option value="Suite" {{ old('room_type') == 'Suite' ? 'selected' : '' }}>Suite</option>
-                        <option value="Deluxe" {{ old('room_type') == 'Deluxe' ? 'selected' : '' }}>Deluxe</option>
+                        <option value="Single" {{ old('room_type') == 'Single' ? 'selected' : '' }}>{{ enum_bi('room_type', 'Single') }}</option>
+                        <option value="Double" {{ old('room_type') == 'Double' ? 'selected' : '' }}>{{ enum_bi('room_type', 'Double') }}</option>
+                        <option value="Twin" {{ old('room_type') == 'Twin' ? 'selected' : '' }}>{{ enum_bi('room_type', 'Twin') }}</option>
+                        <option value="Suite" {{ old('room_type') == 'Suite' ? 'selected' : '' }}>{{ enum_bi('room_type', 'Suite') }}</option>
+                        <option value="Deluxe" {{ old('room_type') == 'Deluxe' ? 'selected' : '' }}>{{ enum_bi('room_type', 'Deluxe') }}</option>
                     </select>
                     @error('room_type')
                         <div class="error">{{ $message }}</div>

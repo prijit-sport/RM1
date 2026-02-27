@@ -101,7 +101,7 @@ class InvoiceController extends Controller
         $invoices = Invoice::with('booking')->get();
 
         $csvData = [];
-        $csvData[] = ['Invoice Number', 'Booking ID', 'Amount', 'Tax', 'Total', 'Issue Date', 'Due Date', 'Status', 'Notes'];
+        $csvData[] = ['Invoice Number (เลขใบแจ้งหนี้)', 'Booking ID (รหัสการจอง)', 'Amount (ยอดก่อนภาษี)', 'Tax (ภาษี)', 'Total (ยอดรวม)', 'Issue Date (วันที่ออก)', 'Due Date (วันครบกำหนด)', 'Status (สถานะ)', 'Notes (หมายเหตุ)'];
 
         foreach ($invoices as $invoice) {
             $csvData[] = [
@@ -117,24 +117,9 @@ class InvoiceController extends Controller
             ];
         }
 
-        $filename = 'invoices_export_' . date('Y-m-d') . '.csv';
+        $filename = 'invoices_export_' . date('Y-m-d') . '.xlsx';
 
-        return response()->stream(function () use ($csvData) {
-            $handle = fopen('php://output', 'wb');
-            fwrite($handle, chr(0xFF) . chr(0xFE));
-
-            foreach ($csvData as $row) {
-                $line = '"' . implode('","', array_map(function ($value) {
-                    return str_replace('"', '""', (string) $value);
-                }, $row)) . '"' . "\r\n";
-                fwrite($handle, mb_convert_encoding($line, 'UTF-16LE', 'UTF-8'));
-            }
-
-            fclose($handle);
-        }, 200, [
-            'Content-Type' => 'text/csv; charset=UTF-16LE',
-            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
-        ]);
+        return xlsx_download($filename, $csvData);
     }
 
     public function markAsPaid(Invoice $invoice)
@@ -157,3 +142,4 @@ class InvoiceController extends Controller
         return redirect()->route('invoices.index')->with('success', 'ส่งแจ้งเตือน ' . $pendingInvoices->count() . ' รายการแล้ว');
     }
 }
+

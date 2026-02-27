@@ -210,7 +210,7 @@
                                 };
                                 @endphp
                                 <span class="status-badge bg-{{ $statusClass }} bg-opacity-10 text-{{ $statusClass }}">
-                                    {{ $booking->status }}
+                                    {{ enum_bi('booking_status', $booking->status, $booking->status) }}
                                 </span>
                             </td>
                         </tr>
@@ -328,3 +328,9 @@
     });
 </script>
 @endpush
+
+
+
+
+
+

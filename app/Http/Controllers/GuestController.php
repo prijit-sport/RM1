@@ -94,7 +94,7 @@ class GuestController extends Controller
         $guests = Guest::all();
 
         $csvData = [];
-        $csvData[] = ['First Name', 'Last Name', 'Email', 'Phone', 'Address', 'City', 'Country', 'ID Number'];
+        $csvData[] = ['First Name (ชื่อ)', 'Last Name (นามสกุล)', 'Email (อีเมล)', 'Phone (เบอร์โทร)', 'Address (ที่อยู่)', 'City (เมือง)', 'Country (ประเทศ)', 'ID Number (เลขบัตร/พาสปอร์ต)'];
 
         foreach ($guests as $guest) {
             $csvData[] = [
@@ -109,23 +109,9 @@ class GuestController extends Controller
             ];
         }
 
-        $filename = 'guests_export_' . date('Y-m-d') . '.csv';
+        $filename = 'guests_export_' . date('Y-m-d') . '.xlsx';
 
-        return response()->stream(function () use ($csvData) {
-            $handle = fopen('php://output', 'wb');
-            fwrite($handle, chr(0xFF) . chr(0xFE));
-
-            foreach ($csvData as $row) {
-                $line = '"' . implode('","', array_map(function ($value) {
-                    return str_replace('"', '""', (string) $value);
-                }, $row)) . '"' . "\r\n";
-                fwrite($handle, mb_convert_encoding($line, 'UTF-16LE', 'UTF-8'));
-            }
-
-            fclose($handle);
-        }, 200, [
-            'Content-Type' => 'text/csv; charset=UTF-16LE',
-            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
-        ]);
+        return xlsx_download($filename, $csvData);
     }
 }
+

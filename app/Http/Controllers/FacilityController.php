@@ -71,37 +71,25 @@ class FacilityController extends Controller
     public function export(Request $request)
     {
         $facilities = Facility::orderBy('id', 'desc')->get();
-        $filename = 'facilities_export_' . date('Y-m-d') . '.csv';
+        $filename = 'facilities_export_' . date('Y-m-d') . '.xlsx';
 
-        return response()->stream(function () use ($facilities) {
-            $rows = [];
-            $rows[] = ['Name', 'Type', 'Location', 'Description', 'Status', 'Maintenance Schedule', 'Last Maintenance Date', 'Next Maintenance Date'];
+        $rows = [];
+        $rows[] = ['Name (ชื่อ)', 'Type (ประเภท)', 'Location (ตำแหน่ง)', 'Description (รายละเอียด)', 'Status (สถานะ)', 'Maintenance Schedule (รอบบำรุงรักษา)', 'Last Maintenance Date (วันที่บำรุงรักษาล่าสุด)', 'Next Maintenance Date (วันที่บำรุงรักษาถัดไป)'];
 
-            foreach ($facilities as $facility) {
-                $rows[] = [
-                    $facility->name,
-                    $facility->type,
-                    $facility->location,
-                    $facility->description ?? '-',
-                    $facility->status,
-                    $facility->maintenance_schedule ?? '-',
-                    optional($facility->last_maintenance_date)->format('d/m/Y'),
-                    optional($facility->next_maintenance_date)->format('d/m/Y'),
-                ];
-            }
+        foreach ($facilities as $facility) {
+            $rows[] = [
+                $facility->name,
+                $facility->type,
+                $facility->location,
+                $facility->description ?? '-',
+                $facility->status,
+                $facility->maintenance_schedule ?? '-',
+                optional($facility->last_maintenance_date)->format('d/m/Y'),
+                optional($facility->next_maintenance_date)->format('d/m/Y'),
+            ];
+        }
 
-            $handle = fopen('php://output', 'wb');
-            fwrite($handle, chr(0xFF) . chr(0xFE));
-            foreach ($rows as $row) {
-                $line = '"' . implode('","', array_map(function ($value) {
-                    return str_replace('"', '""', (string) $value);
-                }, $row)) . '"' . "\r\n";
-                fwrite($handle, mb_convert_encoding($line, 'UTF-16LE', 'UTF-8'));
-            }
-            fclose($handle);
-        }, 200, [
-            'Content-Type' => 'text/csv; charset=UTF-16LE',
-            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
-        ]);
+        return xlsx_download($filename, $rows);
     }
 }
+

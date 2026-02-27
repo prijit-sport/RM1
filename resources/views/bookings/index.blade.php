@@ -9,7 +9,7 @@
     <h4 class="mb-0">รายการการจอง</h4>
     <div class="d-flex gap-2">
         <a href="{{ route('bookings.export') }}" class="btn btn-outline-success">
-            <i class="bi bi-download me-1"></i>Export
+            <i class="bi bi-download me-1"></i>{{ __("ui.export") }}
         </a>
         <a href="{{ route('bookings.create') }}" class="btn btn-primary-custom">
             <i class="bi bi-plus-lg me-1"></i>เพิ่มการจองใหม่
@@ -36,7 +36,7 @@
             </div>
             <div class="col-md-2">
                 <button type="submit" class="btn btn-primary w-100">
-                    <i class="bi bi-search me-1"></i>ค้นหา
+                    <i class="bi bi-search me-1"></i>{{ __("ui.search") }}
                 </button>
             </div>
         </form>
@@ -75,16 +75,9 @@
                                     'checked_out' => 'bg-secondary',
                                     'cancelled' => 'bg-danger',
                                 ];
-                                $statusLabels = [
-                                    'pending' => 'รอการยืนยัน',
-                                    'confirmed' => 'ยืนยันแล้ว',
-                                    'checked_in' => 'เช็คอินแล้ว',
-                                    'checked_out' => 'เช็คเอาท์แล้ว',
-                                    'cancelled' => 'ยกเลิก',
-                                ];
                             @endphp
                             <span class="badge {{ $statusClasses[$booking->status] ?? '' }}">
-                                {{ $statusLabels[$booking->status] ?? $booking->status }}
+                                {{ enum_th('booking_status', $booking->status) }}
                             </span>
                         </td>
                         <td>
@@ -135,3 +128,8 @@
     </div>
 @endif
 @endsection
+
+
+
+
+

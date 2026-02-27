@@ -43,7 +43,7 @@
             </div>
             <div class="col-md-2">
                 <button type="submit" class="btn btn-primary w-100">
-                    <i class="bi bi-search me-1"></i>ค้นหา
+                    <i class="bi bi-search me-1"></i>{{ __("ui.search") }}
                 </button>
             </div>
         </form>
@@ -105,3 +105,6 @@
     </div>
 @endif
 @endsection
+
+
+

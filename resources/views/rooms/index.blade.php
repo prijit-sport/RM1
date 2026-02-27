@@ -12,7 +12,7 @@
             <i class="bi bi-plus-circle me-1"></i>เพิ่มหลายห้อง
         </a>
         <a href="{{ route('rooms.export') }}" class="btn btn-outline-success">
-            <i class="bi bi-download me-1"></i>Export
+            <i class="bi bi-download me-1"></i>{{ __("ui.export") }}
         </a>
         <a href="{{ route('rooms.create') }}" class="btn btn-primary-custom">
             <i class="bi bi-plus-lg me-1"></i>เพิ่มห้องใหม่
@@ -38,14 +38,14 @@
             <div class="col-md-3">
                 <select name="room_type" class="form-select">
                     <option value="">ทุกประเภท</option>
-                    <option value="Standard" {{ request('room_type') == 'Standard' ? 'selected' : '' }}>Standard</option>
-                    <option value="Deluxe" {{ request('room_type') == 'Deluxe' ? 'selected' : '' }}>Deluxe</option>
-                    <option value="Suite" {{ request('room_type') == 'Suite' ? 'selected' : '' }}>Suite</option>
+                    <option value="Standard" {{ request('room_type') == 'Standard' ? 'selected' : '' }}>{{ enum_bi('room_type', 'Standard') }}</option>
+                    <option value="Deluxe" {{ request('room_type') == 'Deluxe' ? 'selected' : '' }}>{{ enum_bi('room_type', 'Deluxe') }}</option>
+                    <option value="Suite" {{ request('room_type') == 'Suite' ? 'selected' : '' }}>{{ enum_bi('room_type', 'Suite') }}</option>
                 </select>
             </div>
             <div class="col-md-2">
                 <button type="submit" class="btn btn-primary w-100">
-                    <i class="bi bi-search me-1"></i>ค้นหา
+                    <i class="bi bi-search me-1"></i>{{ __("ui.search") }}
                 </button>
             </div>
         </form>
@@ -113,7 +113,7 @@
                 @forelse ($rooms as $room)
                     <tr>
                         <td><strong>{{ $room->room_number }}</strong></td>
-                        <td>{{ $room->room_type }}</td>
+                                                <td>{{ enum_bi('room_type', $room->room_type) }}</td>
                         <td>฿{{ number_format($room->price_per_night, 2) }}</td>
                         <td>{{ $room->capacity }} คน</td>
                         <td>
@@ -123,14 +123,9 @@
                                     'occupied' => 'status-occupied',
                                     'maintenance' => 'status-maintenance',
                                 ];
-                                $statusLabels = [
-                                    'available' => 'ว่าง',
-                                    'occupied' => 'ใช้งาน',
-                                    'maintenance' => 'ซ่อมบำรุง',
-                                ];
                             @endphp
                             <span class="status-badge {{ $statusClasses[$room->status] ?? '' }}">
-                                {{ $statusLabels[$room->status] ?? $room->status }}
+                                {{ enum_th('room_status', $room->status) }}
                             </span>
                         </td>
                         <td>
@@ -172,3 +167,9 @@
     </div>
 @endif
 @endsection
+
+
+
+
+
+

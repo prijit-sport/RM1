@@ -12,7 +12,7 @@
             <i class="bi bi-plus-circle me-1"></i>สร้างหลายใบ
         </a>
         <a href="{{ route('invoices.export') }}" class="btn btn-outline-success">
-            <i class="bi bi-download me-1"></i>Export
+            <i class="bi bi-download me-1"></i>{{ __("ui.export") }}
         </a>
         <a href="{{ route('invoices.create') }}" class="btn btn-primary-custom">
             <i class="bi bi-plus-lg me-1"></i>เพิ่มใบแจ้งหนี้
@@ -38,7 +38,7 @@
             </div>
             <div class="col-md-2">
                 <button type="submit" class="btn btn-primary w-100">
-                    <i class="bi bi-search me-1"></i>ค้นหา
+                    <i class="bi bi-search me-1"></i>{{ __("ui.search") }}
                 </button>
             </div>
         </form>
@@ -78,7 +78,7 @@
                                 ];
                             @endphp
                             <span class="badge {{ $statusClasses[$invoice->status] ?? '' }}">
-                                {{ ucfirst($invoice->status) }}
+                                {{ enum_bi('invoice_status', $invoice->status, ucfirst($invoice->status)) }}
                             </span>
                         </td>
                         <td>
@@ -124,3 +124,9 @@
     </div>
 @endif
 @endsection
+
+
+
+
+
+

@@ -4,29 +4,22 @@ namespace App\Http\Controllers;
 
 use App\Models\Room;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class RoomController extends Controller
 {
-    /**
-     * Display a listing of the rooms.
-     */
     public function index()
     {
         $rooms = Room::paginate(10);
+
         return view('rooms.index', compact('rooms'));
     }
 
-    /**
-     * Show the form for creating a new room.
-     */
     public function create()
     {
         return view('rooms.create');
     }
 
-    /**
-     * Store a newly created room in storage.
-     */
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -38,29 +31,22 @@ class RoomController extends Controller
             'description' => 'nullable|max:500',
         ]);
 
+        $validated['description'] = $this->sanitizeNullableText($validated['description'] ?? null);
         Room::create($validated);
-        return redirect()->route('rooms.index')->with('success', 'ห้องถูกสร้างสำเร็จ');
+
+        return redirect()->route('rooms.index')->with('success', 'บันทึกห้องเรียบร้อยแล้ว');
     }
 
-    /**
-     * Display the specified room.
-     */
     public function show(Room $room)
     {
         return view('rooms.show', compact('room'));
     }
 
-    /**
-     * Show the form for editing the specified room.
-     */
     public function edit(Room $room)
     {
         return view('rooms.edit', compact('room'));
     }
 
-    /**
-     * Update the specified room in storage.
-     */
     public function update(Request $request, Room $room)
     {
         $validated = $request->validate([
@@ -72,57 +58,58 @@ class RoomController extends Controller
             'description' => 'nullable|max:500',
         ]);
 
+        $validated['description'] = $this->sanitizeNullableText($validated['description'] ?? null);
         $room->update($validated);
-        return redirect()->route('rooms.show', $room)->with('success', 'ห้องถูกอัปเดตสำเร็จ');
+
+        return redirect()->route('rooms.show', $room)->with('success', 'อัปเดตห้องเรียบร้อยแล้ว');
     }
 
-    /**
-     * Remove the specified room from storage.
-     */
     public function destroy(Room $room)
     {
         $room->delete();
-        return redirect()->route('rooms.index')->with('success', 'ห้องถูกลบสำเร็จ');
+
+        return redirect()->route('rooms.index')->with('success', 'ลบห้องเรียบร้อยแล้ว');
     }
 
-    /**
-     * Show the form for bulk creating rooms.
-     */
     public function bulkCreate()
     {
         return view('rooms.bulk-create');
     }
 
-    /**
-     * Store multiple rooms at once.
-     */
     public function bulkStore(Request $request)
     {
-        $rooms = $request->input('rooms', []);
-        
-        foreach ($rooms as $roomData) {
-            Room::create([
-                'room_number' => $roomData['room_number'],
-                'room_type' => $roomData['room_type'],
-                'price_per_night' => $roomData['price_per_night'],
-                'capacity' => $roomData['capacity'],
-                'status' => $roomData['status'] ?? 'available',
-                'description' => $roomData['description'] ?? null,
-            ]);
-        }
+        $validated = $request->validate([
+            'rooms' => 'required|array|min:1',
+            'rooms.*.room_number' => 'required|max:10|distinct|unique:rooms,room_number',
+            'rooms.*.room_type' => 'required|max:50',
+            'rooms.*.price_per_night' => 'required|numeric|min:0',
+            'rooms.*.capacity' => 'required|integer|min:1',
+            'rooms.*.status' => 'nullable|in:available,occupied,maintenance',
+            'rooms.*.description' => 'nullable|max:500',
+        ]);
 
-        return redirect()->route('rooms.index')->with('success', 'ห้องถูกสร้าง ' . count($rooms) . ' ห้องสำเร็จ');
+        DB::transaction(function () use ($validated) {
+            foreach ($validated['rooms'] as $roomData) {
+                Room::create([
+                    'room_number' => $roomData['room_number'],
+                    'room_type' => $roomData['room_type'],
+                    'price_per_night' => $roomData['price_per_night'],
+                    'capacity' => $roomData['capacity'],
+                    'status' => $roomData['status'] ?? 'available',
+                    'description' => $this->sanitizeNullableText($roomData['description'] ?? null),
+                ]);
+            }
+        });
+
+        return redirect()->route('rooms.index')->with('success', 'สร้างห้องสำเร็จ ' . count($validated['rooms']) . ' ห้อง');
     }
 
-    /**
-     * Export rooms to CSV.
-     */
     public function export(Request $request)
     {
         $rooms = Room::all();
 
         $csvData = [];
-        $csvData[] = ['Room Number', 'Room Type', 'Price/Night', 'Capacity', 'Status', 'Description'];
+        $csvData[] = ['Room Number (เลขห้อง)', 'Room Type (ประเภทห้อง)', 'Price/Night (ราคาต่อคืน)', 'Capacity (ความจุ)', 'Status (สถานะ)', 'Description (รายละเอียด)'];
 
         foreach ($rooms as $room) {
             $csvData[] = [
@@ -131,27 +118,23 @@ class RoomController extends Controller
                 $room->price_per_night,
                 $room->capacity,
                 $room->status,
-                $room->description,
+                csv_sanitize_text($room->description),
             ];
         }
 
-        $filename = 'rooms_export_' . date('Y-m-d') . '.csv';
+        $filename = 'rooms_export_' . date('Y-m-d') . '.xlsx';
 
-        return response()->stream(function () use ($csvData) {
-            $handle = fopen('php://output', 'wb');
-            fwrite($handle, chr(0xFF) . chr(0xFE));
+        return xlsx_download($filename, $csvData);
+    }
 
-            foreach ($csvData as $row) {
-                $line = '"' . implode('","', array_map(function ($value) {
-                    return str_replace('"', '""', (string) $value);
-                }, $row)) . '"' . "\r\n";
-                fwrite($handle, mb_convert_encoding($line, 'UTF-16LE', 'UTF-8'));
-            }
+    private function sanitizeNullableText(?string $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
 
-            fclose($handle);
-        }, 200, [
-            'Content-Type' => 'text/csv; charset=UTF-16LE',
-            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
-        ]);
+        $clean = csv_sanitize_text($value);
+
+        return $clean === '' ? null : $clean;
     }
 }

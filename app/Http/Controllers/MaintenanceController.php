@@ -76,39 +76,26 @@ class MaintenanceController extends Controller
     public function export(Request $request)
     {
         $maintenances = Maintenance::with('room')->orderBy('id', 'desc')->get();
-        $filename = 'maintenances_export_' . date('Y-m-d') . '.csv';
+        $filename = 'maintenances_export_' . date('Y-m-d') . '.xlsx';
 
-        return response()->stream(function () use ($maintenances) {
-            $rows = [];
-            $rows[] = ['Room', 'Issue Type', 'Description', 'Reported Date', 'Completed Date', 'Status', 'Assigned To', 'Cost', 'Notes'];
+        $rows = [];
+        $rows[] = ['Room (ห้อง)', 'Issue Type (ประเภทปัญหา)', 'Description (รายละเอียด)', 'Reported Date (วันที่แจ้ง)', 'Completed Date (วันที่เสร็จ)', 'Status (สถานะ)', 'Assigned To (ผู้รับผิดชอบ)', 'Cost (ค่าใช้จ่าย)', 'Notes (หมายเหตุ)'];
 
-            foreach ($maintenances as $maintenance) {
-                $rows[] = [
-                    $maintenance->room->room_number ?? '-',
-                    $maintenance->issue_type,
-                    $maintenance->description ?? '-',
-                    optional($maintenance->reported_date)->format('d/m/Y'),
-                    optional($maintenance->completed_date)->format('d/m/Y'),
-                    $maintenance->status,
-                    $maintenance->assigned_to ?? '-',
-                    $maintenance->cost ?? '-',
-                    $maintenance->notes ?? '-',
-                ];
-            }
+        foreach ($maintenances as $maintenance) {
+            $rows[] = [
+                $maintenance->room->room_number ?? '-',
+                $maintenance->issue_type,
+                $maintenance->description ?? '-',
+                optional($maintenance->reported_date)->format('d/m/Y'),
+                optional($maintenance->completed_date)->format('d/m/Y'),
+                $maintenance->status,
+                $maintenance->assigned_to ?? '-',
+                $maintenance->cost ?? '-',
+                $maintenance->notes ?? '-',
+            ];
+        }
 
-            $handle = fopen('php://output', 'wb');
-            fwrite($handle, chr(0xFF) . chr(0xFE));
-            foreach ($rows as $row) {
-                $line = '"' . implode('","', array_map(function ($value) {
-                    return str_replace('"', '""', (string) $value);
-                }, $row)) . '"' . "\r\n";
-                fwrite($handle, mb_convert_encoding($line, 'UTF-16LE', 'UTF-8'));
-            }
-            fclose($handle);
-        }, 200, [
-            'Content-Type' => 'text/csv; charset=UTF-16LE',
-            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
-        ]);
+        return xlsx_download($filename, $rows);
     }
 
     public function startWork($id)
@@ -129,3 +116,4 @@ class MaintenanceController extends Controller
         return redirect()->route('maintenances.show', $maintenance)->with('success', 'ปิดงานซ่อมสำเร็จ');
     }
 }
+

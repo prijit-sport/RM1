@@ -85,37 +85,25 @@ class BookingController extends Controller
     public function export(Request $request)
     {
         $bookings = Booking::with(['room', 'guest'])->orderBy('id', 'desc')->get();
-        $filename = 'bookings_export_' . date('Y-m-d') . '.csv';
+        $filename = 'bookings_export_' . date('Y-m-d') . '.xlsx';
 
-        return response()->stream(function () use ($bookings) {
-            $rows = [];
-            $rows[] = ['Booking ID', 'Room', 'Guest', 'Check In', 'Check Out', 'Total Price', 'Status', 'Notes'];
+        $rows = [];
+        $rows[] = ['Booking ID (รหัสการจอง)', 'Room (ห้อง)', 'Guest (ผู้เข้าพัก)', 'Check In (วันเข้า)', 'Check Out (วันออก)', 'Total Price (ราคารวม)', 'Status (สถานะ)', 'Notes (หมายเหตุ)'];
 
-            foreach ($bookings as $booking) {
-                $rows[] = [
-                    $booking->id,
-                    $booking->room->room_number ?? '-',
-                    trim(($booking->guest->first_name ?? '') . ' ' . ($booking->guest->last_name ?? '')) ?: '-',
-                    optional($booking->check_in_date)->format('d/m/Y'),
-                    optional($booking->check_out_date)->format('d/m/Y'),
-                    $booking->total_price,
-                    $booking->status,
-                    $booking->notes ?? '-',
-                ];
-            }
+        foreach ($bookings as $booking) {
+            $rows[] = [
+                $booking->id,
+                $booking->room->room_number ?? '-',
+                trim(($booking->guest->first_name ?? '') . ' ' . ($booking->guest->last_name ?? '')) ?: '-',
+                optional($booking->check_in_date)->format('d/m/Y'),
+                optional($booking->check_out_date)->format('d/m/Y'),
+                $booking->total_price,
+                $booking->status,
+                $booking->notes ?? '-',
+            ];
+        }
 
-            $handle = fopen('php://output', 'wb');
-            fwrite($handle, chr(0xFF) . chr(0xFE));
-            foreach ($rows as $row) {
-                $line = '"' . implode('","', array_map(function ($value) {
-                    return str_replace('"', '""', (string) $value);
-                }, $row)) . '"' . "\r\n";
-                fwrite($handle, mb_convert_encoding($line, 'UTF-16LE', 'UTF-8'));
-            }
-            fclose($handle);
-        }, 200, [
-            'Content-Type' => 'text/csv; charset=UTF-16LE',
-            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
-        ]);
+        return xlsx_download($filename, $rows);
     }
 }
+

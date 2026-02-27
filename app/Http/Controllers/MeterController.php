@@ -119,36 +119,23 @@ class MeterController extends Controller
         }
 
         $meters = $query->orderBy('id', 'desc')->get();
-        $filename = 'meters_' . date('Ymd_His') . '.csv';
+        $filename = 'meters_' . date('Ymd_His') . '.xlsx';
 
-        return response()->stream(function () use ($meters) {
-            $rows = [];
-            $rows[] = ['ห้อง', 'ประเภท', 'เลขมิเตอร์', 'หน่วย', 'สถานะ', 'วันที่ติดตั้ง', 'หมายเหตุ'];
+        $rows = [];
+        $rows[] = ['Room (ห้อง)', 'Type (ประเภท)', 'Meter Number (เลขมิเตอร์)', 'Unit (หน่วย)', 'Status (สถานะ)', 'Installed Date (วันที่ติดตั้ง)', 'Notes (หมายเหตุ)'];
 
-            foreach ($meters as $meter) {
-                $rows[] = [
-                    $meter->room->room_number ?? '-',
-                    $meter->type === 'water' ? 'น้ำ' : 'ไฟฟ้า',
-                    $meter->meter_number,
-                    $meter->unit ?? '-',
-                    $meter->is_active ? 'ใช้งาน' : 'ปิดใช้งาน',
-                    $meter->installed_at ? $meter->installed_at->format('d/m/Y') : '-',
-                    $meter->notes ?? '-',
-                ];
-            }
+        foreach ($meters as $meter) {
+            $rows[] = [
+                $meter->room->room_number ?? '-',
+                $meter->type === 'water' ? 'Water' : 'Electric',
+                $meter->meter_number,
+                $meter->unit ?? '-',
+                $meter->is_active ? 'Active' : 'Inactive',
+                $meter->installed_at ? $meter->installed_at->format('d/m/Y') : '-',
+                $meter->notes ?? '-',
+            ];
+        }
 
-            $handle = fopen('php://output', 'wb');
-            fwrite($handle, chr(0xFF) . chr(0xFE));
-            foreach ($rows as $row) {
-                $line = '"' . implode('","', array_map(function ($value) {
-                    return str_replace('"', '""', (string) $value);
-                }, $row)) . '"' . "\r\n";
-                fwrite($handle, mb_convert_encoding($line, 'UTF-16LE', 'UTF-8'));
-            }
-            fclose($handle);
-        }, 200, [
-            'Content-Type' => 'text/csv; charset=UTF-16LE',
-            'Content-Disposition' => "attachment; filename=\"$filename\"",
-        ]);
+        return xlsx_download($filename, $rows);
     }
 }

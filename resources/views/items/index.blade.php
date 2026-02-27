@@ -9,7 +9,7 @@
     <h4 class="mb-0">รายการสินค้า</h4>
     <div class="d-flex gap-2">
         <a href="{{ route('items.export') }}" class="btn btn-outline-success">
-            <i class="bi bi-download me-1"></i>Export
+            <i class="bi bi-download me-1"></i>{{ __("ui.export") }}
         </a>
         <a href="{{ route('items.create') }}" class="btn btn-primary-custom">
             <i class="bi bi-plus-lg me-1"></i>เพิ่มสินค้า
@@ -35,7 +35,7 @@
             </div>
             <div class="col-md-2">
                 <button type="submit" class="btn btn-primary w-100">
-                    <i class="bi bi-search me-1"></i>ค้นหา
+                    <i class="bi bi-search me-1"></i>{{ __("ui.search") }}
                 </button>
             </div>
         </form>
@@ -69,15 +69,10 @@
                                     'active' => 'bg-success',
                                     'inactive' => 'bg-secondary',
                                     'out_of_stock' => 'bg-danger',
-                                ];
-                                $statusLabels = [
-                                    'active' => 'ใช้งาน',
-                                    'inactive' => 'ไม่ใช้งาน',
-                                    'out_of_stock' => 'สินค้าหมด',
-                                ];
+                                ];
                             @endphp
                             <span class="badge {{ $statusClasses[$item->status] ?? '' }}">
-                                {{ $statusLabels[$item->status] ?? $item->status }}
+                                {{ enum_th('item_status', $item->status) }}
                             </span>
                         </td>
                         <td>
@@ -119,3 +114,7 @@
     </div>
 @endif
 @endsection
+
+
+
+

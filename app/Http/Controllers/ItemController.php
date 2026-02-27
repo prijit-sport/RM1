@@ -67,35 +67,23 @@ class ItemController extends Controller
     public function export(Request $request)
     {
         $items = Item::orderBy('id', 'desc')->get();
-        $filename = 'items_export_' . date('Y-m-d') . '.csv';
+        $filename = 'items_export_' . date('Y-m-d') . '.xlsx';
 
-        return response()->stream(function () use ($items) {
-            $rows = [];
-            $rows[] = ['Name', 'Description', 'Quantity', 'Price', 'Category', 'Status'];
+        $rows = [];
+        $rows[] = ['Name (ชื่อ)', 'Description (รายละเอียด)', 'Quantity (จำนวน)', 'Price (ราคา)', 'Category (หมวดหมู่)', 'Status (สถานะ)'];
 
-            foreach ($items as $item) {
-                $rows[] = [
-                    $item->name,
-                    $item->description ?? '-',
-                    $item->quantity,
-                    $item->price,
-                    $item->category,
-                    $item->status,
-                ];
-            }
+        foreach ($items as $item) {
+            $rows[] = [
+                $item->name,
+                $item->description ?? '-',
+                $item->quantity,
+                $item->price,
+                $item->category,
+                $item->status,
+            ];
+        }
 
-            $handle = fopen('php://output', 'wb');
-            fwrite($handle, chr(0xFF) . chr(0xFE));
-            foreach ($rows as $row) {
-                $line = '"' . implode('","', array_map(function ($value) {
-                    return str_replace('"', '""', (string) $value);
-                }, $row)) . '"' . "\r\n";
-                fwrite($handle, mb_convert_encoding($line, 'UTF-16LE', 'UTF-8'));
-            }
-            fclose($handle);
-        }, 200, [
-            'Content-Type' => 'text/csv; charset=UTF-16LE',
-            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
-        ]);
+        return xlsx_download($filename, $rows);
     }
 }
+

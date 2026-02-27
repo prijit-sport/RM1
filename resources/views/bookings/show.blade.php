@@ -136,7 +136,7 @@
             <div class="info-group">
                 <div class="info-item">
                     <div class="info-label">ห้อม</div>
-                    <div class="info-value">#{{ $booking->room->room_number }} ({{ $booking->room->room_type }})</div>
+                                        <div class="info-value">#{{ $booking->room->room_number }} ({{ enum_bi('room_type', $booking->room->room_type) }})</div>
                 </div>
 
                 <div class="info-item">
@@ -168,15 +168,8 @@
                     <div class="info-label">สถานะ</div>
                     <span class="status {{ $booking->status }}">
                         @php
-                            $statusLabels = [
-                                'pending' => 'รอการยืนยัน',
-                                'confirmed' => 'ยืนยันแล้ว',
-                                'checked_in' => 'เช็คอินแล้ว',
-                                'checked_out' => 'เช็คเอาท์แล้ว',
-                                'cancelled' => 'ยกเลิก',
-                            ];
                         @endphp
-                        {{ $statusLabels[$booking->status] ?? $booking->status }}
+                        {{ enum_th('booking_status', $booking->status) }}
                     </span>
                 </div>
 
@@ -206,3 +199,6 @@
     </div>
 </body>
 </html>
+
+
+

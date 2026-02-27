@@ -41,3 +41,4 @@ class AuthController extends Controller
         return redirect('/')->with('success', 'ออกจากระบบสำเร็จ');
     }
 }
+

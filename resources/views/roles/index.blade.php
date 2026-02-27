@@ -9,7 +9,7 @@
     <h4 class="mb-0">รายการบทบาท</h4>
     <div class="d-flex gap-2">
         <a href="{{ route('roles.export') }}" class="btn btn-outline-success">
-            <i class="bi bi-download me-1"></i>Export
+            <i class="bi bi-download me-1"></i>{{ __("ui.export") }}
         </a>
         <a href="{{ route('roles.create') }}" class="btn btn-primary-custom">
             <i class="bi bi-plus-lg me-1"></i>เพิ่มบทบาท
@@ -74,3 +74,6 @@
     </div>
 @endif
 @endsection
+
+
+

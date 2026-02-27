@@ -9,7 +9,7 @@
     <h4 class="mb-0">รายการการบำรุงรักษา</h4>
     <div class="d-flex gap-2">
         <a href="{{ route('maintenances.export') }}" class="btn btn-outline-success">
-            <i class="bi bi-download me-1"></i>Export
+            <i class="bi bi-download me-1"></i>{{ __("ui.export") }}
         </a>
         <a href="{{ route('maintenances.create') }}" class="btn btn-primary-custom">
             <i class="bi bi-plus-lg me-1"></i>เพิ่มการบำรุงรักษา
@@ -35,7 +35,7 @@
             </div>
             <div class="col-md-2">
                 <button type="submit" class="btn btn-primary w-100">
-                    <i class="bi bi-search me-1"></i>ค้นหา
+                    <i class="bi bi-search me-1"></i>{{ __("ui.search") }}
                 </button>
             </div>
         </form>
@@ -72,15 +72,9 @@
                                     'completed' => 'bg-success',
                                     'cancelled' => 'bg-secondary',
                                 ];
-                                $statusLabels = [
-                                    'pending' => 'รอดำเนินการ',
-                                    'in_progress' => 'กำลังดำเนินการ',
-                                    'completed' => 'เสร็จสิ้น',
-                                    'cancelled' => 'ยกเลิก',
-                                ];
                             @endphp
                             <span class="badge {{ $statusClasses[$maintenance->status] ?? '' }}">
-                                {{ $statusLabels[$maintenance->status] ?? $maintenance->status }}
+                                {{ enum_th('maintenance_status', $maintenance->status) }}
                             </span>
                         </td>
                         <td>{{ $maintenance->cost ? number_format($maintenance->cost, 2) . ' ฿' : '-' }}</td>
@@ -132,3 +126,7 @@
     </div>
 @endif
 @endsection
+
+
+
+

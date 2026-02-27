@@ -159,8 +159,8 @@
             <div class="card-body p-0">
                 @forelse ($popular_rooms as $room)
                     <div class="list-group-item d-flex justify-content-between align-items-center py-3">
-                        <span>
-                            <strong>#{{ $room->room_number }}</strong> - {{ $room->room_type }}
+                                                <span>
+                            <strong>#{{ $room->room_number }}</strong> - {{ enum_bi('room_type', $room->room_type) }}
                         </span>
                         <span class="badge bg-primary rounded-pill">{{ $room->bookings_count }} การจอง</span>
                     </div>
@@ -175,3 +175,9 @@
     </div>
 </div>
 @endsection
+
+
+
+
+
+
