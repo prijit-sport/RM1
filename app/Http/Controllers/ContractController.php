@@ -32,7 +32,7 @@ class ContractController extends Controller
         ]);
 
         Contract::create($validated);
-        return redirect()->route('contracts.index')->with('success', 'สัญญาเพิ่มสำเร็จ');
+        return redirect()->route('contracts.index')->with('success', __('ui.contract.created'));
     }
 
     public function show(Contract $contract)
@@ -59,13 +59,13 @@ class ContractController extends Controller
         ]);
 
         $contract->update($validated);
-        return redirect()->route('contracts.show', $contract)->with('success', 'สัญญาอัปเดตสำเร็จ');
+        return redirect()->route('contracts.show', $contract)->with('success', __('ui.contract.updated'));
     }
 
     public function destroy(Contract $contract)
     {
         $contract->delete();
-        return redirect()->route('contracts.index')->with('success', 'สัญญาลบสำเร็จ');
+        return redirect()->route('contracts.index')->with('success', __('ui.contract.deleted'));
     }
 
     public function export(Request $request)
@@ -74,7 +74,7 @@ class ContractController extends Controller
         $filename = 'contracts_export_' . date('Y-m-d') . '.xlsx';
 
         $rows = [];
-        $rows[] = ['Contract Number (เลขที่สัญญา)', 'Contractor (ผู้รับจ้าง)', 'Description (รายละเอียด)', 'Start Date (วันที่เริ่ม)', 'End Date (วันที่สิ้นสุด)', 'Amount (จำนวนเงิน)', 'Status (สถานะ)', 'Notes (หมายเหตุ)'];
+        $rows[] = ['Contract Number', 'Contractor', 'Description', 'Start Date', 'End Date', 'Amount', 'Status', 'Notes'];
 
         foreach ($contracts as $contract) {
             $rows[] = [
@@ -94,7 +94,7 @@ class ContractController extends Controller
 
     public function generatePdf($id)
     {
-        return redirect()->route('contracts.show', $id)->with('info', 'PDF generation coming soon');
+        return redirect()->route('contracts.show', $id)->with('info', __('ui.common.pdf_coming_soon'));
     }
 
     public function expiring()
@@ -103,4 +103,5 @@ class ContractController extends Controller
         return view('contracts.index', compact('contracts'));
     }
 }
+
 

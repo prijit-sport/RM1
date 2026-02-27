@@ -32,7 +32,7 @@ class FacilityController extends Controller
         ]);
 
         Facility::create($validated);
-        return redirect()->route('facilities.index')->with('success', 'Facility เพิ่มสำเร็จ');
+        return redirect()->route('facilities.index')->with('success', __('ui.facility.created'));
     }
 
     public function show(Facility $facility)
@@ -59,13 +59,13 @@ class FacilityController extends Controller
         ]);
 
         $facility->update($validated);
-        return redirect()->route('facilities.show', $facility)->with('success', 'Facility อัปเดตสำเร็จ');
+        return redirect()->route('facilities.show', $facility)->with('success', __('ui.facility.updated'));
     }
 
     public function destroy(Facility $facility)
     {
         $facility->delete();
-        return redirect()->route('facilities.index')->with('success', 'Facility ลบสำเร็จ');
+        return redirect()->route('facilities.index')->with('success', __('ui.facility.deleted'));
     }
 
     public function export(Request $request)
@@ -74,7 +74,7 @@ class FacilityController extends Controller
         $filename = 'facilities_export_' . date('Y-m-d') . '.xlsx';
 
         $rows = [];
-        $rows[] = ['Name (ชื่อ)', 'Type (ประเภท)', 'Location (ตำแหน่ง)', 'Description (รายละเอียด)', 'Status (สถานะ)', 'Maintenance Schedule (รอบบำรุงรักษา)', 'Last Maintenance Date (วันที่บำรุงรักษาล่าสุด)', 'Next Maintenance Date (วันที่บำรุงรักษาถัดไป)'];
+        $rows[] = ['Name', 'Type', 'Location', 'Description', 'Status', 'Maintenance Schedule', 'Last Maintenance Date', 'Next Maintenance Date'];
 
         foreach ($facilities as $facility) {
             $rows[] = [
@@ -92,4 +92,5 @@ class FacilityController extends Controller
         return xlsx_download($filename, $rows);
     }
 }
+
 

@@ -56,7 +56,7 @@ class MeterController extends Controller
         $validated['is_active'] = (bool) ($validated['is_active'] ?? true);
         $meter = Meter::create($validated);
 
-        return redirect()->route('meters.show', $meter)->with('success', 'เพิ่มมิเตอร์สำเร็จ');
+        return redirect()->route('meters.show', $meter)->with('success', __('ui.meter.created'));
     }
 
     public function show(Meter $meter)
@@ -93,13 +93,13 @@ class MeterController extends Controller
         $validated['is_active'] = (bool) ($validated['is_active'] ?? false);
         $meter->update($validated);
 
-        return redirect()->route('meters.show', $meter)->with('success', 'อัปเดตมิเตอร์สำเร็จ');
+        return redirect()->route('meters.show', $meter)->with('success', __('ui.meter.updated'));
     }
 
     public function destroy(Meter $meter)
     {
         $meter->delete();
-        return redirect()->route('meters.index')->with('success', 'ลบมิเตอร์สำเร็จ');
+        return redirect()->route('meters.index')->with('success', __('ui.meter.deleted'));
     }
 
     public function export(Request $request)
@@ -122,7 +122,7 @@ class MeterController extends Controller
         $filename = 'meters_' . date('Ymd_His') . '.xlsx';
 
         $rows = [];
-        $rows[] = ['Room (ห้อง)', 'Type (ประเภท)', 'Meter Number (เลขมิเตอร์)', 'Unit (หน่วย)', 'Status (สถานะ)', 'Installed Date (วันที่ติดตั้ง)', 'Notes (หมายเหตุ)'];
+        $rows[] = ['Room', 'Type', 'Meter Number', 'Unit', 'Status', 'Installed Date', 'Notes'];
 
         foreach ($meters as $meter) {
             $rows[] = [
@@ -139,3 +139,4 @@ class MeterController extends Controller
         return xlsx_download($filename, $rows);
     }
 }
+

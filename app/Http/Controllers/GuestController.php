@@ -41,7 +41,7 @@ class GuestController extends Controller
         ]);
 
         Guest::create($validated);
-        return redirect()->route('guests.index')->with('success', 'แขกถูกสร้างสำเร็จ');
+        return redirect()->route('guests.index')->with('success', __('ui.guest.created'));
     }
 
     /**
@@ -77,7 +77,7 @@ class GuestController extends Controller
         ]);
 
         $guest->update($validated);
-        return redirect()->route('guests.show', $guest)->with('success', 'แขกถูกอัปเดตสำเร็จ');
+        return redirect()->route('guests.show', $guest)->with('success', __('ui.guest.updated'));
     }
 
     /**
@@ -86,7 +86,7 @@ class GuestController extends Controller
     public function destroy(Guest $guest)
     {
         $guest->delete();
-        return redirect()->route('guests.index')->with('success', 'แขกถูกลบสำเร็จ');
+        return redirect()->route('guests.index')->with('success', __('ui.guest.deleted'));
     }
 
     public function export(Request $request)
@@ -94,7 +94,7 @@ class GuestController extends Controller
         $guests = Guest::all();
 
         $csvData = [];
-        $csvData[] = ['First Name (ชื่อ)', 'Last Name (นามสกุล)', 'Email (อีเมล)', 'Phone (เบอร์โทร)', 'Address (ที่อยู่)', 'City (เมือง)', 'Country (ประเทศ)', 'ID Number (เลขบัตร/พาสปอร์ต)'];
+        $csvData[] = ['First Name', 'Last Name', 'Email', 'Phone', 'Address', 'City', 'Country', 'ID Number'];
 
         foreach ($guests as $guest) {
             $csvData[] = [
@@ -114,4 +114,5 @@ class GuestController extends Controller
         return xlsx_download($filename, $csvData);
     }
 }
+
 

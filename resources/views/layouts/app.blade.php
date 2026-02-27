@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="th">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'ระบบจัดการอพาร์ทเมนต์')</title>
+    <title>@yield('title', 'ระบบจัดการอพาร์ทเมนท์')</title>
     
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -249,7 +249,7 @@
     <aside class="sidebar">
         <div class="sidebar-brand">
             <i class="bi bi-building"></i>
-            <span>ระบบจัดการอพาร์ทเมนต์</span>
+            <span>ระบบจัดการอพาร์ทเมนท์</span>
         </div>
         
         <nav class="sidebar-menu">
@@ -339,14 +339,19 @@
             <div class="d-flex align-items-center gap-3">
                 <!-- Notifications -->
                 <div class="dropdown">
-                    <button class="btn btn-light position-relative notification-badge" data-bs-toggle="dropdown">
+                    <button class="btn btn-light position-relative {{ ($notificationCount ?? 0) > 0 ? 'notification-badge' : '' }}" data-bs-toggle="dropdown">
                         <i class="bi bi-bell"></i>
+                        @if(($notificationCount ?? 0) > 0)
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                                {{ $notificationCount > 99 ? '99+' : $notificationCount }}
+                            </span>
+                        @endif
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end">
                         <li><h6 class="dropdown-header">การแจ้งเตือน</h6></li>
                         @if(isset($notifications) && $notifications->count() > 0)
                             @foreach($notifications as $notification)
-                            <li><a class="dropdown-item" href="#">{{ $notification->message }}</a></li>
+                            <li><a class="dropdown-item" href="{{ $notification['url'] }}">{{ $notification['message'] }}</a></li>
                             @endforeach
                         @else
                             <li><span class="dropdown-item text-muted">ไม่มีการแจ้งเตือน</span></li>
@@ -368,8 +373,8 @@
                             <small class="text-muted">{{ auth()->user()->role->name ?? 'User' }}</small>
                         </span></li>
                         <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="#"><i class="bi bi-person me-2"></i>โปรไฟล์</a></li>
-                        <li><a class="dropdown-item" href="#"><i class="bi bi-gear me-2"></i>ตั้งค่า</a></li>
+                        <li><a class="dropdown-item" href="{{ route('profile.edit') }}"><i class="bi bi-person me-2"></i>โปรไฟล์</a></li>
+                        <li><a class="dropdown-item" href="{{ route('settings.edit') }}"><i class="bi bi-gear me-2"></i>ตั้งค่า</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li>
                             <form action="{{ route('logout') }}" method="POST">
@@ -441,3 +446,5 @@
     @stack('scripts')
 </body>
 </html>
+
+

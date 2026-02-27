@@ -30,7 +30,7 @@ class ItemController extends Controller
         ]);
 
         Item::create($validated);
-        return redirect()->route('items.index')->with('success', 'Item เพิ่มสำเร็จ');
+        return redirect()->route('items.index')->with('success', __('ui.item.created'));
     }
 
     public function show(Item $item)
@@ -55,13 +55,13 @@ class ItemController extends Controller
         ]);
 
         $item->update($validated);
-        return redirect()->route('items.show', $item)->with('success', 'Item อัปเดตสำเร็จ');
+        return redirect()->route('items.show', $item)->with('success', __('ui.item.updated'));
     }
 
     public function destroy(Item $item)
     {
         $item->delete();
-        return redirect()->route('items.index')->with('success', 'Item ลบสำเร็จ');
+        return redirect()->route('items.index')->with('success', __('ui.item.deleted'));
     }
 
     public function export(Request $request)
@@ -70,7 +70,7 @@ class ItemController extends Controller
         $filename = 'items_export_' . date('Y-m-d') . '.xlsx';
 
         $rows = [];
-        $rows[] = ['Name (ชื่อ)', 'Description (รายละเอียด)', 'Quantity (จำนวน)', 'Price (ราคา)', 'Category (หมวดหมู่)', 'Status (สถานะ)'];
+        $rows[] = ['Name', 'Description', 'Quantity', 'Price', 'Category', 'Status'];
 
         foreach ($items as $item) {
             $rows[] = [
@@ -86,4 +86,5 @@ class ItemController extends Controller
         return xlsx_download($filename, $rows);
     }
 }
+
 

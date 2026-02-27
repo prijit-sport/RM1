@@ -35,7 +35,7 @@ class MaintenanceController extends Controller
         ]);
 
         Maintenance::create($validated);
-        return redirect()->route('maintenances.index')->with('success', 'ซ่อมบำรุงเพิ่มสำเร็จ');
+        return redirect()->route('maintenances.index')->with('success', __('ui.maintenance.created'));
     }
 
     public function show(Maintenance $maintenance)
@@ -64,13 +64,13 @@ class MaintenanceController extends Controller
         ]);
 
         $maintenance->update($validated);
-        return redirect()->route('maintenances.show', $maintenance)->with('success', 'ซ่อมบำรุงอัปเดตสำเร็จ');
+        return redirect()->route('maintenances.show', $maintenance)->with('success', __('ui.maintenance.updated'));
     }
 
     public function destroy(Maintenance $maintenance)
     {
         $maintenance->delete();
-        return redirect()->route('maintenances.index')->with('success', 'ซ่อมบำรุงลบสำเร็จ');
+        return redirect()->route('maintenances.index')->with('success', __('ui.maintenance.deleted'));
     }
 
     public function export(Request $request)
@@ -79,7 +79,7 @@ class MaintenanceController extends Controller
         $filename = 'maintenances_export_' . date('Y-m-d') . '.xlsx';
 
         $rows = [];
-        $rows[] = ['Room (ห้อง)', 'Issue Type (ประเภทปัญหา)', 'Description (รายละเอียด)', 'Reported Date (วันที่แจ้ง)', 'Completed Date (วันที่เสร็จ)', 'Status (สถานะ)', 'Assigned To (ผู้รับผิดชอบ)', 'Cost (ค่าใช้จ่าย)', 'Notes (หมายเหตุ)'];
+        $rows[] = ['Room', 'Issue Type', 'Description', 'Reported Date', 'Completed Date', 'Status', 'Assigned To', 'Cost', 'Notes'];
 
         foreach ($maintenances as $maintenance) {
             $rows[] = [
@@ -102,7 +102,7 @@ class MaintenanceController extends Controller
     {
         $maintenance = Maintenance::findOrFail($id);
         $maintenance->update(['status' => 'in_progress']);
-        return redirect()->route('maintenances.show', $maintenance)->with('success', 'เริ่มงานซ่อมแล้ว');
+        return redirect()->route('maintenances.show', $maintenance)->with('success', __('ui.maintenance.started'));
     }
 
     public function completeWork($id)
@@ -113,7 +113,8 @@ class MaintenanceController extends Controller
             'completed_date' => now()->toDateString(),
         ]);
 
-        return redirect()->route('maintenances.show', $maintenance)->with('success', 'ปิดงานซ่อมสำเร็จ');
+        return redirect()->route('maintenances.show', $maintenance)->with('success', __('ui.maintenance.completed'));
     }
 }
+
 

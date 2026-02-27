@@ -1,7 +1,10 @@
 <?php
+
 namespace App\Http\Controllers;
-use App\Models\Invoice;
+
 use App\Models\Booking;
+use App\Models\Invoice;
+use App\Support\AuditLogger;
 use Illuminate\Http\Request;
 
 class InvoiceController extends Controller
@@ -9,12 +12,14 @@ class InvoiceController extends Controller
     public function index()
     {
         $invoices = Invoice::with('booking')->paginate(10);
+
         return view('invoices.index', compact('invoices'));
     }
 
     public function create()
     {
         $bookings = Booking::all();
+
         return view('invoices.create', compact('bookings'));
     }
 
@@ -31,8 +36,10 @@ class InvoiceController extends Controller
             'status' => 'required|in:draft,sent,paid,overdue,cancelled',
             'notes' => 'nullable|max:500',
         ]);
+
         Invoice::create($validated);
-        return redirect()->route('invoices.index')->with('success', 'Invoice เพิ่มสำเร็จ');
+
+        return redirect()->route('invoices.index')->with('success', __('ui.invoice.created'));
     }
 
     public function show(Invoice $invoice)
@@ -43,6 +50,7 @@ class InvoiceController extends Controller
     public function edit(Invoice $invoice)
     {
         $bookings = Booking::all();
+
         return view('invoices.edit', compact('invoice', 'bookings'));
     }
 
@@ -59,26 +67,30 @@ class InvoiceController extends Controller
             'status' => 'required|in:draft,sent,paid,overdue,cancelled',
             'notes' => 'nullable|max:500',
         ]);
+
         $invoice->update($validated);
-        return redirect()->route('invoices.show', $invoice)->with('success', 'Invoice อัปเดตสำเร็จ');
+
+        return redirect()->route('invoices.show', $invoice)->with('success', __('ui.invoice.updated'));
     }
 
     public function destroy(Invoice $invoice)
     {
         $invoice->delete();
-        return redirect()->route('invoices.index')->with('success', 'Invoice ลบสำเร็จ');
+
+        return redirect()->route('invoices.index')->with('success', __('ui.invoice.deleted'));
     }
 
     public function bulkCreate()
     {
         $bookings = Booking::all();
+
         return view('invoices.bulk-create', compact('bookings'));
     }
 
     public function bulkStore(Request $request)
     {
         $invoices = $request->input('invoices', []);
-        
+
         foreach ($invoices as $invoiceData) {
             Invoice::create([
                 'booking_id' => $invoiceData['booking_id'],
@@ -93,53 +105,58 @@ class InvoiceController extends Controller
             ]);
         }
 
-        return redirect()->route('invoices.index')->with('success', 'Invoice ถูกสร้าง ' . count($invoices) . ' รายการสำเร็จ');
+        return redirect()->route('invoices.index')->with('success', __('ui.invoice.bulk_created', ['count' => count($invoices)]));
     }
 
     public function export(Request $request)
     {
-        $invoices = Invoice::with('booking')->get();
+        $headers = ['Invoice Number', 'Booking ID', 'Amount', 'Tax', 'Total', 'Issue Date', 'Due Date', 'Status', 'Notes'];
 
-        $csvData = [];
-        $csvData[] = ['Invoice Number (เลขใบแจ้งหนี้)', 'Booking ID (รหัสการจอง)', 'Amount (ยอดก่อนภาษี)', 'Tax (ภาษี)', 'Total (ยอดรวม)', 'Issue Date (วันที่ออก)', 'Due Date (วันครบกำหนด)', 'Status (สถานะ)', 'Notes (หมายเหตุ)'];
-
-        foreach ($invoices as $invoice) {
-            $csvData[] = [
-                $invoice->invoice_number,
-                $invoice->booking_id,
-                $invoice->amount,
-                $invoice->tax,
-                $invoice->total,
-                $invoice->issue_date,
-                $invoice->due_date,
-                $invoice->status,
-                $invoice->notes,
-            ];
-        }
-
-        $filename = 'invoices_export_' . date('Y-m-d') . '.xlsx';
-
-        return xlsx_download($filename, $csvData);
+        return csv_stream_download(
+            'invoices_export_' . date('Y-m-d') . '.csv',
+            $headers,
+            static function (callable $push): void {
+                Invoice::query()
+                    ->orderBy('id')
+                    ->chunk(500, function ($invoices) use ($push): void {
+                        foreach ($invoices as $invoice) {
+                            $push([
+                                $invoice->invoice_number,
+                                $invoice->booking_id,
+                                $invoice->amount,
+                                $invoice->tax,
+                                $invoice->total,
+                                $invoice->issue_date,
+                                $invoice->due_date,
+                                $invoice->status,
+                                $invoice->notes,
+                            ]);
+                        }
+                    });
+            }
+        );
     }
 
     public function markAsPaid(Invoice $invoice)
     {
         $invoice->update(['status' => 'paid']);
-        return redirect()->route('invoices.show', $invoice)->with('success', 'Invoice ถูกชำระเงินแล้ว');
+        AuditLogger::log('invoice.marked_paid', $invoice);
+
+        return redirect()->route('invoices.show', $invoice)->with('success', __('ui.invoice.marked_paid'));
     }
 
     public function generatePdf(Invoice $invoice)
     {
-        return redirect()->route('invoices.show', $invoice)->with('info', 'PDF generation coming soon');
+        return redirect()->route('invoices.show', $invoice)->with('info', __('ui.common.pdf_coming_soon'));
     }
 
     public function remindAll()
     {
-        $pendingInvoices = Invoice::where('status', 'pending')
-            ->where('due_date', '<', now())
+        $pendingInvoices = Invoice::whereIn('status', ['sent', 'overdue'])
+            ->whereDate('due_date', '<', now())
             ->get();
-        
-        return redirect()->route('invoices.index')->with('success', 'ส่งแจ้งเตือน ' . $pendingInvoices->count() . ' รายการแล้ว');
+
+        return redirect()->route('invoices.index')->with('success', __('ui.invoice.reminders_sent', ['count' => $pendingInvoices->count()]));
     }
 }
 

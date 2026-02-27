@@ -3,20 +3,18 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
-use App\Models\Role;
+use App\Support\AuditLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
-    // Show login form
     public function showLogin()
     {
         return view('auth.login');
     }
 
-    // Handle login
     public function login(Request $request)
     {
         $credentials = $request->validate([
@@ -24,21 +22,34 @@ class AuthController extends Controller
             'password' => 'required',
         ]);
 
-        if (Auth::attempt($credentials)) {
-            $request->session()->regenerate();
-            return redirect('/dashboard')->with('success', 'เข้าสู่ระบบสำเร็จ');
+        $user = User::where('email', $credentials['email'])->first();
+        if ($user && Hash::check($credentials['password'], $user->password) && ! $user->is_active) {
+            return back()->withErrors(['email' => __('ui.auth.inactive')])->onlyInput('email');
         }
 
-        return back()->withErrors(['email' => 'ข้อมูลการเข้าสู่ระบบไม่ถูกต้อง'])->onlyInput('email');
+        if (Auth::attempt([
+            'email' => $credentials['email'],
+            'password' => $credentials['password'],
+            'is_active' => true,
+        ])) {
+            $request->session()->regenerate();
+            AuditLogger::log('auth.login', Auth::user());
+
+            return redirect('/dashboard')->with('success', __('ui.auth.login_success'));
+        }
+
+        return back()
+            ->withErrors(['email' => __('ui.auth.login_failed')])
+            ->onlyInput('email');
     }
 
-    // Logout
     public function logout(Request $request)
     {
+        AuditLogger::log('auth.logout', Auth::user());
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-        return redirect('/')->with('success', 'ออกจากระบบสำเร็จ');
+
+        return redirect('/')->with('success', __('ui.auth.logout_success'));
     }
 }
-

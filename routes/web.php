@@ -14,6 +14,7 @@ use App\Http\Controllers\FacilityController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\MeterController;
 use App\Http\Controllers\MeterReadingController;
+use App\Http\Controllers\AccountController;
 use Illuminate\Support\Facades\Route;
 
 // Auth routes
@@ -31,6 +32,12 @@ Route::get('/dashboard', [DashboardController::class, 'index'])->middleware('aut
 
 // Protected routes - require authentication
 Route::middleware('auth')->group(function () {
+    // Account routes
+    Route::get('profile', [AccountController::class, 'editProfile'])->name('profile.edit');
+    Route::put('profile', [AccountController::class, 'updateProfile'])->name('profile.update');
+    Route::get('settings', [AccountController::class, 'editSettings'])->name('settings.edit');
+    Route::put('settings', [AccountController::class, 'updateSettings'])->name('settings.update');
+
     // Room routes
     Route::get('rooms/bulk-create', [RoomController::class, 'bulkCreate'])->name('rooms.bulk-create');
     Route::post('rooms/bulk-store', [RoomController::class, 'bulkStore'])->name('rooms.bulk-store');
@@ -43,8 +50,8 @@ Route::middleware('auth')->group(function () {
 
     // Booking routes
     Route::get('bookings/export', [BookingController::class, 'export'])->name('bookings.export');
-    Route::post('bookings/{id}/confirm', [BookingController::class, 'confirm'])->name('bookings.confirm');
-    Route::post('bookings/{id}/cancel', [BookingController::class, 'cancel'])->name('bookings.cancel');
+    Route::post('bookings/{booking}/confirm', [BookingController::class, 'confirm'])->name('bookings.confirm');
+    Route::post('bookings/{booking}/cancel', [BookingController::class, 'cancel'])->name('bookings.cancel');
     Route::resource('bookings', BookingController::class);
 
     // Report routes

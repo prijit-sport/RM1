@@ -37,7 +37,7 @@ class RoleController extends Controller
             $role->permissions()->sync($request->input('permissions'));
         }
 
-        return redirect()->route('roles.index')->with('success', 'Role เพิ่มสำเร็จ');
+        return redirect()->route('roles.index')->with('success', __('ui.role.created'));
     }
 
     public function show(Role $role)
@@ -68,13 +68,13 @@ class RoleController extends Controller
             $role->permissions()->sync($request->input('permissions'));
         }
 
-        return redirect()->route('roles.show', $role)->with('success', 'Role อัปเดตสำเร็จ');
+        return redirect()->route('roles.show', $role)->with('success', __('ui.role.updated'));
     }
 
     public function destroy(Role $role)
     {
         $role->delete();
-        return redirect()->route('roles.index')->with('success', 'Role ลบสำเร็จ');
+        return redirect()->route('roles.index')->with('success', __('ui.role.deleted'));
     }
 
     public function export(Request $request)
@@ -83,7 +83,7 @@ class RoleController extends Controller
         $filename = 'roles_export_' . date('Y-m-d') . '.xlsx';
 
         $rows = [];
-        $rows[] = ['Name (ชื่อบทบาท)', 'Description (รายละเอียด)', 'Permissions (สิทธิ์การใช้งาน)'];
+        $rows[] = ['Name', 'Description', 'Permissions'];
 
         foreach ($roles as $role) {
             $rows[] = [
@@ -96,4 +96,5 @@ class RoleController extends Controller
         return xlsx_download($filename, $rows);
     }
 }
+
 

@@ -50,7 +50,7 @@ class MeterReadingController extends Controller
         $validated['recorded_by'] = auth()->id();
 
         MeterReading::create($validated);
-        return redirect()->route('meters.readings.index', $meter)->with('success', 'บันทึกเลขมิเตอร์สำเร็จ');
+        return redirect()->route('meters.readings.index', $meter)->with('success', __('ui.meter_reading.created'));
     }
 
     public function edit(Meter $meter, MeterReading $reading)
@@ -79,14 +79,14 @@ class MeterReadingController extends Controller
         $validated['recorded_by'] = auth()->id();
         $reading->update($validated);
 
-        return redirect()->route('meters.readings.index', $meter)->with('success', 'แก้ไขเลขมิเตอร์สำเร็จ');
+        return redirect()->route('meters.readings.index', $meter)->with('success', __('ui.meter_reading.updated'));
     }
 
     public function destroy(Meter $meter, MeterReading $reading)
     {
         abort_unless($reading->meter_id === $meter->id, 404);
         $reading->delete();
-        return redirect()->route('meters.readings.index', $meter)->with('success', 'ลบรายการเลขมิเตอร์สำเร็จ');
+        return redirect()->route('meters.readings.index', $meter)->with('success', __('ui.meter_reading.deleted'));
     }
 
     public function export(Meter $meter, Request $request)
@@ -106,7 +106,7 @@ class MeterReadingController extends Controller
         $filename = 'meter_readings_' . $meter->meter_number . '_' . date('Ymd_His') . '.xlsx';
 
         $rows = [];
-        $rows[] = ['Date (วันที่)', 'Meter Reading (เลขมิเตอร์)', 'Recorded By (ผู้บันทึก)', 'Notes (หมายเหตุ)'];
+        $rows[] = ['Date', 'Meter Reading', 'Recorded By', 'Notes'];
 
         foreach ($readings as $reading) {
             $rows[] = [
@@ -120,3 +120,4 @@ class MeterReadingController extends Controller
         return xlsx_download($filename, $rows);
     }
 }
+

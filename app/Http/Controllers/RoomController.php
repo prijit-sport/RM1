@@ -34,7 +34,7 @@ class RoomController extends Controller
         $validated['description'] = $this->sanitizeNullableText($validated['description'] ?? null);
         Room::create($validated);
 
-        return redirect()->route('rooms.index')->with('success', 'บันทึกห้องเรียบร้อยแล้ว');
+        return redirect()->route('rooms.index')->with('success', __('ui.room.created'));
     }
 
     public function show(Room $room)
@@ -61,14 +61,14 @@ class RoomController extends Controller
         $validated['description'] = $this->sanitizeNullableText($validated['description'] ?? null);
         $room->update($validated);
 
-        return redirect()->route('rooms.show', $room)->with('success', 'อัปเดตห้องเรียบร้อยแล้ว');
+        return redirect()->route('rooms.show', $room)->with('success', __('ui.room.updated'));
     }
 
     public function destroy(Room $room)
     {
         $room->delete();
 
-        return redirect()->route('rooms.index')->with('success', 'ลบห้องเรียบร้อยแล้ว');
+        return redirect()->route('rooms.index')->with('success', __('ui.room.deleted'));
     }
 
     public function bulkCreate()
@@ -101,7 +101,7 @@ class RoomController extends Controller
             }
         });
 
-        return redirect()->route('rooms.index')->with('success', 'สร้างห้องสำเร็จ ' . count($validated['rooms']) . ' ห้อง');
+        return redirect()->route('rooms.index')->with('success', __('ui.room.bulk_created', ['count' => count($validated['rooms'])]));
     }
 
     public function export(Request $request)
@@ -109,7 +109,7 @@ class RoomController extends Controller
         $rooms = Room::all();
 
         $csvData = [];
-        $csvData[] = ['Room Number (เลขห้อง)', 'Room Type (ประเภทห้อง)', 'Price/Night (ราคาต่อคืน)', 'Capacity (ความจุ)', 'Status (สถานะ)', 'Description (รายละเอียด)'];
+        $csvData[] = ['Room Number', 'Room Type', 'Price/Night', 'Capacity', 'Status', 'Description'];
 
         foreach ($rooms as $room) {
             $csvData[] = [
@@ -138,3 +138,4 @@ class RoomController extends Controller
         return $clean === '' ? null : $clean;
     }
 }
+
