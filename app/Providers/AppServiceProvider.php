@@ -60,28 +60,28 @@ class AppServiceProvider extends ServiceProvider
 
             if ($overdueInvoices > 0) {
                 $notifications->push([
-                    'message' => "มีใบแจ้งหนี้เกินกำหนด {$overdueInvoices} รายการ",
+                    'message' => __('ui.notifications.overdue_invoices', ['count' => $overdueInvoices]),
                     'url' => route('invoices.index'),
                 ]);
             }
 
             if ($pendingMaintenance > 0) {
                 $notifications->push([
-                    'message' => "มีงานซ่อมที่ยังไม่เสร็จ {$pendingMaintenance} รายการ",
+                    'message' => __('ui.notifications.pending_maintenance', ['count' => $pendingMaintenance]),
                     'url' => route('maintenances.index'),
                 ]);
             }
 
             if ($pendingBookings > 0) {
                 $notifications->push([
-                    'message' => "มีการจองรอยืนยัน {$pendingBookings} รายการ",
+                    'message' => __('ui.notifications.pending_bookings', ['count' => $pendingBookings]),
                     'url' => route('bookings.index', ['status' => 'pending']),
                 ]);
             }
 
             if ($expiringContracts > 0) {
                 $notifications->push([
-                    'message' => "มีสัญญาใกล้หมดอายุ {$expiringContracts} รายการ",
+                    'message' => __('ui.notifications.expiring_contracts', ['count' => $expiringContracts]),
                     'url' => route('contracts.expiring'),
                 ]);
             }
@@ -95,3 +95,4 @@ class AppServiceProvider extends ServiceProvider
         });
     }
 }
+

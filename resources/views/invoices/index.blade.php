@@ -30,7 +30,8 @@
             <div class="col-md-3">
                 <select name="status" class="form-select">
                     <option value="">ทุกสถานะ</option>
-                    <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>รอชำระ</option>
+                    <option value="draft" {{ request('status') == 'draft' ? 'selected' : '' }}>Draft</option>
+                    <option value="sent" {{ request('status') == 'sent' ? 'selected' : '' }}>Sent</option>
                     <option value="paid" {{ request('status') == 'paid' ? 'selected' : '' }}>ชำระแล้ว</option>
                     <option value="overdue" {{ request('status') == 'overdue' ? 'selected' : '' }}>เกินกำหนด</option>
                     <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>ยกเลิก</option>
@@ -71,7 +72,8 @@
                         <td>
                             @php
                                 $statusClasses = [
-                                    'pending' => 'bg-warning',
+                                    'draft' => 'bg-secondary',
+                                    'sent' => 'bg-warning',
                                     'paid' => 'bg-success',
                                     'overdue' => 'bg-danger',
                                     'cancelled' => 'bg-secondary',
@@ -89,7 +91,7 @@
                                 <a href="{{ route('invoices.edit', $invoice) }}" class="btn btn-sm btn-outline-warning">
                                     <i class="bi bi-pencil"></i>
                                 </a>
-                                @if($invoice->status == 'pending')
+                                @if(in_array($invoice->status, ['sent', 'overdue']))
                                     <form action="{{ route('invoices.markAsPaid', $invoice) }}" method="POST" class="d-inline">
                                         @csrf
                                         <button type="submit" class="btn btn-sm btn-outline-success" onclick="return confirm('ยืนยันการชำระเงิน?')">

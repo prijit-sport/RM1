@@ -92,9 +92,9 @@ class ContractController extends Controller
         return xlsx_download($filename, $rows);
     }
 
-    public function generatePdf($id)
+    public function generatePdf(Contract $contract)
     {
-        return redirect()->route('contracts.show', $id)->with('info', __('ui.common.pdf_coming_soon'));
+        return redirect()->route('contracts.show', $contract)->with('info', __('ui.common.pdf_coming_soon'));
     }
 
     public function expiring()

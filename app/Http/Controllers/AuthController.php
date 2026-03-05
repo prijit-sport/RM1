@@ -10,8 +10,10 @@ use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
-    public function showLogin()
+    public function showLogin(Request $request)
     {
+        $request->session()->regenerateToken();
+
         return view('auth.login');
     }
 

@@ -9,7 +9,6 @@ use App\Models\Invoice;
 use App\Models\Maintenance;
 use App\Models\Contract;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
@@ -23,12 +22,11 @@ class DashboardController extends Controller
         $maintenanceCount = Room::where('status', 'maintenance')->count();
 
         // Pending notifications
-        $pendingPayments = Invoice::where('status', 'pending')
-            ->where('due_date', '<', Carbon::now())
+        $pendingPayments = Invoice::whereIn('status', ['sent', 'overdue'])
+            ->whereDate('due_date', '<', Carbon::today())
             ->count();
         
-        $pendingMaintenance = Maintenance::where('status', 'pending')
-            ->orWhere('status', 'in_progress')
+        $pendingMaintenance = Maintenance::whereIn('status', ['pending', 'in_progress'])
             ->count();
 
         // Recent bookings
@@ -38,8 +36,8 @@ class DashboardController extends Controller
             ->get();
 
         // Pending invoices
-        $pendingInvoices = Invoice::with('guest')
-            ->where('status', 'pending')
+        $pendingInvoices = Invoice::with(['booking.guest'])
+            ->whereIn('status', ['sent', 'overdue'])
             ->orderBy('due_date', 'asc')
             ->take(5)
             ->get();
@@ -84,9 +82,8 @@ class DashboardController extends Controller
         }
 
         // Get contracts expiring soon (within 30 days)
-        $expiringContracts = Contract::with('guest', 'room')
-            ->where('end_date', '>=', Carbon::now())
-            ->where('end_date', '<=', Carbon::now()->addDays(30))
+        $expiringContracts = Contract::whereDate('end_date', '>=', Carbon::today())
+            ->whereDate('end_date', '<=', Carbon::today()->copy()->addDays(30))
             ->count();
 
         return view('dashboard.index', compact(

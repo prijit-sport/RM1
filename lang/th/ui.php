@@ -12,6 +12,12 @@ return [
         'login_failed' => 'ข้อมูลเข้าสู่ระบบไม่ถูกต้อง',
         'logout_success' => 'ออกจากระบบสำเร็จ',
     ],
+    'notifications' => [
+        'overdue_invoices' => 'มีใบแจ้งหนี้เกินกำหนด :count รายการ',
+        'pending_maintenance' => 'มีงานซ่อมที่ยังไม่เสร็จ :count รายการ',
+        'pending_bookings' => 'มีการจองรอยืนยัน :count รายการ',
+        'expiring_contracts' => 'มีสัญญาใกล้หมดอายุ :count รายการ',
+    ],
     'account' => [
         'profile_updated' => 'บันทึกข้อมูลโปรไฟล์เรียบร้อยแล้ว',
         'settings_updated' => 'บันทึกการตั้งค่าเรียบร้อยแล้ว',
@@ -89,6 +95,7 @@ return [
         'updated' => 'อัปเดตใบแจ้งหนี้เรียบร้อยแล้ว',
         'deleted' => 'ลบใบแจ้งหนี้เรียบร้อยแล้ว',
         'marked_paid' => 'บันทึกการชำระเงินเรียบร้อยแล้ว',
+        'mark_paid_only_sent_overdue' => 'สามารถบันทึกชำระเงินได้เฉพาะใบแจ้งหนี้ที่ส่งแล้วหรือเกินกำหนดเท่านั้น',
         'bulk_created' => 'สร้างใบแจ้งหนี้สำเร็จ :count รายการ',
         'reminders_sent' => 'ส่งแจ้งเตือนแล้ว :count รายการ',
     ],

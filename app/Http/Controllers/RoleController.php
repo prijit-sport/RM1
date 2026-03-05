@@ -26,6 +26,7 @@ class RoleController extends Controller
             'name' => 'required|unique:roles|max:50',
             'description' => 'nullable|max:255',
             'permissions' => 'array',
+            'permissions.*' => 'exists:permissions,id',
         ]);
 
         $role = Role::create([
@@ -33,9 +34,7 @@ class RoleController extends Controller
             'description' => $validated['description'] ?? null,
         ]);
 
-        if ($request->has('permissions')) {
-            $role->permissions()->sync($request->input('permissions'));
-        }
+        $role->permissions()->sync($validated['permissions'] ?? []);
 
         return redirect()->route('roles.index')->with('success', __('ui.role.created'));
     }
@@ -57,6 +56,7 @@ class RoleController extends Controller
             'name' => 'required|unique:roles,name,' . $role->id . '|max:50',
             'description' => 'nullable|max:255',
             'permissions' => 'array',
+            'permissions.*' => 'exists:permissions,id',
         ]);
 
         $role->update([
@@ -64,9 +64,7 @@ class RoleController extends Controller
             'description' => $validated['description'] ?? null,
         ]);
 
-        if ($request->has('permissions')) {
-            $role->permissions()->sync($request->input('permissions'));
-        }
+        $role->permissions()->sync($validated['permissions'] ?? []);
 
         return redirect()->route('roles.show', $role)->with('success', __('ui.role.updated'));
     }

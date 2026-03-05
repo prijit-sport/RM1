@@ -4,11 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Models\Booking;
 use App\Models\Room;
-use Illuminate\Http\Request;
 
 class ReportController extends Controller
 {
-    public function index()
+    /**
+     * Build report data used by index, revenue and occupancy pages.
+     *
+     * @return array<string, mixed>
+     */
+    private function buildReportData(): array
     {
         $total_rooms = Room::count();
         $occupied_rooms = Room::where('status', 'occupied')->count();
@@ -37,7 +41,7 @@ class ReportController extends Controller
         $today_check_ins = Booking::whereDate('check_in_date', today())->count();
         $today_check_outs = Booking::whereDate('check_out_date', today())->count();
 
-        return view('reports.index', compact(
+        return compact(
             'total_rooms',
             'occupied_rooms',
             'available_rooms',
@@ -54,23 +58,40 @@ class ReportController extends Controller
             'popular_rooms',
             'today_check_ins',
             'today_check_outs'
-        ));
+        );
     }
 
-    public function export(Request $request)
+    public function index()
     {
-        $total_rooms = Room::count();
-        $occupied_rooms = Room::where('status', 'occupied')->count();
-        $available_rooms = Room::where('status', 'available')->count();
-        $maintenance_rooms = Room::where('status', 'maintenance')->count();
-        $total_bookings = Booking::count();
-        $pending_bookings = Booking::where('status', 'pending')->count();
-        $confirmed_bookings = Booking::where('status', 'confirmed')->count();
-        $checked_in = Booking::where('status', 'checked_in')->count();
-        $checked_out = Booking::where('status', 'checked_out')->count();
-        $cancelled = Booking::where('status', 'cancelled')->count();
-        $occupancy_rate = $total_rooms > 0 ? round(($occupied_rooms / $total_rooms) * 100, 2) : 0;
-        $total_revenue = Booking::where('status', '!=', 'cancelled')->sum('total_price');
+        return view('reports.index', $this->buildReportData());
+    }
+
+    public function revenue()
+    {
+        return view('reports.index', $this->buildReportData() + ['report_focus' => 'revenue']);
+    }
+
+    public function occupancy()
+    {
+        return view('reports.index', $this->buildReportData() + ['report_focus' => 'occupancy']);
+    }
+
+    public function export()
+    {
+        [
+            'total_rooms' => $total_rooms,
+            'occupied_rooms' => $occupied_rooms,
+            'available_rooms' => $available_rooms,
+            'maintenance_rooms' => $maintenance_rooms,
+            'total_bookings' => $total_bookings,
+            'pending_bookings' => $pending_bookings,
+            'confirmed_bookings' => $confirmed_bookings,
+            'checked_in' => $checked_in,
+            'checked_out' => $checked_out,
+            'cancelled' => $cancelled,
+            'occupancy_rate' => $occupancy_rate,
+            'total_revenue' => $total_revenue,
+        ] = $this->buildReportData();
 
         $filename = 'report_' . date('Ymd_His') . '.xlsx';
 

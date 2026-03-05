@@ -195,10 +195,10 @@
                         <tr>
                             <td>
                                 <a href="{{ route('rooms.show', $booking->room_id) }}" class="text-decoration-none">
-                                    {{ $booking->room->name ?? '-' }}
+                                    {{ $booking->room->room_number ?? '-' }}
                                 </a>
                             </td>
-                            <td>{{ $booking->guest->name ?? '-' }}</td>
+                            <td>{{ $booking->guest->full_name ?? '-' }}</td>
                             <td>{{ \Carbon\Carbon::parse($booking->check_in_date)->format('d/m/Y') }}</td>
                             <td>
                                 @php
@@ -242,10 +242,10 @@
                 <table class="table mb-0">
                     <thead>
                         <tr>
-                            <th>เลขที่บ>
-                            <thิล</th>ผู้เช่า</th>
-                            <th>จำนวน</th>
-                            <th>ครบกำหนด</th>
+                            <th>Invoice</th>
+                            <th>Guest</th>
+                            <th>Total</th>
+                            <th>Due Date</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -256,8 +256,8 @@
                                     {{ $invoice->invoice_number }}
                                 </a>
                             </td>
-                            <td>{{ $invoice->guest->name ?? '-' }}</td>
-                            <td>{{ number_format($invoice->total_amount, 2) }} ฿</td>
+                            <td>{{ $invoice->booking->guest->full_name ?? '-' }}</td>
+                            <td>{{ number_format($invoice->total, 2) }} &#3647;</td>
                             <td>
                                 @php
                                 $dueDate = \Carbon\Carbon::parse($invoice->due_date);

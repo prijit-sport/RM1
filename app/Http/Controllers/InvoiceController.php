@@ -6,19 +6,37 @@ use App\Models\Booking;
 use App\Models\Invoice;
 use App\Support\AuditLogger;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class InvoiceController extends Controller
 {
-    public function index()
+    private const STATUSES = ['draft', 'sent', 'paid', 'overdue', 'cancelled'];
+
+    public function index(Request $request)
     {
-        $invoices = Invoice::with('booking')->paginate(10);
+        $query = Invoice::query()->with(['booking.room', 'booking.guest']);
+
+        if ($request->filled('search')) {
+            $search = trim((string) $request->input('search'));
+            $query->where(function ($q) use ($search): void {
+                $q->where('invoice_number', 'like', '%' . $search . '%')
+                    ->orWhere('booking_id', $search);
+            });
+        }
+
+        if ($request->filled('status') && in_array($request->input('status'), self::STATUSES, true)) {
+            $query->where('status', $request->input('status'));
+        }
+
+        $invoices = $query->orderByDesc('id')->paginate(10)->withQueryString();
 
         return view('invoices.index', compact('invoices'));
     }
 
     public function create()
     {
-        $bookings = Booking::all();
+        $bookings = Booking::with(['room', 'guest'])->orderByDesc('id')->get();
 
         return view('invoices.create', compact('bookings'));
     }
@@ -44,12 +62,14 @@ class InvoiceController extends Controller
 
     public function show(Invoice $invoice)
     {
+        $invoice->loadMissing(['booking.room', 'booking.guest']);
+
         return view('invoices.show', compact('invoice'));
     }
 
     public function edit(Invoice $invoice)
     {
-        $bookings = Booking::all();
+        $bookings = Booking::with(['room', 'guest'])->orderByDesc('id')->get();
 
         return view('invoices.edit', compact('invoice', 'bookings'));
     }
@@ -82,30 +102,51 @@ class InvoiceController extends Controller
 
     public function bulkCreate()
     {
-        $bookings = Booking::all();
+        $bookings = Booking::with(['room', 'guest'])->orderByDesc('id')->get();
 
         return view('invoices.bulk-create', compact('bookings'));
     }
 
     public function bulkStore(Request $request)
     {
-        $invoices = $request->input('invoices', []);
+        $validated = $request->validate([
+            'invoices' => ['required', 'array', 'min:1'],
+            'invoices.*.booking_id' => ['required', 'exists:bookings,id'],
+            'invoices.*.invoice_number' => ['required', 'string', 'max:50', 'distinct', 'unique:invoices,invoice_number'],
+            'invoices.*.amount' => ['required', 'numeric', 'min:0'],
+            'invoices.*.tax' => ['required', 'numeric', 'min:0'],
+            'invoices.*.total' => ['required', 'numeric', 'min:0'],
+            'invoices.*.issue_date' => ['required', 'date'],
+            'invoices.*.due_date' => ['required', 'date'],
+            'invoices.*.status' => ['required', 'in:' . implode(',', self::STATUSES)],
+            'invoices.*.notes' => ['nullable', 'string', 'max:500'],
+        ]);
 
-        foreach ($invoices as $invoiceData) {
-            Invoice::create([
-                'booking_id' => $invoiceData['booking_id'],
-                'invoice_number' => $invoiceData['invoice_number'],
-                'amount' => $invoiceData['amount'],
-                'tax' => $invoiceData['tax'] ?? 0,
-                'total' => $invoiceData['total'],
-                'issue_date' => $invoiceData['issue_date'],
-                'due_date' => $invoiceData['due_date'],
-                'status' => $invoiceData['status'] ?? 'draft',
-                'notes' => $invoiceData['notes'] ?? null,
-            ]);
+        foreach ($validated['invoices'] as $index => $invoiceData) {
+            if ($invoiceData['due_date'] <= $invoiceData['issue_date']) {
+                throw ValidationException::withMessages([
+                    "invoices.$index.due_date" => 'Due date must be after issue date.',
+                ]);
+            }
         }
 
-        return redirect()->route('invoices.index')->with('success', __('ui.invoice.bulk_created', ['count' => count($invoices)]));
+        DB::transaction(function () use ($validated): void {
+            foreach ($validated['invoices'] as $invoiceData) {
+                Invoice::create([
+                    'booking_id' => $invoiceData['booking_id'],
+                    'invoice_number' => $invoiceData['invoice_number'],
+                    'amount' => $invoiceData['amount'],
+                    'tax' => $invoiceData['tax'],
+                    'total' => $invoiceData['total'],
+                    'issue_date' => $invoiceData['issue_date'],
+                    'due_date' => $invoiceData['due_date'],
+                    'status' => $invoiceData['status'],
+                    'notes' => $invoiceData['notes'] ?? null,
+                ]);
+            }
+        });
+
+        return redirect()->route('invoices.index')->with('success', __('ui.invoice.bulk_created', ['count' => count($validated['invoices'])]));
     }
 
     public function export(Request $request)
@@ -139,6 +180,10 @@ class InvoiceController extends Controller
 
     public function markAsPaid(Invoice $invoice)
     {
+        if (! in_array($invoice->status, ['sent', 'overdue'], true)) {
+            return redirect()->route('invoices.show', $invoice)->with('warning', __('ui.invoice.mark_paid_only_sent_overdue'));
+        }
+
         $invoice->update(['status' => 'paid']);
         AuditLogger::log('invoice.marked_paid', $invoice);
 
@@ -152,11 +197,11 @@ class InvoiceController extends Controller
 
     public function remindAll()
     {
-        $pendingInvoices = Invoice::whereIn('status', ['sent', 'overdue'])
+        $dueInvoices = Invoice::whereIn('status', ['sent', 'overdue'])
             ->whereDate('due_date', '<', now())
             ->get();
 
-        return redirect()->route('invoices.index')->with('success', __('ui.invoice.reminders_sent', ['count' => $pendingInvoices->count()]));
+        return redirect()->route('invoices.index')->with('success', __('ui.invoice.reminders_sent', ['count' => $dueInvoices->count()]));
     }
 }
 

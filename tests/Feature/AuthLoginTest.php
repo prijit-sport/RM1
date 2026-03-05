@@ -18,7 +18,11 @@ class AuthLoginTest extends TestCase
             'is_active' => false,
         ]);
 
+        $this->withMiddleware();
+        $this->get('/login');
+
         $this->post('/login', [
+            '_token' => csrf_token(),
             'email' => $user->email,
             'password' => 'password123',
         ])->assertSessionHasErrors('email');

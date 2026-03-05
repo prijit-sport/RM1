@@ -12,6 +12,12 @@ return [
         'login_failed' => 'Invalid credentials.',
         'logout_success' => 'Signed out successfully.',
     ],
+    'notifications' => [
+        'overdue_invoices' => 'There are :count overdue invoices.',
+        'pending_maintenance' => 'There are :count maintenance tasks pending.',
+        'pending_bookings' => 'There are :count bookings waiting for confirmation.',
+        'expiring_contracts' => 'There are :count contracts expiring soon.',
+    ],
     'account' => [
         'profile_updated' => 'Profile updated successfully.',
         'settings_updated' => 'Settings updated successfully.',
@@ -89,6 +95,7 @@ return [
         'updated' => 'Invoice updated successfully.',
         'deleted' => 'Invoice deleted successfully.',
         'marked_paid' => 'Invoice marked as paid.',
+        'mark_paid_only_sent_overdue' => 'Only sent or overdue invoices can be marked as paid.',
         'bulk_created' => 'Created :count invoices successfully.',
         'reminders_sent' => 'Sent reminders: :count',
     ],

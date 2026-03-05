@@ -65,7 +65,7 @@
                                         <option value="">-- เลือกการจอง --</option>
                                         @foreach ($bookings as $booking)
                                             <option value="{{ $booking->id }}" @selected(($invoice['booking_id'] ?? '') == $booking->id)>
-                                                #{{ $booking->id }}{{ $booking->room_id ? ' - ห้อง ' . $booking->room_id : '' }}
+                                                #{{ $booking->id }}{{ $booking->room?->room_number ? ' - ห้อง ' . $booking->room->room_number : '' }}
                                             </option>
                                         @endforeach
                                     </select>
@@ -111,7 +111,7 @@
 
 <script>
     (function () {
-        const bookings = @json($bookings->map(fn($b) => ['id' => $b->id, 'room_id' => $b->room_id])->values());
+        const bookings = @json($bookings->map(fn($b) => ['id' => $b->id, 'room_number' => $b->room?->room_number])->values());
         const tableBody = document.querySelector('#invoicesTable tbody');
         const addRowBtn = document.getElementById('addRowBtn');
 
@@ -122,7 +122,7 @@
         function bookingOptions() {
             let html = '<option value="">-- เลือกการจอง --</option>';
             bookings.forEach((booking) => {
-                const roomLabel = booking.room_id ? ` - ห้อง ${booking.room_id}` : '';
+                const roomLabel = booking.room_number ? ` - ห้อง ${booking.room_number}` : '';
                 html += `<option value="${booking.id}">#${booking.id}${roomLabel}</option>`;
             });
             return html;

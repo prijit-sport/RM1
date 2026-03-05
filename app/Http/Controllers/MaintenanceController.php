@@ -98,16 +98,14 @@ class MaintenanceController extends Controller
         return xlsx_download($filename, $rows);
     }
 
-    public function startWork($id)
+    public function startWork(Maintenance $maintenance)
     {
-        $maintenance = Maintenance::findOrFail($id);
         $maintenance->update(['status' => 'in_progress']);
         return redirect()->route('maintenances.show', $maintenance)->with('success', __('ui.maintenance.started'));
     }
 
-    public function completeWork($id)
+    public function completeWork(Maintenance $maintenance)
     {
-        $maintenance = Maintenance::findOrFail($id);
         $maintenance->update([
             'status' => 'completed',
             'completed_date' => now()->toDateString(),
