@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+﻿ให<!DOCTYPE html>
 <html lang="th">
 <head>
     <meta charset="UTF-8">
@@ -273,7 +273,8 @@
                 <span>การจอง</span>
             </a>
             
-            @if(auth()->user()->hasRole('Manager') || auth()->user()->hasRole('Admin'))
+            {{-- เมนูสำหรับ Admin เท่านั้น --}}
+            @role('Admin')
             <a href="{{ route('contracts.index') }}" class="sidebar-menu-item {{ request()->routeIs('contracts.*') ? 'active' : '' }}">
                 <i class="bi bi-file-earmark-text"></i>
                 <span>สัญญาเช่า</span>
@@ -309,20 +310,17 @@
                 <i class="bi bi-building"></i>
                 <span>สิ่งอำนวยความสะดวก</span>
             </a>
-            @endif
             
-            @if(auth()->user()->hasRole('Admin'))
             <a href="{{ route('roles.index') }}" class="sidebar-menu-item {{ request()->routeIs('roles.*') ? 'active' : '' }}">
                 <i class="bi bi-shield-lock"></i>
                 <span>บทบาทและสิทธิ์</span>
             </a>
-            @endif
+            @endrole
             
             <a href="{{ route('reports.index') }}" class="sidebar-menu-item {{ request()->routeIs('reports.*') ? 'active' : '' }}">
                 <i class="bi bi-graph-up"></i>
                 <span>รายงาน</span>
             </a>
-        </nav>
     </aside>
 
     <!-- Main Content -->

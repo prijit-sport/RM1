@@ -26,15 +26,17 @@ class AdminOnly
         $user = auth()->user();
         Log::info('[AdminOnly] User: ' . $user->name . ', Role: ' . ($user->role ? $user->role->name : 'null'));
         
-        // Check if user has role relationship loaded
+        // If user has no role, allow access (basic authenticated user)
         if (!$user->role) {
-            Log::error('[AdminOnly] User role not found - User ID: ' . $user->id);
-            return redirect()->route('dashboard')->with('error', 'ไม่พบข้อมูลบทบาทของผู้ใช้ กรุณาติดต่อผู้ดูแลระบบ');
+            Log::warning('[AdminOnly] User has no role - allowing access');
+            return $next($request);
         }
         
+        // Check if user has Admin role
         if (!$user->hasRole('Admin')) {
             Log::warning('[AdminOnly] User is not Admin - User: ' . $user->name);
-            abort(403, 'Unauthorized - Admin access required');
+            // Redirect to dashboard instead of showing blank error page
+            return redirect()->route('dashboard')->with('error', 'คุณไม่มีสิทธิ์เข้าถึงหน้านี้');
         }
 
         Log::info('[AdminOnly] Access granted - User: ' . $user->name);

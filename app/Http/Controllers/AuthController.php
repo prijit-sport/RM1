@@ -37,7 +37,9 @@ class AuthController extends Controller
             return back()->withErrors(['email' => __('ui.auth.login_failed')])->onlyInput('email');
         }
         
-        if ($user && Hash::check($credentials['password'], $user->password) && ! $user->is_active) {
+        // Check if user is active (default to true if column doesn't exist)
+        $isActive = $user->is_active ?? true;
+        if ($user && Hash::check($credentials['password'], $user->password) && !$isActive) {
             Log::warning('[Auth] login failed - User inactive: ' . $request->email);
             return back()->withErrors(['email' => __('ui.auth.inactive')])->onlyInput('email');
         }

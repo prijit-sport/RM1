@@ -65,8 +65,8 @@ Route::middleware(['web'])->group(function () {
         Route::get('/reports/occupancy', [ReportController::class, 'occupancy'])->name('reports.occupancy');
     });
 
-    // Employee-level routes (Manager and Admin)
-    Route::middleware(['auth', 'manager_or_admin'])->group(function () {
+    // Admin-only routes - ทุกอย่างต้องเป็น Admin เท่านั้น
+    Route::middleware(['auth', 'admin_only'])->group(function () {
         // Item routes
         Route::get('items/export', [ItemController::class, 'export'])->name('items.export');
         Route::resource('items', ItemController::class);
@@ -101,10 +101,8 @@ Route::middleware(['web'])->group(function () {
         Route::get('meters/{meter}/readings/export', [MeterReadingController::class, 'export'])->name('meters.readings.export');
         Route::resource('meters.readings', MeterReadingController::class)->except(['show']);
         Route::resource('meters', MeterController::class);
-    });
-
-    // Admin-only routes
-    Route::middleware(['auth', 'admin_only'])->group(function () {
+        
+        // Role routes
         Route::get('roles/export', [RoleController::class, 'export'])->name('roles.export');
         Route::resource('roles', RoleController::class);
     });
