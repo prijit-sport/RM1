@@ -268,7 +268,7 @@ class BookingFlowTest extends TestCase
         return Room::create([
             'room_number' => $roomNumber,
             'room_type' => 'Single',
-            'price_per_night' => 1000,
+            'price_per_month' => 1000,
             'capacity' => 1,
             'status' => $status,
             'description' => null,

@@ -41,7 +41,7 @@
                     <p class="text-muted mb-1">ห้องทั้งหมด</p>
                     <h3 class="mb-0">{{ number_format($roomCount ?? 0) }}</h3>
                     <small class="text-success">
-                        <i class="bi bi-arrow-up"></i> {{ number_format(($occupiedCount ?? 0) / max($roomCount ?? 1, 1) * 100, 1) }}% ถูกเช่า
+                        <i class="bi bi-arrow-up"></i> {{ number_format((($occupiedCount ?? 0) / max($roomCount ?? 1, 1)) * 100, 1) }}% ถูกเช่า
                     </small>
                 </div>
                 <div class="stat-icon bg-primary bg-opacity-10 text-primary">
@@ -126,12 +126,14 @@
             <h5 class="mb-4">สถานะห้อง</h5>
             
             @php
-            $totalRooms = $roomCount ?? 1;
+            $totalRooms = max($roomCount ?? 1, 1);
             $occupiedPercent = ($occupiedCount ?? 0) / $totalRooms * 100;
             $availablePercent = (($roomCount ?? 0) - ($occupiedCount ?? 0)) / $totalRooms * 100;
             $maintenancePercent = ($maintenanceCount ?? 0) / $totalRooms * 100;
+            $hasRooms = ($roomCount ?? 0) > 0;
             @endphp
             
+            @if($hasRooms)
             <div class="mb-4">
                 <div class="d-flex justify-content-between mb-2">
                     <span>ห้องที่ถูกเช่า</span>
@@ -164,6 +166,12 @@
                          style="width: {{ min($maintenancePercent, 95) }}%"></div>
                 </div>
             </div>
+            @else
+            <div class="text-center text-muted py-4">
+                <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                ไม่มีข้อมูลห้อง
+            </div>
+            @endif
         </div>
     </div>
 </div>

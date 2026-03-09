@@ -98,7 +98,7 @@
             @csrf
             <div class="mb-3">
                 <label for="email" class="form-label">อีเมล</label>
-                <input type="email" class="form-control @error('email') is-invalid @enderror" id="email" name="email" value="{{ old('email') }}" required>
+                <input type="email" class="form-control @error('email') is-invalid @enderror" id="email" name="email" value="{{ old('email') }}" autocomplete="username" required>
                 @error('email')
                     <div class="error-message">{{ $message }}</div>
                 @enderror
@@ -106,7 +106,7 @@
 
             <div class="mb-3">
                 <label for="password" class="form-label">รหัสผ่าน</label>
-                <input type="password" class="form-control @error('password') is-invalid @enderror" id="password" name="password" required>
+                <input type="password" class="form-control @error('password') is-invalid @enderror" id="password" name="password" autocomplete="current-password" required>
                 @error('password')
                     <div class="error-message">{{ $message }}</div>
                 @enderror
@@ -122,5 +122,20 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Console logging for debugging
+        console.log('[Login] Page loaded');
+        
+        // Log form submission
+        document.querySelector('form')?.addEventListener('submit', function(e) {
+            console.log('[Login] Form submitting - Email:', document.getElementById('email').value);
+        });
+        
+        // Log any errors
+        window.onerror = function(msg, url, line, col, error) {
+            console.error('[JS Error]', msg, 'at line', line);
+        };
+    </script>
 </body>
 </html>

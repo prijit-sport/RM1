@@ -103,7 +103,7 @@
                 <tr>
                     <th>หมายเลขห้อง</th>
                     <th>ประเภทห้อง</th>
-                    <th>ราคา/คืน</th>
+                    <th>ราคา/เดือน</th>
                     <th>ความจุ</th>
                     <th>สถานะ</th>
                     <th>การกระทำ</th>
@@ -114,7 +114,7 @@
                     <tr>
                         <td><strong>{{ $room->room_number }}</strong></td>
                                                 <td>{{ enum_bi('room_type', $room->room_type) }}</td>
-                        <td>฿{{ number_format($room->price_per_night, 2) }}</td>
+                        <td>฿{{ number_format($room->price_per_month, 2) }}</td>
                         <td>{{ $room->capacity }} คน</td>
                         <td>
                             @php

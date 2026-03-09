@@ -33,7 +33,7 @@
                         <tr>
                             <th>หมายเลขห้อง</th>
                             <th>ประเภท</th>
-                            <th>ราคา/คืน</th>
+                            <th>ราคา/เดือน</th>
                             <th>ความจุ</th>
                             <th>สถานะ</th>
                             <th>คำอธิบาย</th>
@@ -43,7 +43,7 @@
                     <tbody>
                         @php
                             $oldRooms = old('rooms', [
-                                ['room_number' => '', 'room_type' => 'Single', 'price_per_night' => '', 'capacity' => 1, 'status' => 'available', 'description' => ''],
+                                ['room_number' => '', 'room_type' => 'Single', 'price_per_month' => '', 'capacity' => 1, 'status' => 'available', 'description' => ''],
                             ]);
                         @endphp
 
@@ -59,7 +59,7 @@
                                         <option value="Deluxe" @selected(($room['room_type'] ?? '') === 'Deluxe')>{{ enum_bi('room_type', 'Deluxe') }}</option>
                                     </select>
                                 </td>
-                                <td><input type="number" min="0" step="0.01" class="form-control" name="rooms[{{ $i }}][price_per_night]" value="{{ $room['price_per_night'] ?? '' }}" required></td>
+                                <td><input type="number" min="0" step="0.01" class="form-control" name="rooms[{{ $i }}][price_per_month]" value="{{ $room['price_per_month'] ?? '' }}" required></td>
                                 <td><input type="number" min="1" class="form-control" name="rooms[{{ $i }}][capacity]" value="{{ $room['capacity'] ?? 1 }}" required></td>
                                 <td>
                                     <select class="form-select" name="rooms[{{ $i }}][status]">
@@ -114,7 +114,7 @@
                             <option value="Deluxe">{{ enum_bi('room_type', 'Deluxe') }}</option>
                         </select>
                     </td>
-                    <td><input type="number" min="0" step="0.01" class="form-control" name="rooms[${i}][price_per_night]" required></td>
+                    <td><input type="number" min="0" step="0.01" class="form-control" name="rooms[${i}][price_per_month]" required></td>
                     <td><input type="number" min="1" class="form-control" name="rooms[${i}][capacity]" value="1" required></td>
                     <td>
                         <select class="form-select" name="rooms[${i}][status]">

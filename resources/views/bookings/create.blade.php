@@ -101,7 +101,7 @@
                         <option value="">-- เลือกห้อง --</option>
                         @foreach ($rooms as $room)
                             <option value="{{ $room->id }}" {{ old('room_id') == $room->id ? 'selected' : '' }}>
-                                #{{ $room->room_number }} - {{ enum_bi('room_type', $room->room_type) }} (฿{{ $room->price_per_night }}/คืน)
+                                #{{ $room->room_number }} - {{ enum_bi('room_type', $room->room_type) }} (฿{{ $room->price_per_month }}/เดือน)
                             </option>
                         @endforeach
                     </select>

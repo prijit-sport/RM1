@@ -32,7 +32,7 @@ class BookingService
 
         DB::transaction(function () use ($validated) {
             $room = $this->lockRoom((int) $validated['room_id']);
-            $validated['total_price'] = $this->calculateTotal($room->price_per_night, $validated['check_in_date'], $validated['check_out_date']);
+            $validated['total_price'] = $this->calculateTotal($room->price_per_month, $validated['check_in_date'], $validated['check_out_date']);
 
             if ($this->hasOverlappingBooking(
                 (int) $validated['room_id'],
@@ -67,7 +67,7 @@ class BookingService
                 ]);
             }
 
-            $validated['total_price'] = $this->calculateTotal($newRoom->price_per_night, $validated['check_in_date'], $validated['check_out_date']);
+            $validated['total_price'] = $this->calculateTotal($newRoom->price_per_month, $validated['check_in_date'], $validated['check_out_date']);
 
             if (
                 in_array($validated['status'], self::ACTIVE_BOOKING_STATUSES, true)
@@ -145,13 +145,18 @@ class BookingService
         });
     }
 
-    private function calculateTotal(float $pricePerNight, string $checkInDate, string $checkOutDate): float
+    private function calculateTotal(float $pricePerMonth, string $checkInDate, string $checkOutDate): float
     {
         $checkIn = new DateTime($checkInDate);
         $checkOut = new DateTime($checkOutDate);
         $days = $checkOut->diff($checkIn)->days;
-
-        return $pricePerNight * $days;
+        
+        // Calculate daily rate from monthly price
+        // Using actual days in month (average 30.44 days per month)
+        $dailyRate = $pricePerMonth / 30.44;
+        
+        // Calculate total based on actual days
+        return round($dailyRate * $days, 2);
     }
 
     private function hasOverlappingBooking(

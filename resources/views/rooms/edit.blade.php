@@ -120,9 +120,9 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="price_per_night">ราคา/คืน (บาท) *</label>
-                    <input type="number" id="price_per_night" name="price_per_night" placeholder="1000" step="0.01" value="{{ old('price_per_night', $room->price_per_night) }}" required>
-                    @error('price_per_night')
+                    <label for="price_per_month">ราคา/เดือน (บาท) *</label>
+                    <input type="number" id="price_per_month" name="price_per_month" placeholder="10000" step="0.01" value="{{ old('price_per_month', $room->price_per_month) }}" required>
+                    @error('price_per_month')
                         <div class="error">{{ $message }}</div>
                     @enderror
                 </div>

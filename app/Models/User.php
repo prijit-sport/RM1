@@ -6,11 +6,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Log;
+use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, HasApiTokens, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -61,5 +63,17 @@ class User extends Authenticatable
 
     public function hasRole($role)
     {
-        return $this->role && $this->role->name === $role;
-    }}
+        Log::info('[User.hasRole] Checking user: ' . $this->name . ' for role: ' . $role);
+        
+        // Ensure role is loaded
+        if (!$this->relationLoaded('role')) {
+            Log::info('[User.hasRole] Role not loaded, loading now...');
+            $this->load('role');
+        }
+        
+        $result = $this->role && $this->role->name === $role;
+        Log::info('[User.hasRole] Result: ' . ($result ? 'true' : 'false') . ', User role: ' . ($this->role ? $this->role->name : 'null'));
+        
+        return $result;
+    }
+}

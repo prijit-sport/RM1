@@ -137,8 +137,8 @@
                 </div>
 
                 <div class="info-item">
-                    <div class="info-label">ราคา/คืน</div>
-                    <div class="info-value">฿{{ number_format($room->price_per_night, 2) }}</div>
+                    <div class="info-label">ราคา/เดือน</div>
+                    <div class="info-value">฿{{ number_format($room->price_per_month, 2) }}</div>
                 </div>
 
                 <div class="info-item">

@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreInvoiceRequest;
+use App\Http\Requests\UpdateInvoiceRequest;
 use App\Models\Booking;
 use App\Models\Invoice;
 use App\Support\AuditLogger;
@@ -41,19 +43,9 @@ class InvoiceController extends Controller
         return view('invoices.create', compact('bookings'));
     }
 
-    public function store(Request $request)
+    public function store(StoreInvoiceRequest $request)
     {
-        $validated = $request->validate([
-            'booking_id' => 'required|exists:bookings,id',
-            'invoice_number' => 'required|unique:invoices|max:50',
-            'amount' => 'required|numeric|min:0',
-            'tax' => 'required|numeric|min:0',
-            'total' => 'required|numeric|min:0',
-            'issue_date' => 'required|date',
-            'due_date' => 'required|date|after:issue_date',
-            'status' => 'required|in:draft,sent,paid,overdue,cancelled',
-            'notes' => 'nullable|max:500',
-        ]);
+        $validated = $request->validated();
 
         Invoice::create($validated);
 
@@ -74,19 +66,9 @@ class InvoiceController extends Controller
         return view('invoices.edit', compact('invoice', 'bookings'));
     }
 
-    public function update(Request $request, Invoice $invoice)
+    public function update(UpdateInvoiceRequest $request, Invoice $invoice)
     {
-        $validated = $request->validate([
-            'booking_id' => 'required|exists:bookings,id',
-            'invoice_number' => 'required|unique:invoices,invoice_number,' . $invoice->id . '|max:50',
-            'amount' => 'required|numeric|min:0',
-            'tax' => 'required|numeric|min:0',
-            'total' => 'required|numeric|min:0',
-            'issue_date' => 'required|date',
-            'due_date' => 'required|date|after:issue_date',
-            'status' => 'required|in:draft,sent,paid,overdue,cancelled',
-            'notes' => 'nullable|max:500',
-        ]);
+        $validated = $request->validated();
 
         $invoice->update($validated);
 
@@ -200,6 +182,9 @@ class InvoiceController extends Controller
         $dueInvoices = Invoice::whereIn('status', ['sent', 'overdue'])
             ->whereDate('due_date', '<', now())
             ->get();
+
+        // TODO: Implement actual notification sending (email/SMS)
+        // For now, this just shows the count of invoices that would be reminded
 
         return redirect()->route('invoices.index')->with('success', __('ui.invoice.reminders_sent', ['count' => $dueInvoices->count()]));
     }

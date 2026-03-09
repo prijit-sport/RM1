@@ -349,9 +349,9 @@
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end">
                         <li><h6 class="dropdown-header">การแจ้งเตือน</h6></li>
-                        @if(isset($notifications) && $notifications->count() > 0)
+                        @if(isset($notifications) && count($notifications) > 0)
                             @foreach($notifications as $notification)
-                            <li><a class="dropdown-item" href="{{ $notification['url'] }}">{{ $notification['message'] }}</a></li>
+                            <li><a class="dropdown-item" href="{{ $notification['url'] ?? '#' }}">{{ $notification['message'] }}</a></li>
                             @endforeach
                         @else
                             <li><span class="dropdown-item text-muted">ไม่มีการแจ้งเตือน</span></li>
@@ -428,6 +428,15 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
     <script>
+        // Console logging for debugging
+        console.log('[Layout] Page loaded - URL:', window.location.href);
+        console.log('[Layout] User authenticated:', {{ auth()->check() ? 'true' : 'false' }});
+        
+        // Log any JavaScript errors
+        window.onerror = function(msg, url, line, col, error) {
+            console.error('[JS Error]', msg, 'at line', line);
+        };
+        
         // Sidebar toggle
         document.getElementById('sidebarToggle')?.addEventListener('click', function() {
             document.querySelector('.sidebar').classList.toggle('show');

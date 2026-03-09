@@ -1,12 +1,12 @@
 @extends('layouts.app')
 
-@section('title', 'จัดการสัญญา')
+@section('title', 'จัดการสัญญาเช่า')
 
-@section('page-title', 'จัดการสัญญา')
+@section('page-title', 'จัดการสัญญาเช่า')
 
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h4 class="mb-0">รายการสัญญา</h4>
+    <h4 class="mb-0"><i class="bi bi-file-earmark-text me-2"></i>รายการสัญญาเช่า</h4>
     <div class="d-flex gap-2">
         <a href="{{ route('contracts.expiring') }}" class="btn btn-outline-warning">
             <i class="bi bi-exclamation-triangle me-1"></i>สัญญาหมดอายุเร็ว
@@ -25,14 +25,16 @@
     <div class="card-body">
         <form method="GET" action="{{ route('contracts.index') }}" class="row g-3">
             <div class="col-md-4">
-                <input type="text" name="search" class="form-control" placeholder="ค้นหาเลขที่สัญญา..." value="{{ request('search') }}">
+                <input type="text" name="search" class="form-control" placeholder="ค้นหาเลขที่สัญญา, ชื่อผู้เช่า, ห้องพัก..." value="{{ request('search') }}">
             </div>
             <div class="col-md-3">
                 <select name="status" class="form-select">
                     <option value="">ทุกสถานะ</option>
+                    <option value="draft" {{ request('status') == 'draft' ? 'selected' : '' }}>ร่างสัญญา</option>
+                    <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>รออนุมัติ</option>
                     <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>ใช้งาน</option>
-                    <option value="expired" {{ request('status') == 'expired' ? 'selected' : '' }}>หมดอายุ</option>
-                    <option value="terminated" {{ request('status') == 'terminated' ? 'selected' : '' }}>ยกเลิก</option>
+                    <option value="completed" {{ request('status') == 'completed' ? 'selected' : '' }}>เสร็จสิ้น</option>
+                    <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>ยกเลิก</option>
                 </select>
             </div>
             <div class="col-md-2">
@@ -51,10 +53,11 @@
             <thead>
                 <tr>
                     <th>เลขที่สัญญา</th>
-                    <th>ผู้รับเหมา</th>
+                    <th>ห้องพัก</th>
+                    <th>ผู้เช่า</th>
                     <th>วันเริ่มต้น</th>
                     <th>วันสิ้นสุด</th>
-                    <th>จำนวนเงิน</th>
+                    <th>ค่าเช่า/เดือน</th>
                     <th>สถานะ</th>
                     <th>การกระทำ</th>
                 </tr>
@@ -63,19 +66,34 @@
                 @forelse ($contracts as $contract)
                     <tr>
                         <td><strong>{{ $contract->contract_number }}</strong></td>
-                        <td>{{ $contract->contractor_name }}</td>
+                        <td>
+                            @if($contract->room)
+                                <span class="badge bg-primary">{{ $contract->room->room_number }}</span>
+                            @else
+                                <span class="text-muted">-</span>
+                            @endif
+                        </td>
+                        <td>
+                            @if($contract->guest)
+                                {{ $contract->guest->first_name }} {{ $contract->guest->last_name }}
+                            @else
+                                <span class="text-muted">-</span>
+                            @endif
+                        </td>
                         <td>{{ optional($contract->start_date)->format('d/m/Y') }}</td>
                         <td>{{ optional($contract->end_date)->format('d/m/Y') }}</td>
-                        <td>฿{{ number_format($contract->amount, 2) }}</td>
+                        <td>฿{{ number_format($contract->monthly_rent, 2) }}</td>
                         <td>
                             @php
                                 $statusClasses = [
+                                    'draft' => 'bg-secondary',
+                                    'pending' => 'bg-warning text-dark',
                                     'active' => 'bg-success',
-                                    'expired' => 'bg-danger',
-                                    'terminated' => 'bg-secondary',
+                                    'completed' => 'bg-info',
+                                    'cancelled' => 'bg-danger',
                                 ];
                             @endphp
-                            <span class="badge {{ $statusClasses[$contract->status] ?? '' }}">
+                            <span class="badge {{ $statusClasses[$contract->status] ?? 'bg-secondary' }}">
                                 {{ enum_bi('contract_status', $contract->status, ucfirst($contract->status)) }}
                             </span>
                         </td>
@@ -95,10 +113,10 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="7" class="text-center py-4">
+                        <td colspan="8" class="text-center py-4">
                             <i class="bi bi-inbox fs-1 text-muted"></i>
-                            <p class="text-muted mt-2">ไม่มีข้อมูลสัญญา</p>
-                            <a href="{{ route('contracts.create') }}" class="btn btn-primary-custom mt-2">เพิ่มสัญญา</a>
+                            <p class="text-muted mt-2">ไม่มีข้อมูลสัญญาเช่า</p>
+                            <a href="{{ route('contracts.create') }}" class="btn btn-primary-custom mt-2">เพิ่มสัญญาเช่า</a>
                         </td>
                     </tr>
                 @endforelse
@@ -114,9 +132,4 @@
     </div>
 @endif
 @endsection
-
-
-
-
-
 
