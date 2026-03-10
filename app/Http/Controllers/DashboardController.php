@@ -16,7 +16,9 @@ class DashboardController extends Controller
     public function index()
     {
         // Cache dashboard data for 5 minutes
-        $cacheKey = 'dashboard_' . (auth()->check() ? auth()->id() : 'guest');
+        // Always use user ID if authenticated, with a unique key to prevent cache conflicts
+        $userId = auth()->check() ? auth()->id() : 'guest';
+        $cacheKey = 'dashboard_' . $userId . '_' . ($userId === 'guest' ? 'public' : 'private');
         
         $data = Cache::remember($cacheKey, now()->addMinutes(5), function () {
             // KPI Data

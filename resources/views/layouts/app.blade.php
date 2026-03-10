@@ -274,7 +274,7 @@
             </a>
             
             {{-- เมนูสำหรับ Admin เท่านั้น --}}
-            @role('Admin')
+            @if(auth()->check() && auth()->user() && auth()->user()->hasRole('Admin'))
             <a href="{{ route('contracts.index') }}" class="sidebar-menu-item {{ request()->routeIs('contracts.*') ? 'active' : '' }}">
                 <i class="bi bi-file-earmark-text"></i>
                 <span>สัญญาเช่า</span>
@@ -315,7 +315,7 @@
                 <i class="bi bi-shield-lock"></i>
                 <span>บทบาทและสิทธิ์</span>
             </a>
-            @endrole
+            @endif
             
             <a href="{{ route('reports.index') }}" class="sidebar-menu-item {{ request()->routeIs('reports.*') ? 'active' : '' }}">
                 <i class="bi bi-graph-up"></i>

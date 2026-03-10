@@ -4,23 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Models\Guest;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 
 class GuestController extends Controller
 {
-    public function __construct()
-    {
-        Log::info('[GuestController] Constructor called');
-    }
-    
     /**
      * Display a listing of the guests.
      */
     public function index(Request $request)
     {
-        Log::info('[GuestController] index - User authenticated: ' . (auth()->check() ? 'Yes - ' . auth()->user()->name : 'No'));
-        Log::info('[GuestController] index - Session ID: ' . $request->session()->getId());
-        
         $guests = Guest::paginate(10);
         return view('guests.index', compact('guests'));
     }

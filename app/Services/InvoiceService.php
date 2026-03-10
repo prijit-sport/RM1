@@ -134,11 +134,14 @@ class InvoiceService
         }
 
         $daysOverdue = now()->diffInDays($invoice->due_date);
-        $lateFee = $invoice->total * self::DEFAULT_LATE_FEE_RATE * $daysOverdue;
+        $amount = $invoice->amount ?? 0;
+        $tax = $invoice->tax ?? 0;
+        $subtotal = $amount + $tax;
+        $lateFee = $subtotal * self::DEFAULT_LATE_FEE_RATE * $daysOverdue;
 
         $invoice->update([
             'late_fee' => $lateFee,
-            'total' => $invoice->amount + $invoice->tax + $lateFee,
+            'total' => $subtotal + $lateFee,
             'status' => 'overdue',
         ]);
 

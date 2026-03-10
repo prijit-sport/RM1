@@ -41,7 +41,14 @@ class AuthController extends Controller
         
         // Check if user is active (default to true if column doesn't exist)
         $isActive = $user->is_active ?? true;
-        if ($user && Hash::check($credentials['password'], $user->password) && !$isActive) {
+        
+        // Validate password first, then check if account is active
+        if (!Hash::check($credentials['password'], $user->password)) {
+            Log::warning('[Auth] login failed - Invalid password: ' . $request->email);
+            return back()->withErrors(['email' => __('ui.auth.login_failed')])->onlyInput('email');
+        }
+        
+        if (!$isActive) {
             Log::warning('[Auth] login failed - User inactive: ' . $request->email);
             return back()->withErrors(['email' => __('ui.auth.inactive')])->onlyInput('email');
         }

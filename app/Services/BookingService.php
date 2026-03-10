@@ -151,6 +151,11 @@ class BookingService
         $checkOut = new DateTime($checkOutDate);
         $days = $checkOut->diff($checkIn)->days;
         
+        // Handle zero or negative price
+        if ($pricePerMonth <= 0) {
+            return 0;
+        }
+        
         // Calculate daily rate from monthly price
         // Using actual days in month (average 30.44 days per month)
         $dailyRate = $pricePerMonth / 30.44;

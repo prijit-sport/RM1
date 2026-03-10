@@ -31,12 +31,22 @@ class AppServiceProvider extends ServiceProvider
     {
         Gate::policy(Booking::class, BookingPolicy::class);
 
-        // Register @role directive for Blade
+        // Register @role directive for Blade - improved with null safety
         Blade::directive('role', function ($role) {
-            return "<?php if(auth()->check() && auth()->user()->hasRole({$role})): ?>";
+            $role = trim($role, "'\"");
+            return "<?php if(auth()->check() && auth()->user() && auth()->user()->hasRole('{$role}')): ?>";
         });
 
         Blade::directive('endrole', function () {
+            return "<?php endif; ?>";
+        });
+
+        // Register @canany directive for multiple permissions
+        Blade::directive('canany', function ($permissions) {
+            return "<?php if(auth()->check() && auth()->user() && auth()->user()->hasAnyPermission({$permissions})): ?>";
+        });
+
+        Blade::directive('endcanany', function () {
             return "<?php endif; ?>";
         });
 

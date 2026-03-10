@@ -26,16 +26,17 @@ class ManagerOrAdmin
         // Force reload role from database to ensure we have the latest
         $user->load('role');
         
-        // If user has no role, allow access (basic authenticated user)
+        // If user has no role, deny access
         if (!$user->role) {
-            return $next($request);
+            abort(403, 'คุณไม่มีสิทธิ์เข้าถึงหน้านี้');
         }
         
-        // Check role - allow all authenticated users to pass
-        // The role restrictions are handled at route level
+        // Check if user has Manager or Admin role
         $userRole = $user->role->name;
+        if (!in_array($userRole, ['Admin', 'Manager'], true)) {
+            abort(403, 'คุณไม่มีสิทธิ์เข้าถึงหน้านี้');
+        }
         
-        // Allow all authenticated users through
         return $next($request);
     }
 }

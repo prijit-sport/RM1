@@ -11,7 +11,7 @@ class Role extends Model
 {
     use HasFactory;
     
-    protected $fillable = ['name', 'description'];
+    protected $fillable = ['name', 'label', 'description'];
     
     public function permissions(): BelongsToMany
     {

@@ -47,6 +47,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_active' => 'boolean',
         ];
     }
 
@@ -75,5 +76,33 @@ class User extends Authenticatable
         Log::info('[User.hasRole] Result: ' . ($result ? 'true' : 'false') . ', User role: ' . ($this->role ? $this->role->name : 'null'));
         
         return $result;
+    }
+
+    /**
+     * Check if user is Manager or Admin
+     */
+    public function isManagerOrAdmin(): bool
+    {
+        return $this->hasRole('Admin') || $this->hasRole('Manager');
+    }
+
+    /**
+     * Check if user has any of the given permissions
+     */
+    public function hasAnyPermission($permissions): bool
+    {
+        if (!$this->role) {
+            return false;
+        }
+        
+        $permissions = is_array($permissions) ? $permissions : func_get_args();
+        
+        foreach ($permissions as $permission) {
+            if ($this->hasPermission($permission)) {
+                return true;
+            }
+        }
+        
+        return false;
     }
 }

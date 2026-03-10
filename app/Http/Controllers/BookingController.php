@@ -10,20 +10,15 @@ use App\Models\Room;
 use App\Services\BookingService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 
 class BookingController extends Controller
 {
     public function __construct(private readonly BookingService $bookingService)
     {
-        Log::info('[BookingController] Constructor called');
     }
 
     public function index(Request $request)
     {
-        Log::info('[BookingController] index - User authenticated: ' . (auth()->check() ? 'Yes - ' . auth()->user()->name : 'No'));
-        Log::info('[BookingController] index - Session ID: ' . $request->session()->getId());
-        
         $this->authorize('viewAny', Booking::class);
 
         $bookings = Booking::with(['room', 'guest'])

@@ -65,12 +65,8 @@ Route::middleware(['web'])->group(function () {
         Route::get('/reports/occupancy', [ReportController::class, 'occupancy'])->name('reports.occupancy');
     });
 
-    // Admin-only routes - ทุกอย่างต้องเป็น Admin เท่านั้น
-    Route::middleware(['auth', 'admin_only'])->group(function () {
-        // Item routes
-        Route::get('items/export', [ItemController::class, 'export'])->name('items.export');
-        Route::resource('items', ItemController::class);
-
+    // Manager or Admin routes - accessible by both Manager and Admin
+    Route::middleware(['auth', 'manager_or_admin'])->group(function () {
         // Contract routes
         Route::get('contracts/export', [ContractController::class, 'export'])->name('contracts.export');
         Route::get('contracts/{contract}/pdf', [ContractController::class, 'generatePdf'])->name('contracts.pdf');
@@ -91,6 +87,13 @@ Route::middleware(['web'])->group(function () {
         Route::post('maintenances/{maintenance}/start', [MaintenanceController::class, 'startWork'])->name('maintenances.start');
         Route::post('maintenances/{maintenance}/complete', [MaintenanceController::class, 'completeWork'])->name('maintenances.complete');
         Route::resource('maintenances', MaintenanceController::class);
+    });
+
+    // Admin-only routes - ทุกอย่างต้องเป็น Admin เท่านั้น
+    Route::middleware(['auth', 'admin_only'])->group(function () {
+        // Item routes
+        Route::get('items/export', [ItemController::class, 'export'])->name('items.export');
+        Route::resource('items', ItemController::class);
 
         // Facility routes
         Route::get('facilities/export', [FacilityController::class, 'export'])->name('facilities.export');

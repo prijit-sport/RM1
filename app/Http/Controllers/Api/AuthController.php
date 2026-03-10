@@ -18,13 +18,21 @@ class AuthController extends Controller
 
         $user = User::where('email', $request->email)->first();
 
-        if (!$user || !Hash::check($request->password, $user->password)) {
+        if (!$user) {
             return response()->json([
                 'message' => 'Invalid credentials'
             ], 401);
         }
 
-        if (!$user->is_active) {
+        if (!Hash::check($request->password, $user->password)) {
+            return response()->json([
+                'message' => 'Invalid credentials'
+            ], 401);
+        }
+
+        // Check if user account is active (default to true if column doesn't exist)
+        $isActive = $user->is_active ?? true;
+        if (!$isActive) {
             return response()->json([
                 'message' => 'Account is inactive'
             ], 401);
