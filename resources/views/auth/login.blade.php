@@ -126,10 +126,21 @@
     <script>
         // Console logging for debugging
         console.log('[Login] Page loaded');
+        console.log('[Login] Current URL:', window.location.href);
+        console.log('[Login] Previous URL:', document.referrer);
+        
+        // Check and log cookies
+        const cookies = document.cookie;
+        console.log('[Login] All cookies:', cookies);
+        
+        // Check for session cookie
+        const sessionCookie = cookies.split(';').find(c => c.trim().startsWith('rm1_session'));
+        console.log('[Login] Session cookie exists:', !!sessionCookie);
         
         // Log form submission
         document.querySelector('form')?.addEventListener('submit', function(e) {
             console.log('[Login] Form submitting - Email:', document.getElementById('email').value);
+            console.log('[Login] Session before submit:', document.cookie);
         });
         
         // Log any errors

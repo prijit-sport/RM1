@@ -7,15 +7,20 @@ use App\Models\Room;
 use App\Models\Guest;
 use App\Services\ContractService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class ContractController extends Controller
 {
     public function __construct(private readonly ContractService $contractService)
     {
+        Log::info('[ContractController] Constructor called');
     }
 
     public function index(Request $request)
     {
+        Log::info('[ContractController] index - User authenticated: ' . (auth()->check() ? 'Yes - ' . auth()->user()->name : 'No'));
+        Log::info('[ContractController] index - Session ID: ' . $request->session()->getId());
+        
         $contracts = Contract::with(['room', 'guest'])
             ->when($request->filled('status'), function ($query) use ($request) {
                 $query->where('status', $request->status);

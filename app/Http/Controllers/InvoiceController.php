@@ -9,14 +9,23 @@ use App\Models\Invoice;
 use App\Support\AuditLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
 class InvoiceController extends Controller
 {
     private const STATUSES = ['draft', 'sent', 'paid', 'overdue', 'cancelled'];
 
+    public function __construct()
+    {
+        Log::info('[InvoiceController] Constructor called');
+    }
+
     public function index(Request $request)
     {
+        Log::info('[InvoiceController] index - User authenticated: ' . (auth()->check() ? 'Yes - ' . auth()->user()->name : 'No'));
+        Log::info('[InvoiceController] index - Session ID: ' . $request->session()->getId());
+        
         $query = Invoice::query()->with(['booking.room', 'booking.guest']);
 
         if ($request->filled('search')) {

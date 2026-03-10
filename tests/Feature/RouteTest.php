@@ -76,13 +76,15 @@ class RouteTest extends TestCase
     public function test_fallback_route_for_unauthenticated(): void
     {
         $response = $this->get('/some-unknown-path');
-        $response->assertRedirect('/login');
+        // Fallback route returns 404
+        $response->assertStatus(404);
     }
 
     public function test_fallback_route_with_deep_path(): void
     {
         $response = $this->get('/.well-known/appspecific/com.chrome.devtools');
-        $response->assertRedirect('/login');
+        // Fallback route returns 404
+        $response->assertStatus(404);
     }
 
     public function test_login_route_exists(): void

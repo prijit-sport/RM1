@@ -1,4 +1,4 @@
-﻿ให<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="th">
 <head>
     <meta charset="UTF-8">
@@ -426,16 +426,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
     <script>
-        // Console logging for debugging
-        console.log('[Layout] Page loaded - URL:', window.location.href);
-        console.log('[Layout] User authenticated:', {{ auth()->check() ? 'true' : 'false' }});
-        
-        // Log any JavaScript errors
-        window.onerror = function(msg, url, line, col, error) {
-            console.error('[JS Error]', msg, 'at line', line);
-        };
-        
-        // Sidebar toggle
+        // Sidebar toggle for mobile
         document.getElementById('sidebarToggle')?.addEventListener('click', function() {
             document.querySelector('.sidebar').classList.toggle('show');
         });

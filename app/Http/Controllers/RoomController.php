@@ -5,11 +5,22 @@ namespace App\Http\Controllers;
 use App\Models\Room;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class RoomController extends Controller
 {
+    public function __construct()
+    {
+        Log::info('[RoomController] Constructor called');
+    }
+    
     public function index(Request $request)
     {
+        Log::info('[RoomController] index - User authenticated: ' . (auth()->check() ? 'Yes - ' . auth()->user()->name : 'No'));
+        Log::info('[RoomController] index - Session ID: ' . $request->session()->getId());
+        Log::info('[RoomController] index - Request URL: ' . $request->fullUrl());
+        Log::info('[RoomController] index - Headers: ' . $request->header('Cookie'));
+        
         $query = Room::query();
 
         if ($request->filled('search')) {

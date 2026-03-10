@@ -12,6 +12,12 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Ensure session middleware is always included for web routes
+        $middleware->web(prepend: [
+            \Illuminate\Session\Middleware\StartSession::class,
+            \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+        ]);
+        
         $middleware->alias([
             'admin_only' => \App\Http\Middleware\AdminOnly::class,
             'manager_or_admin' => \App\Http\Middleware\ManagerOrAdmin::class,
