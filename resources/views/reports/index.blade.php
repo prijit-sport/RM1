@@ -12,7 +12,7 @@
     </div>
     <div class="d-flex gap-2">
         <a href="{{ route('reports.export') }}" class="btn btn-success">
-            <i class="bi bi-download me-1"></i>ส่งออก CSV
+            <i class="bi bi-download me-1"></i>{{ __("ui.export") }}
         </a>
     </div>
 </div>

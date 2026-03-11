@@ -64,18 +64,12 @@ class User extends Authenticatable
 
     public function hasRole($role)
     {
-        Log::info('[User.hasRole] Checking user: ' . $this->name . ' for role: ' . $role);
-        
         // Ensure role is loaded
         if (!$this->relationLoaded('role')) {
-            Log::info('[User.hasRole] Role not loaded, loading now...');
             $this->load('role');
         }
         
-        $result = $this->role && $this->role->name === $role;
-        Log::info('[User.hasRole] Result: ' . ($result ? 'true' : 'false') . ', User role: ' . ($this->role ? $this->role->name : 'null'));
-        
-        return $result;
+        return $this->role && $this->role->name === $role;
     }
 
     /**

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\BillingCalculator;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -71,14 +72,13 @@ class Booking extends Model
             return $this->total_price;
         }
 
-        $days = $this->actual_check_in->diffInDays($this->actual_check_out);
-        if ($days <= 0) {
-            return $this->total_price;
-        }
+        $monthlyCharge = BillingCalculator::calculateMonthlyCharge(
+            (float) $this->room->price_per_month,
+            $this->actual_check_in,
+            $this->actual_check_out
+        );
 
-        // Use consistent daily rate calculation (30.44 days per month)
-        $dailyRate = $this->room->price_per_month / 30.44;
-        return round($dailyRate * $days, 2);
+        return $monthlyCharge > 0 ? $monthlyCharge : $this->total_price;
     }
 
     /**

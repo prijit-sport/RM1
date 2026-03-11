@@ -1,111 +1,131 @@
-<!DOCTYPE html>
-<html lang="th">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>เพิ่มมิเตอร์</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f5f5; }
-        .container { max-width: 700px; margin: 50px auto; padding: 20px; }
-        .card { background: white; border-radius: 10px; padding: 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        h1 { color: #333; margin-bottom: 20px; }
-        .form-group { margin-bottom: 16px; }
-        label { display:block; margin-bottom: 6px; font-weight: 700; color: #333; }
-        input, select, textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 1em; font-family: inherit; }
-        textarea { resize: vertical; }
-        .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        @media (max-width: 640px) { .row { grid-template-columns: 1fr; } }
-        .btn-group { display:flex; gap: 10px; margin-top: 20px; }
-        .btn { flex: 1; padding: 12px; border: none; border-radius: 5px; cursor: pointer; font-size: 1em; font-weight: 700; transition: background 0.2s; text-decoration:none; display:flex; align-items:center; justify-content:center; }
-        .btn-primary { background: #667eea; color: white; }
-        .btn-primary:hover { background: #764ba2; }
-        .btn-secondary { background: #6c757d; color: white; }
-        .btn-secondary:hover { background: #5a6268; }
-        .error { color: #dc3545; font-size: 0.9em; margin-top: 6px; }
-        .help { color: #666; font-size: 0.9em; margin-top: 6px; }
-        .checkbox { display:flex; gap: 8px; align-items:center; }
-        .checkbox input { width: auto; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="card">
-            <h1>⚡ เพิ่มมิเตอร์น้ำ/ไฟ</h1>
+@extends('layouts.app')
 
-            <form action="{{ route('meters.store') }}" method="POST">
-                @csrf
+@section('title', 'เพิ่มมิเตอร์')
 
-                <div class="form-group">
-                    <label for="room_id">ห้อง *</label>
-                                        <select id="room_id" name="room_id" required>
-                        <option value="">-- เลือกห้อง --</option>
-                        @foreach($rooms as $room)
-                            <option value="{{ $room->id }}" {{ old('room_id') == $room->id ? 'selected' : '' }}>
-                                ห้อง {{ $room->room_number }} ({{ enum_bi('room_type', $room->room_type) }})
-                            </option>
-                        @endforeach
-                    </select>
-                    @error('room_id') <div class="error">{{ $message }}</div> @enderror
+@section('page-title', 'เพิ่มมิเตอร์')
+
+@php
+    /** @var \Illuminate\Support\Collection<\App\Models\Room>|\App\Models\Room[] $rooms */
+@endphp
+
+@section('content')
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-primary text-white py-3">
+                    <h5 class="mb-0"><i class="bi bi-speedometer2 me-2"></i>บันทึกข้อมูลมิเตอร์</h5>
                 </div>
+                <div class="card-body">
+                    <form action="{{ route('meters.store') }}" method="POST">
+                        @csrf
 
-                <div class="row">
-                    <div class="form-group">
-                        <label for="type">ประเภท *</label>
-                        <select id="type" name="type" required>
-                            <option value="">-- เลือกประเภท --</option>
-                            <option value="water" {{ old('type') == 'water' ? 'selected' : '' }}>น้ำ</option>
-                            <option value="electric" {{ old('type') == 'electric' ? 'selected' : '' }}>ไฟ</option>
-                        </select>
-                        @error('type') <div class="error">{{ $message }}</div> @enderror
-                        <div class="help">หมายเหตุ: 1 ห้อง จะมีมิเตอร์น้ำ/ไฟได้อย่างละ 1 ตัว</div>
-                    </div>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-12">
+                                <label for="room_id" class="form-label required">ห้องพัก</label>
+                                <select id="room_id" name="room_id" class="form-select @error('room_id') is-invalid @enderror" required>
+                                    <option value="">-- เลือกห้องพัก --</option>
+                                    @foreach($rooms ?? [] as $room)
+                                        @continue(!$room instanceof \App\Models\Room)
+                                        <option value="{{ $room->id }}" {{ old('room_id') == $room->id ? 'selected' : '' }}>
+                                            {{ $room->room_number ?? '—' }} • {{ $room->room_type ?? '—' }} ({{ number_format($room->price_per_month ?? 0, 2) }} ฿/เดือน)
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('room_id')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
 
-                    <div class="form-group">
-                        <label for="meter_number">เลขมิเตอร์ *</label>
-                        <input id="meter_number" name="meter_number" type="text" value="{{ old('meter_number') }}" placeholder="เช่น W-00001 / E-00001" required>
-                        @error('meter_number') <div class="error">{{ $message }}</div> @enderror
-                    </div>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label for="type" class="form-label required">ประเภทมิเตอร์</label>
+                                <select id="type" name="type" class="form-select @error('type') is-invalid @enderror" required>
+                                    <option value="">-- เลือกประเภท --</option>
+                                    <option value="electric" {{ old('type') == 'electric' ? 'selected' : '' }}>ไฟฟ้า</option>
+                                    <option value="water" {{ old('type') == 'water' ? 'selected' : '' }}>น้ำ</option>
+                                </select>
+                                @error('type')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <div class="col-md-6">
+                                <label for="meter_number" class="form-label required">หมายเลขมิเตอร์</label>
+                                <input id="meter_number" type="text" name="meter_number" class="form-control @error('meter_number') is-invalid @enderror" value="{{ old('meter_number') }}" required>
+                                @error('meter_number')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label for="unit" class="form-label">หน่วยวัด</label>
+                                <input id="unit" type="text" name="unit" class="form-control @error('unit') is-invalid @enderror" value="{{ old('unit') }}" placeholder="เช่น kWh หรือ m³">
+                                @error('unit')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <div class="col-md-6">
+                                <label for="installed_at" class="form-label">วันที่ติดตั้ง</label>
+                                <input id="installed_at" type="date" name="installed_at" class="form-control @error('installed_at') is-invalid @enderror" value="{{ old('installed_at') }}">
+                                @error('installed_at')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label for="rate_per_unit" class="form-label required">อัตรา (บาท/หน่วย)</label>
+                                <input id="rate_per_unit" type="number" step="0.01" name="rate_per_unit" class="form-control @error('rate_per_unit') is-invalid @enderror" value="{{ old('rate_per_unit', 0) }}" required>
+                                @error('rate_per_unit')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <div class="col-md-6">
+                                <label for="tax_rate" class="form-label required">ภาษี (%)</label>
+                                <input id="tax_rate" type="number" step="0.01" name="tax_rate" class="form-control @error('tax_rate') is-invalid @enderror" value="{{ old('tax_rate', 0) }}" required>
+                                @error('tax_rate')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label for="is_active" class="form-label">สถานะ</label>
+                                <select id="is_active" name="is_active" class="form-select @error('is_active') is-invalid @enderror">
+                                    <option value="1" {{ old('is_active', '1') == '1' ? 'selected' : '' }}>ใช้งาน</option>
+                                    <option value="0" {{ old('is_active') == '0' ? 'selected' : '' }}>ระงับใช้งาน</option>
+                                </select>
+                                @error('is_active')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="notes" class="form-label">หมายเหตุเพิ่มเติม</label>
+                            <textarea id="notes" name="notes" class="form-control @error('notes') is-invalid @enderror" rows="3">{{ old('notes') }}</textarea>
+                            @error('notes')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ route('meters.index') }}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> ย้อนกลับ
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle"></i> บันทึกข้อมูล
+                            </button>
+                        </div>
+                    </form>
                 </div>
-
-                <div class="row">
-                    <div class="form-group">
-                        <label for="unit">หน่วย</label>
-                        <input id="unit" name="unit" type="text" value="{{ old('unit') }}" placeholder="เช่น m3 / kWh">
-                        @error('unit') <div class="error">{{ $message }}</div> @enderror
-                    </div>
-
-                    <div class="form-group">
-                        <label for="installed_at">วันที่ติดตั้ง</label>
-                        <input id="installed_at" name="installed_at" type="date" value="{{ old('installed_at') }}">
-                        @error('installed_at') <div class="error">{{ $message }}</div> @enderror
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <div class="checkbox">
-                        <input id="is_active" name="is_active" type="checkbox" value="1" {{ old('is_active', '1') ? 'checked' : '' }}>
-                        <label for="is_active" style="margin:0;">เปิดใช้งาน</label>
-                    </div>
-                    @error('is_active') <div class="error">{{ $message }}</div> @enderror
-                </div>
-
-                <div class="form-group">
-                    <label for="notes">หมายเหตุ</label>
-                    <textarea id="notes" name="notes" rows="4" placeholder="รายละเอียดเพิ่มเติม...">{{ old('notes') }}</textarea>
-                    @error('notes') <div class="error">{{ $message }}</div> @enderror
-                </div>
-
-                <div class="btn-group">
-                    <button type="submit" class="btn btn-primary">✓ บันทึก</button>
-                    <a href="{{ route('meters.index') }}" class="btn btn-secondary">← ยกเลิก</a>
-                </div>
-            </form>
+            </div>
         </div>
     </div>
-</body>
-</html>
-
-
-
-
+</div>
+@endsection

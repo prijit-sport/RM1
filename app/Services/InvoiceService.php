@@ -57,6 +57,25 @@ class InvoiceService
     }
 
     /**
+     * Create a new invoice with minimal defaults.
+     */
+    public function create(array $data): Invoice
+    {
+        $data['amount'] = $data['amount'] ?? 0;
+        $data['tax'] = $data['tax'] ?? 0;
+        $data['total'] = $data['total'] ?? $this->calculateTotal($data['amount'], $data['tax']);
+        $data['issue_date'] = $data['issue_date'] ?? now();
+        $data['due_date'] = $data['due_date'] ?? $this->calculateDueDate($data['issue_date']);
+        $data['invoice_number'] = $data['invoice_number'] ?? $this->generateInvoiceNumber();
+
+        return DB::transaction(function () use ($data) {
+            $invoice = Invoice::create($data);
+            AuditLogger::log('invoice.created', $invoice);
+            return $invoice;
+        });
+    }
+
+    /**
      * Create a recurring monthly invoice.
      */
     public function createMonthlyInvoice(Room $room, Guest $guest, int $month, int $year): ?Invoice
@@ -129,19 +148,23 @@ class InvoiceService
      */
     public function applyLateFee(Invoice $invoice): Invoice
     {
-        if (!$invoice->due_date->isPast() || $invoice->status === 'paid') {
+        $dueDate = $invoice->due_date;
+        if (!($dueDate instanceof Carbon) || !$dueDate->isPast() || $invoice->status === 'paid') {
             return $invoice;
         }
 
-        $daysOverdue = now()->diffInDays($invoice->due_date);
+        $daysOverdue = now()->diffInDays($dueDate);
         $amount = $invoice->amount ?? 0;
         $tax = $invoice->tax ?? 0;
+        $existingLateFee = $invoice->late_fee ?? 0;
+        
+        // Calculate late fee on base amount (not including previous late fee to avoid double compounding)
         $subtotal = $amount + $tax;
         $lateFee = $subtotal * self::DEFAULT_LATE_FEE_RATE * $daysOverdue;
 
         $invoice->update([
-            'late_fee' => $lateFee,
-            'total' => $subtotal + $lateFee,
+            'late_fee' => $existingLateFee + $lateFee,
+            'total' => $subtotal + $existingLateFee + $lateFee,
             'status' => 'overdue',
         ]);
 
@@ -157,6 +180,7 @@ class InvoiceService
             ->whereDate('due_date', '<', Carbon::today())
             ->get();
 
+        /** @var Invoice $invoice */
         foreach ($overdueInvoices as $invoice) {
             $this->applyLateFee($invoice);
             // TODO: Send email/SMS notification

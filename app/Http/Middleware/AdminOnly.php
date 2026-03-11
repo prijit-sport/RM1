@@ -26,10 +26,10 @@ class AdminOnly
         $user = auth()->user();
         Log::info('[AdminOnly] User: ' . $user->name . ', Role: ' . ($user->role ? $user->role->name : 'null'));
         
-        // If user has no role, allow access (basic authenticated user)
+        // If user has no role, deny access (security requirement)
         if (!$user->role) {
-            Log::warning('[AdminOnly] User has no role - allowing access');
-            return $next($request);
+            Log::warning('[AdminOnly] User has no role - denying access for user: ' . $user->name);
+            abort(403, 'คุณไม่มีสิทธิ์เข้าถึงหน้านี้');
         }
         
         // Check if user has Admin role

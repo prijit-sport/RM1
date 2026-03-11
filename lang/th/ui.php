@@ -33,6 +33,7 @@ return [
         'confirm_only_pending' => 'ยืนยันได้เฉพาะรายการที่รอยืนยันเท่านั้น',
         'cancel_not_allowed' => 'รายการนี้ไม่สามารถยกเลิกได้',
         'invalid_initial_status' => 'สร้างรายการใหม่ด้วยสถานะเช็คอินหรือเช็คเอาท์ไม่ได้',
+        'check_out_after_check_in' => 'วันออกต้องหลังวันเข้าพัก',
         'export_id' => 'รหัสการจอง',
         'export_room' => 'ห้อง',
         'export_guest' => 'ผู้เข้าพัก',

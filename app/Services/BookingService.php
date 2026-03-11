@@ -5,6 +5,8 @@ namespace App\Services;
 use App\Models\Booking;
 use App\Models\Room;
 use App\Support\AuditLogger;
+use App\Support\BillingCalculator;
+use Carbon\Carbon;
 use DateTime;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
@@ -30,9 +32,24 @@ class BookingService
             ]);
         }
 
+        // Validate check_in_date is before check_out_date
+        $checkIn = new DateTime($validated['check_in_date']);
+        $checkOut = new DateTime($validated['check_out_date']);
+        
+        if ($checkOut <= $checkIn) {
+            throw ValidationException::withMessages([
+                'check_out_date' => __('ui.booking.check_out_after_check_in'),
+            ]);
+        }
+
         DB::transaction(function () use ($validated) {
             $room = $this->lockRoom((int) $validated['room_id']);
-            $validated['total_price'] = $this->calculateTotal($room->price_per_month, $validated['check_in_date'], $validated['check_out_date']);
+            $pricePerMonth = (float) $room->price_per_month;
+            $validated['total_price'] = $this->calculateTotal(
+                $pricePerMonth,
+                $validated['check_in_date'],
+                $validated['check_out_date']
+            );
 
             if ($this->hasOverlappingBooking(
                 (int) $validated['room_id'],
@@ -67,7 +84,22 @@ class BookingService
                 ]);
             }
 
-            $validated['total_price'] = $this->calculateTotal($newRoom->price_per_month, $validated['check_in_date'], $validated['check_out_date']);
+            // Validate check_in_date is before check_out_date
+            $checkIn = new DateTime($validated['check_in_date']);
+            $checkOut = new DateTime($validated['check_out_date']);
+            
+            if ($checkOut <= $checkIn) {
+                throw ValidationException::withMessages([
+                    'check_out_date' => __('ui.booking.check_out_after_check_in'),
+                ]);
+            }
+
+            $pricePerMonth = (float) $newRoom->price_per_month;
+            $validated['total_price'] = $this->calculateTotal(
+                $pricePerMonth,
+                $validated['check_in_date'],
+                $validated['check_out_date']
+            );
 
             if (
                 in_array($validated['status'], self::ACTIVE_BOOKING_STATUSES, true)
@@ -145,23 +177,18 @@ class BookingService
         });
     }
 
-    private function calculateTotal(float $pricePerMonth, string $checkInDate, string $checkOutDate): float
+    private function calculateTotal(float|int|string $pricePerMonth, string $checkInDate, string $checkOutDate): float
     {
-        $checkIn = new DateTime($checkInDate);
-        $checkOut = new DateTime($checkOutDate);
-        $days = $checkOut->diff($checkIn)->days;
-        
-        // Handle zero or negative price
-        if ($pricePerMonth <= 0) {
+        $price = (float) $pricePerMonth;
+        $checkIn = Carbon::parse($checkInDate);
+        $checkOut = Carbon::parse($checkOutDate);
+
+        // Handle zero or negative price / invalid date range
+        if ($price <= 0 || $checkOut <= $checkIn) {
             return 0;
         }
-        
-        // Calculate daily rate from monthly price
-        // Using actual days in month (average 30.44 days per month)
-        $dailyRate = $pricePerMonth / 30.44;
-        
-        // Calculate total based on actual days
-        return round($dailyRate * $days, 2);
+
+        return BillingCalculator::calculateMonthlyCharge($price, $checkIn, $checkOut);
     }
 
     private function hasOverlappingBooking(

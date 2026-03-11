@@ -4,11 +4,16 @@ namespace App\Http\Controllers;
 
 use App\Models\Meter;
 use App\Models\MeterReading;
+use App\Services\MeterBillingService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
 class MeterReadingController extends Controller
 {
+    public function __construct(protected MeterBillingService $billingService)
+    {
+    }
+
     public function index(Meter $meter, Request $request)
     {
         $meter->load('room');
@@ -25,7 +30,10 @@ class MeterReadingController extends Controller
         }
 
         $readings = $query->latest('reading_date')->paginate(15);
-        return view('meter_readings.index', compact('meter', 'readings'));
+        $billing = $this->billingService->summarize($meter);
+        return response()
+            ->view('meter_readings.index', compact('meter', 'readings', 'billing'))
+            ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
     }
 
     public function create(Meter $meter)

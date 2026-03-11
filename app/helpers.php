@@ -167,6 +167,34 @@ if (!function_exists('csv_stream_download')) {
     }
 }
 
+if (!function_exists('csv_download')) {
+    function csv_download(string $filename, array $rows)
+    {
+        $safeRows = array_map(static function ($row): array {
+            return array_map(static function ($value): string {
+                return csv_sanitize_text($value);
+            }, is_array($row) ? $row : [$row]);
+        }, $rows);
+
+        $downloadName = preg_replace('/\.csv$/i', '', $filename) . '.csv';
+
+        return response()->streamDownload(function () use ($safeRows): void {
+            $out = fopen('php://output', 'w');
+            if ($out === false) {
+                return;
+            }
+
+            fwrite($out, "\xEF\xBB\xBF");
+
+            foreach ($safeRows as $row) {
+                fputcsv($out, $row);
+            }
+
+            fclose($out);
+        }, $downloadName, ['Content-Type' => 'text/csv; charset=UTF-8']);
+    }
+}
+
 if (!function_exists('xlsx_cell_ref')) {
     function xlsx_cell_ref(int $column, int $row): string
     {

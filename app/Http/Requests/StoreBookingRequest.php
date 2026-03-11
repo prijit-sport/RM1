@@ -16,7 +16,7 @@ class StoreBookingRequest extends FormRequest
         return [
             'room_id' => 'required|exists:rooms,id',
             'guest_id' => 'required|exists:guests,id',
-            'check_in_date' => 'required|date|after:today',
+            'check_in_date' => 'required|date|after_or_equal:today',
             'check_out_date' => 'required|date|after:check_in_date',
             'status' => 'required|in:pending,confirmed,checked_in,checked_out,cancelled',
             'notes' => 'nullable|max:500',

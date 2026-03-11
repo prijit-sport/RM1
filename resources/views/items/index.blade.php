@@ -8,7 +8,7 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h4 class="mb-0">รายการสินค้า</h4>
     <div class="d-flex gap-2">
-        <a href="{{ route('items.export') }}" class="btn btn-outline-success">
+        <a href="{{ route('items.export') }}" class="btn btn-success">
             <i class="bi bi-download me-1"></i>{{ __("ui.export") }}
         </a>
         <a href="{{ route('items.create') }}" class="btn btn-primary-custom">

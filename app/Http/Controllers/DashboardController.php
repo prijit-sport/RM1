@@ -24,7 +24,7 @@ class DashboardController extends Controller
             // KPI Data
             $roomCount = Room::count() ?: 0;
             $guestCount = Guest::count() ?: 0;
-            $bookingCount = Booking::count() ?: 0;
+            $pendingBookingCount = Booking::where('status', 'pending')->count() ?: 0;
             $occupiedCount = Room::where('status', 'occupied')->count() ?: 0;
             $maintenanceCount = Room::where('status', 'maintenance')->count() ?: 0;
 
@@ -97,7 +97,7 @@ class DashboardController extends Controller
             return compact(
                 'roomCount', 
                 'guestCount', 
-                'bookingCount', 
+                'pendingBookingCount', 
                 'occupiedCount',
                 'maintenanceCount',
                 'pendingPayments',
@@ -131,7 +131,11 @@ class DashboardController extends Controller
      */
     public static function clearCache(): void
     {
-        Cache::forget('dashboard_' . auth()->id());
+        if (auth()->check()) {
+            Cache::forget('dashboard_' . auth()->id() . '_private');
+        } else {
+            Cache::forget('dashboard_guest_public');
+        }
     }
 
     /**

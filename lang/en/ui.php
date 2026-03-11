@@ -33,6 +33,7 @@ return [
         'confirm_only_pending' => 'Only pending bookings can be confirmed.',
         'cancel_not_allowed' => 'This booking cannot be cancelled.',
         'invalid_initial_status' => 'Cannot create booking with checked-in or checked-out status.',
+        'check_out_after_check_in' => 'Check-out date must be after check-in date.',
         'export_id' => 'Booking ID',
         'export_room' => 'Room',
         'export_guest' => 'Guest',

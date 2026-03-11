@@ -47,6 +47,8 @@ class RoomController extends Controller
             'price_per_month' => 'required|numeric|min:0',
             'capacity' => 'required|integer|min:1',
             'status' => 'required|in:available,occupied,maintenance',
+            'floor' => 'nullable|integer|min:1',
+            'building' => 'nullable|string|max:50',
             'description' => 'nullable|max:500',
         ]);
 
@@ -74,6 +76,8 @@ class RoomController extends Controller
             'price_per_month' => 'required|numeric|min:0',
             'capacity' => 'required|integer|min:1',
             'status' => 'required|in:available,occupied,maintenance',
+            'floor' => 'nullable|integer|min:1',
+            'building' => 'nullable|string|max:50',
             'description' => 'nullable|max:500',
         ]);
 
@@ -104,6 +108,8 @@ class RoomController extends Controller
             'rooms.*.price_per_month' => 'required|numeric|min:0',
             'rooms.*.capacity' => 'required|integer|min:1',
             'rooms.*.status' => 'nullable|in:available,occupied,maintenance',
+            'rooms.*.floor' => 'nullable|integer|min:1',
+            'rooms.*.building' => 'nullable|string|max:50',
             'rooms.*.description' => 'nullable|max:500',
         ]);
 
@@ -115,6 +121,8 @@ class RoomController extends Controller
                     'price_per_month' => $roomData['price_per_month'],
                     'capacity' => $roomData['capacity'],
                     'status' => $roomData['status'] ?? 'available',
+                    'floor' => $roomData['floor'] ?? null,
+                    'building' => $roomData['building'] ?? null,
                     'description' => $this->sanitizeNullableText($roomData['description'] ?? null),
                 ]);
             }
@@ -127,15 +135,17 @@ class RoomController extends Controller
     {
         $rooms = Room::all();
 
-        $csvData = [];
-        $csvData[] = ['Room Number', 'Room Type', 'Price/Month', 'Capacity', 'Status', 'Description'];
+        $rows = [];
+        $rows[] = ['Room Number', 'Room Type', 'Price/Month', 'Capacity', 'Floor', 'Building', 'Status', 'Description'];
 
         foreach ($rooms as $room) {
-            $csvData[] = [
+            $rows[] = [
                 $room->room_number,
                 $room->room_type,
                 $room->price_per_month,
                 $room->capacity,
+                $room->floor ?? '-',
+                $room->building ?? '-',
                 $room->status,
                 csv_sanitize_text($room->description),
             ];
@@ -143,7 +153,7 @@ class RoomController extends Controller
 
         $filename = 'rooms_export_' . date('Y-m-d') . '.xlsx';
 
-        return xlsx_download($filename, $csvData);
+        return xlsx_download($filename, $rows);
     }
 
     private function sanitizeNullableText(?string $value): ?string
@@ -157,4 +167,3 @@ class RoomController extends Controller
         return $clean === '' ? null : $clean;
     }
 }
-

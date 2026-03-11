@@ -102,8 +102,8 @@ class BookingController extends Controller
     {
         $this->authorize('export', Booking::class);
 
-        return csv_stream_download(
-            'bookings_export_' . date('Y-m-d') . '.csv',
+        $filename = 'bookings_export_' . date('Y-m-d') . '.xlsx';
+        $rows = [
             [
                 __('ui.booking.export_id'),
                 __('ui.booking.export_room'),
@@ -114,25 +114,26 @@ class BookingController extends Controller
                 __('ui.booking.export_status'),
                 __('ui.booking.export_notes'),
             ],
-            static function (callable $push): void {
-                Booking::with(['room', 'guest'])
-                    ->orderBy('id')
-                    ->chunk(500, function ($bookings) use ($push): void {
-                        foreach ($bookings as $booking) {
-                            $push([
-                                $booking->id,
-                                $booking->room->room_number ?? '-',
-                                trim(($booking->guest->first_name ?? '') . ' ' . ($booking->guest->last_name ?? '')) ?: '-',
-                                optional($booking->check_in_date)->format('d/m/Y'),
-                                optional($booking->check_out_date)->format('d/m/Y'),
-                                $booking->total_price,
-                                $booking->status,
-                                $booking->notes ?? '-',
-                            ]);
-                        }
-                    });
-            }
-        );
+        ];
+
+        Booking::with(['room', 'guest'])
+            ->orderBy('id')
+            ->chunk(500, function ($bookings) use (&$rows): void {
+                foreach ($bookings as $booking) {
+                    $rows[] = [
+                        $booking->id,
+                        $booking->room->room_number ?? '-',
+                        trim(($booking->guest->first_name ?? '') . ' ' . ($booking->guest->last_name ?? '')) ?: '-',
+                        optional($booking->check_in_date)->format('d/m/Y'),
+                        optional($booking->check_out_date)->format('d/m/Y'),
+                        $booking->total_price,
+                        $booking->status,
+                        $booking->notes ?? '-',
+                    ];
+                }
+            });
+
+        return xlsx_download($filename, $rows);
     }
 
     public function confirm(Booking $booking)

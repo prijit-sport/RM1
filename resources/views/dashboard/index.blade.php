@@ -32,6 +32,10 @@
 @endpush
 
 @section('content')
+@php
+    /** @var \Illuminate\Support\Collection|\App\Models\Booking[] $recentBookings */
+    /** @var \Illuminate\Support\Collection|\App\Models\Invoice[] $pendingInvoices */
+@endphp
 <div class="row g-4 mb-4">
     <!-- KPI Cards -->
     <div class="col-md-6 col-xl-3">
@@ -200,13 +204,18 @@
                     </thead>
                     <tbody>
                         @forelse($recentBookings ?? [] as $booking)
+                        @php /** @var \App\Models\Booking $booking */ @endphp
                         <tr>
                             <td>
+                                @if($booking->room_id)
                                 <a href="{{ route('rooms.show', $booking->room_id) }}" class="text-decoration-none">
-                                    {{ $booking->room->room_number ?? '-' }}
+                                    {{ optional($booking->room)->room_number ?? '-' }}
                                 </a>
+                                @else
+                                -
+                                @endif
                             </td>
-                            <td>{{ $booking->guest->full_name ?? '-' }}</td>
+                            <td>{{ optional($booking->guest)->full_name ?? '-' }}</td>
                             <td>{{ \Carbon\Carbon::parse($booking->check_in_date)->format('d/m/Y') }}</td>
                             <td>
                                 @php
@@ -258,14 +267,15 @@
                     </thead>
                     <tbody>
                         @forelse($pendingInvoices ?? [] as $invoice)
+                        @php /** @var \App\Models\Invoice $invoice */ @endphp
                         <tr>
                             <td>
                                 <a href="{{ route('invoices.show', $invoice->id) }}" class="text-decoration-none">
                                     {{ $invoice->invoice_number }}
                                 </a>
                             </td>
-                            <td>{{ $invoice->booking->guest->full_name ?? '-' }}</td>
-                            <td>{{ number_format($invoice->total, 2) }} &#3647;</td>
+                            <td>{{ optional(optional($invoice->booking)->guest)->full_name ?? '-' }}</td>
+                            <td>{{ number_format($invoice->total ?? 0, 2) }} &#3647;</td>
                             <td>
                                 @php
                                 $dueDate = \Carbon\Carbon::parse($invoice->due_date);
@@ -336,9 +346,3 @@
     });
 </script>
 @endpush
-
-
-
-
-
-

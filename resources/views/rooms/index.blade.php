@@ -11,7 +11,7 @@
         <a href="{{ route('rooms.bulk-create') }}" class="btn btn-outline-primary">
             <i class="bi bi-plus-circle me-1"></i>เพิ่มหลายห้อง
         </a>
-        <a href="{{ route('rooms.export') }}" class="btn btn-outline-success">
+        <a href="{{ route('rooms.export') }}" class="btn btn-success">
             <i class="bi bi-download me-1"></i>{{ __("ui.export") }}
         </a>
         <a href="{{ route('rooms.create') }}" class="btn btn-primary-custom">

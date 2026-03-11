@@ -93,9 +93,59 @@
                         @endif
                     </div>
                 </div>
-            </div>
+        </div>
+        </div>
 
-            @if($meter->notes)
+        <div class="card mb-4">
+            <div class="header" style="margin-bottom: 12px;">
+                <h1 style="font-size: 1.1em;">สรุปการใช้งานล่าสุด</h1>
+                <span class="badge badge-water" style="background:#dbeafe;color:#1d4ed8;padding:6px 12px;">
+                    {{ $meter->type === 'water' ? 'น้ำ' : 'ไฟฟ้า' }}
+                </span>
+            </div>
+            @if($billing['has_reading'])
+                <table style="width:100%;border-collapse:collapse;">
+                    <tbody>
+                        <tr>
+                            <th style="text-align:left;width:45%;padding:10px;border-bottom:1px solid #eee;">เลขก่อนหน้า</th>
+                            <td style="padding:10px;border-bottom:1px solid #eee;">{{ number_format($billing['previous'], 2) }} ({{ $billing['previous_date'] ?? '-' }})</td>
+                        </tr>
+                        <tr>
+                            <th style="text-align:left;padding:10px;border-bottom:1px solid #eee;">เลขปัจจุบัน</th>
+                            <td style="padding:10px;border-bottom:1px solid #eee;">{{ number_format($billing['current'], 2) }} ({{ $billing['current_date'] ?? '-' }})</td>
+                        </tr>
+                        <tr>
+                            <th style="text-align:left;padding:10px;border-bottom:1px solid #eee;">หน่วยที่ใช้</th>
+                            <td style="padding:10px;border-bottom:1px solid #eee;">{{ number_format($billing['usage'], 2) }} {{ $meter->unit ?? '' }}</td>
+                        </tr>
+                        <tr>
+                            <th style="text-align:left;padding:10px;border-bottom:1px solid #eee;">อัตราต่อหน่วย</th>
+                            <td style="padding:10px;border-bottom:1px solid #eee;">{{ number_format($billing['rate'], 2) }} บาท</td>
+                        </tr>
+                        <tr>
+                            <th style="text-align:left;padding:10px;border-bottom:1px solid #eee;">ภาษี/ค่าธรรมเนียม ({{ number_format($billing['tax_rate'], 2) }}%)</th>
+                            <td style="padding:10px;border-bottom:1px solid #eee;">{{ number_format($billing['tax'], 2) }} บาท</td>
+                        </tr>
+                        <tr>
+                            <th style="text-align:left;padding:10px;">ยอดรวม</th>
+                            <td style="padding:10px;font-weight:700;">{{ number_format($billing['total'], 2) }} บาท</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="actions" style="margin-top:8px;">
+                    <span class="badge badge-active" style="background:#e0f2fe;color:#0c4a6e;padding:6px 12px;font-size:0.8em;">
+                        {{ $billing['formula'] }}
+                    </span>
+                    <span class="badge badge-inactive" style="background:#fef9c3;color:#92400e;padding:6px 12px;font-size:0.8em;">
+                        รับบันทึกโดย {{ $billing['recorder'] ?? 'ไม่ระบุ' }}
+                    </span>
+                </div>
+            @else
+                <div style="padding:16px;color:#475569;">ยังไม่มีข้อมูลเลขอ่านล่าสุด กรุณาบันทึกเลขก่อนเพื่อแสดงผลคำนวณ</div>
+            @endif
+        </div>
+
+        @if($meter->notes)
                 <div style="margin-top: 14px;">
                     <div class="label">หมายเหตุ</div>
                     <div class="value" style="font-weight: 500; white-space: pre-wrap;">{{ $meter->notes }}</div>

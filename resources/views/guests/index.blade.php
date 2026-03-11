@@ -8,7 +8,7 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h4 class="mb-0">รายการแขก</h4>
     <div class="d-flex gap-2">
-        <a href="{{ route('guests.export') }}" class="btn btn-outline-success">
+        <a href="{{ route('guests.export') }}" class="btn btn-success">
             <i class="bi bi-download me-1"></i>{{ __("ui.export") }}
         </a>
         <a href="{{ route('guests.create') }}" class="btn btn-primary-custom">

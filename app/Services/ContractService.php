@@ -20,7 +20,7 @@ class ContractService
     public function create(array $validated): Contract
     {
         // Auto-generate contract number if not provided
-        if (!isset($validated['contract_number'])) {
+        if (empty($validated['contract_number'] ?? null)) {
             $validated['contract_number'] = $this->generateContractNumber();
         }
 
@@ -239,8 +239,9 @@ class ContractService
 
     /**
      * Update room status.
+     * Made public to allow access from Controller.
      */
-    private function updateRoomStatus(int $roomId, string $status): void
+    public function updateRoomStatus(int $roomId, string $status): void
     {
         $room = Room::find($roomId);
         if ($room && $room->status !== 'maintenance') {
@@ -259,4 +260,3 @@ class ContractService
         return $start->diffInMonths($end);
     }
 }
-

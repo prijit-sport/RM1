@@ -7,20 +7,15 @@ use App\Models\Room;
 use App\Models\Guest;
 use App\Services\ContractService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 
 class ContractController extends Controller
 {
-    public function __construct(private readonly ContractService $contractService)
+    public function __construct(protected readonly ContractService $contractService)
     {
-        Log::info('[ContractController] Constructor called');
     }
 
     public function index(Request $request)
     {
-        Log::info('[ContractController] index - User authenticated: ' . (auth()->check() ? 'Yes - ' . auth()->user()->name : 'No'));
-        Log::info('[ContractController] index - Session ID: ' . $request->session()->getId());
-        
         $contracts = Contract::with(['room', 'guest'])
             ->when($request->filled('status'), function ($query) use ($request) {
                 $query->where('status', $request->status);
@@ -47,15 +42,19 @@ class ContractController extends Controller
 
     public function create()
     {
-        $rooms = Room::where('status', 'available')->get();
+        $rooms = Room::whereIn('status', ['available', 'occupied'])
+            ->orderBy('room_number')
+            ->get();
         $guests = Guest::all();
+        $contractNumber = $this->contractService->generateContractNumber();
         
-        return view('contracts.create', compact('rooms', 'guests'));
+        return view('contracts.create', compact('rooms', 'guests', 'contractNumber'));
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
+            'contract_number' => 'nullable|string|max:255|unique:contracts,contract_number',
             'room_id' => 'required|exists:rooms,id',
             'guest_id' => 'required|exists:guests,id',
             'title' => 'required|max:200',
@@ -106,6 +105,7 @@ class ContractController extends Controller
     public function update(Request $request, Contract $contract)
     {
         $validated = $request->validate([
+            'contract_number' => 'nullable|string|max:255|unique:contracts,contract_number,' . $contract->id,
             'room_id' => 'required|exists:rooms,id',
             'guest_id' => 'required|exists:guests,id',
             'title' => 'required|max:200',
@@ -140,7 +140,13 @@ class ContractController extends Controller
 
     public function destroy(Contract $contract)
     {
+        $roomId = $contract->room_id;
         $contract->delete();
+
+        // Update room status if contract was active
+        if ($roomId) {
+            $this->contractService->updateRoomStatus($roomId, 'available');
+        }
 
         return redirect()->route('contracts.index')->with('success', __('ui.contract.deleted'));
     }
@@ -190,4 +196,3 @@ class ContractController extends Controller
         return view('contracts.index', compact('contracts'));
     }
 }
-

@@ -11,7 +11,7 @@
         <a href="{{ route('invoices.bulk-create') }}" class="btn btn-outline-primary">
             <i class="bi bi-plus-circle me-1"></i>สร้างหลายใบ
         </a>
-        <a href="{{ route('invoices.export') }}" class="btn btn-outline-success">
+        <a href="{{ route('invoices.export') }}" class="btn btn-success">
             <i class="bi bi-download me-1"></i>{{ __("ui.export") }}
         </a>
         <a href="{{ route('invoices.create') }}" class="btn btn-primary-custom">
@@ -126,7 +126,6 @@
     </div>
 @endif
 @endsection
-
 
 
 

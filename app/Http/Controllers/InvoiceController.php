@@ -6,6 +6,7 @@ use App\Http\Requests\StoreInvoiceRequest;
 use App\Http\Requests\UpdateInvoiceRequest;
 use App\Models\Booking;
 use App\Models\Invoice;
+use App\Services\InvoiceService;
 use App\Support\AuditLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -14,6 +15,10 @@ use Illuminate\Validation\ValidationException;
 class InvoiceController extends Controller
 {
     private const STATUSES = ['draft', 'sent', 'paid', 'overdue', 'cancelled'];
+
+    public function __construct(protected readonly InvoiceService $invoiceService)
+    {
+    }
 
     public function index(Request $request)
     {
@@ -39,13 +44,21 @@ class InvoiceController extends Controller
     public function create()
     {
         $bookings = Booking::with(['room', 'guest'])->orderByDesc('id')->get();
+        $invoiceNumber = $this->invoiceService->generateInvoiceNumber();
 
-        return view('invoices.create', compact('bookings'));
+        return view('invoices.create', compact('bookings', 'invoiceNumber'));
     }
 
     public function store(StoreInvoiceRequest $request)
     {
         $validated = $request->validated();
+        if (empty($validated['invoice_number'])) {
+            $validated['invoice_number'] = $this->invoiceService->generateInvoiceNumber();
+        }
+        $validated['total'] = $validated['total'] ?? $this->invoiceService->calculateTotal(
+            (float) $validated['amount'],
+            (float) $validated['tax']
+        );
 
         Invoice::create($validated);
 
@@ -69,6 +82,10 @@ class InvoiceController extends Controller
     public function update(UpdateInvoiceRequest $request, Invoice $invoice)
     {
         $validated = $request->validated();
+        $validated['total'] = $validated['total'] ?? $this->invoiceService->calculateTotal(
+            (float) $validated['amount'],
+            (float) $validated['tax']
+        );
 
         $invoice->update($validated);
 
@@ -101,6 +118,7 @@ class InvoiceController extends Controller
             'invoices.*.issue_date' => ['required', 'date'],
             'invoices.*.due_date' => ['required', 'date'],
             'invoices.*.status' => ['required', 'in:' . implode(',', self::STATUSES)],
+            'invoices.*.payment_method' => ['nullable', 'in:cash,bank_transfer,credit_card,e_wallet,other'],
             'invoices.*.notes' => ['nullable', 'string', 'max:500'],
         ]);
 
@@ -114,8 +132,12 @@ class InvoiceController extends Controller
 
         DB::transaction(function () use ($validated): void {
             foreach ($validated['invoices'] as $invoiceData) {
+                $booking = Booking::find($invoiceData['booking_id']);
+                
                 Invoice::create([
                     'booking_id' => $invoiceData['booking_id'],
+                    'guest_id' => $booking->guest_id ?? null,
+                    'room_id' => $booking->room_id ?? null,
                     'invoice_number' => $invoiceData['invoice_number'],
                     'amount' => $invoiceData['amount'],
                     'tax' => $invoiceData['tax'],
@@ -123,6 +145,7 @@ class InvoiceController extends Controller
                     'issue_date' => $invoiceData['issue_date'],
                     'due_date' => $invoiceData['due_date'],
                     'status' => $invoiceData['status'],
+                    'payment_method' => $invoiceData['payment_method'] ?? null,
                     'notes' => $invoiceData['notes'] ?? null,
                 ]);
             }
@@ -133,31 +156,30 @@ class InvoiceController extends Controller
 
     public function export(Request $request)
     {
-        $headers = ['Invoice Number', 'Booking ID', 'Amount', 'Tax', 'Total', 'Issue Date', 'Due Date', 'Status', 'Notes'];
+        $filename = 'invoices_export_' . date('Y-m-d') . '.xlsx';
+        $rows = [
+            ['Invoice Number', 'Booking ID', 'Amount', 'Tax', 'Total', 'Issue Date', 'Due Date', 'Status', 'Notes'],
+        ];
 
-        return csv_stream_download(
-            'invoices_export_' . date('Y-m-d') . '.csv',
-            $headers,
-            static function (callable $push): void {
-                Invoice::query()
-                    ->orderBy('id')
-                    ->chunk(500, function ($invoices) use ($push): void {
-                        foreach ($invoices as $invoice) {
-                            $push([
-                                $invoice->invoice_number,
-                                $invoice->booking_id,
-                                $invoice->amount,
-                                $invoice->tax,
-                                $invoice->total,
-                                $invoice->issue_date,
-                                $invoice->due_date,
-                                $invoice->status,
-                                $invoice->notes,
-                            ]);
-                        }
-                    });
-            }
-        );
+        Invoice::query()
+            ->orderBy('id')
+            ->chunk(500, function ($invoices) use (&$rows): void {
+                foreach ($invoices as $invoice) {
+                    $rows[] = [
+                        $invoice->invoice_number,
+                        $invoice->booking_id,
+                        $invoice->amount,
+                        $invoice->tax,
+                        $invoice->total,
+                        $invoice->issue_date,
+                        $invoice->due_date,
+                        $invoice->status,
+                        $invoice->notes,
+                    ];
+                }
+            });
+
+        return xlsx_download($filename, $rows);
     }
 
     public function markAsPaid(Invoice $invoice)
@@ -189,4 +211,3 @@ class InvoiceController extends Controller
         return redirect()->route('invoices.index')->with('success', __('ui.invoice.reminders_sent', ['count' => $dueInvoices->count()]));
     }
 }
-

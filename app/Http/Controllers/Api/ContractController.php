@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 
 class ContractController extends Controller
 {
-    public function __construct(private readonly ContractService $contractService)
+    public function __construct(protected readonly ContractService $contractService)
     {
     }
 

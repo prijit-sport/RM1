@@ -11,7 +11,7 @@
         <a href="{{ route('contracts.expiring') }}" class="btn btn-outline-warning">
             <i class="bi bi-exclamation-triangle me-1"></i>สัญญาหมดอายุเร็ว
         </a>
-        <a href="{{ route('contracts.export') }}" class="btn btn-outline-success">
+        <a href="{{ route('contracts.export') }}" class="btn btn-success">
             <i class="bi bi-download me-1"></i>{{ __("ui.export") }}
         </a>
         <a href="{{ route('contracts.create') }}" class="btn btn-primary-custom">
@@ -132,4 +132,3 @@
     </div>
 @endif
 @endsection
-

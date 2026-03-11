@@ -26,7 +26,7 @@ class StoreInvoiceRequest extends FormRequest
             'invoice_number' => 'required|unique:invoices|max:50',
             'amount' => 'required|numeric|min:0',
             'tax' => 'required|numeric|min:0',
-            'total' => 'required|numeric|min:0',
+            'total' => 'nullable|numeric|min:0',
             'issue_date' => 'required|date',
             'due_date' => 'required|date|after:issue_date',
             'status' => 'required|in:draft,sent,paid,overdue,cancelled',
