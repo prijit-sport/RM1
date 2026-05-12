@@ -5,44 +5,77 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Auth; // เพิ่มตัวนี้
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rules\Password;
 
 class AccountController extends Controller
 {
+    /**
+     * แสดงหน้าแก้ไขโปรไฟล์
+     */
+    public function editProfile()
+    {
+        $user = Auth::user();
+        // ตรวจสอบว่าไฟล์อยู่ที่ resources/views/profile/edit.blade.php
+        return view('profile.edit', compact('user'));
+    }
+
+    /**
+     * อัปเดตข้อมูลโปรไฟล์และรหัสผ่าน
+     */
     public function updateProfile(Request $request)
     {
         /** @var User $user */
-        $user = Auth::user(); // ใช้ Auth Facade แทน helper
+        $user = Auth::user();
 
-        if (!$user) {
-            return redirect()->route('login');
-        }
-
+        // ตรวจสอบความถูกต้องของข้อมูล
         $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $user->id],
+            // กำหนดให้ password เป็น nullable (ไม่ต้องกรอกก็ได้) 
+            // แต่ถ้ากรอก ต้องยาวอย่างน้อย 8 ตัว และต้องตรงกับช่อง confirmation
+            'password' => ['nullable', 'string', 'min:8', 'confirmed'],
+        ], [
+            'password.min' => 'รหัสผ่านใหม่ต้องมีความยาวอย่างน้อย 8 ตัวอักษร',
+            'password.confirmed' => 'การยืนยันรหัสผ่านไม่ตรงกัน',
         ]);
 
+        // อัปเดตชื่อและอีเมล
         $user->name = $request->name;
         $user->email = $request->email;
+
+        // ตรวจสอบว่ามีการกรอกรหัสผ่านใหม่มาหรือไม่
+        if ($request->filled('password')) {
+            $user->password = Hash::make($request->password);
+        }
+
         $user->save();
 
         return redirect()->back()->with('success', 'โปรไฟล์ถูกอัปเดตเรียบร้อยแล้ว');
     }
 
+    /**
+     * แสดงหน้าตั้งค่าระบบ
+     */
+    public function editSettings()
+    {
+        $user = Auth::user();
+        
+        $settings = [
+            'locale' => old('locale', 'th'),
+            'items_per_page' => old('items_per_page', 20),
+            'compact_mode' => old('compact_mode', false),
+        ];
+
+        return view('profile.settings', compact('user', 'settings'));
+    }
+
+    /**
+     * อัปเดตการตั้งค่าระบบ
+     */
     public function updateSettings(Request $request)
     {
-        /** @var User $user */
-        $user = Auth::user();
-
-        if ($request->filled('password')) {
-            $request->validate([
-                'password' => 'required|string|min:8|confirmed',
-            ]);
-            $user->password = Hash::make($request->password);
-            $user->save();
-        }
-
-        return redirect()->back()->with('success', 'การตั้งค่าถูกบันทึกแล้ว');
+        // บันทึก Logic การตั้งค่าเพิ่มเติมที่นี่ในอนาคต
+        return redirect()->back()->with('success', 'การตั้งค่าระบบถูกบันทึกแล้ว');
     }
 }
