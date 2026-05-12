@@ -1,33 +1,59 @@
 <?php
-
+ 
 namespace App\Models;
-
+ 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-
+ 
+/**
+ * @property int                 $id
+ * @property int                 $meter_id
+ * @property int|null            $booking_id
+ * @property int|null            $period_month
+ * @property int|null            $period_year
+ * @property Carbon|null         $reading_date
+ * @property float               $reading_value
+ * @property int|null            $recorded_by
+ * @property string|null         $notes
+ * @property Carbon              $created_at
+ * @property Carbon              $updated_at
+ */
 class MeterReading extends Model
 {
     protected $fillable = [
         'meter_id',
+        'booking_id',
+        'period_month',
+        'period_year',
         'reading_date',
         'reading_value',
         'recorded_by',
         'notes',
     ];
-
+ 
     protected $casts = [
-        'reading_date' => 'date',
+        'reading_date'  => 'date',
         'reading_value' => 'decimal:2',
     ];
-
+ 
+    // ─────────────────────────────────────────
+    //  RELATIONSHIPS
+    // ─────────────────────────────────────────
+ 
     public function meter(): BelongsTo
     {
         return $this->belongsTo(Meter::class);
     }
-
+ 
     public function recordedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'recorded_by');
     }
+ 
+    public function booking(): BelongsTo
+    {
+        return $this->belongsTo(Booking::class);
+    }
 }
-
+ 

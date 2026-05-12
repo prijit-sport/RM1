@@ -6,12 +6,8 @@ class EnumLabel
 {
     private const MAP = [
         'room_type' => [
-            'Standard' => ['en' => 'Standard', 'th' => 'มาตรฐาน'],
-            'Single' => ['en' => 'Single', 'th' => 'เดี่ยว'],
-            'Double' => ['en' => 'Double', 'th' => 'คู่'],
-            'Twin' => ['en' => 'Twin', 'th' => 'เตียงแยก'],
-            'Suite' => ['en' => 'Suite', 'th' => 'ห้องสวีท'],
-            'Deluxe' => ['en' => 'Deluxe', 'th' => 'ดีลักซ์'],
+            'fan' => ['en' => 'Fan', 'th' => 'พัด'],
+            'air_conditioning' => ['en' => 'Air Conditioning', 'th' => 'แอร์'],
         ],
         'room_status' => [
             'available' => ['en' => 'Available', 'th' => 'ว่าง'],
@@ -86,3 +82,4 @@ class EnumLabel
         return $en . ' (' . $th . ')';
     }
 }
+

@@ -88,9 +88,10 @@ class AppServiceProvider extends ServiceProvider
             if ($pendingMaintenance > 0) {
                 $notifications->push([
                     'message' => __('ui.notifications.pending_maintenance', ['count' => $pendingMaintenance]),
-                    'url' => route('maintenances.index'),
+                    'url' => route('maintenances.index', ['status' => 'pending']),
                 ]);
             }
+
 
             if ($pendingBookings > 0) {
                 $notifications->push([

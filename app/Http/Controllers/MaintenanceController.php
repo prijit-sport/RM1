@@ -4,14 +4,48 @@ namespace App\Http\Controllers;
 
 use App\Models\Maintenance;
 use App\Models\Room;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class MaintenanceController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $maintenances = Maintenance::with('room')->paginate(10);
-        return view('maintenances.index', compact('maintenances'));
+        $pendingCount = Maintenance::where('status', 'pending')->count();
+        $inProgressCount = Maintenance::where('status', 'in_progress')->count();
+        $completedThisMonth = Maintenance::where('status', 'completed')
+            ->whereMonth('completion_date', Carbon::now()->month)
+            ->whereYear('completion_date', Carbon::now()->year)
+            ->count();
+
+        $pending = Maintenance::with('room')
+            ->whereIn('status', ['pending', 'in_progress'])
+            ->orderByRaw("FIELD(status, 'pending', 'in_progress')")
+            ->orderByDesc('request_date')
+            ->take(5)
+            ->get();
+
+        $recentlyCompleted = Maintenance::with('room')
+            ->where('status', 'completed')
+            ->orderByDesc('completion_date')
+            ->take(5)
+            ->get();
+
+        $query = Maintenance::with('room');
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where(function($q) use ($search) {
+                $q->where('maintenance_type', 'like', "%{$search}%")
+                  ->orWhereHas('room', fn($r) => $r->where('room_number', 'like', "%{$search}%"));
+            });
+        }
+
+        $maintenances = $query->orderByDesc('id')->paginate(10);
+
+        return view('maintenances.index', compact(
+            'maintenances', 'pendingCount', 'inProgressCount', 
+            'completedThisMonth', 'pending', 'recentlyCompleted'
+        ));
     }
 
     public function create()
@@ -23,23 +57,21 @@ class MaintenanceController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'room_id' => 'required|exists:rooms,id',
-            'issue_type' => 'required|max:50',
-            'description' => 'nullable|max:500',
-            'reported_date' => 'required|date',
-            'completed_date' => 'nullable|date',
-            'status' => 'required|in:pending,in_progress,completed,cancelled',
-            'assigned_to' => 'nullable|max:100',
-            'cost' => 'nullable|numeric|min:0',
-            'notes' => 'nullable|max:500',
+            'room_id'          => 'required|exists:rooms,id',
+            'maintenance_type' => 'required',
+            'description'      => 'required',
+            'request_date'     => 'required|date',
+            'status'           => 'required',
+            'notes'            => 'nullable',
         ]);
 
         Maintenance::create($validated);
-        return redirect()->route('maintenances.index')->with('success', __('ui.maintenance.created'));
+        return redirect()->route('maintenances.index')->with('success', 'แจ้งซ่อมเรียบร้อยแล้ว');
     }
 
     public function show(Maintenance $maintenance)
     {
+        $maintenance->load('room');
         return view('maintenances.show', compact('maintenance'));
     }
 
@@ -53,66 +85,50 @@ class MaintenanceController extends Controller
     {
         $validated = $request->validate([
             'room_id' => 'required|exists:rooms,id',
-            'issue_type' => 'required|max:50',
-            'description' => 'nullable|max:500',
-            'reported_date' => 'required|date',
-            'completed_date' => 'nullable|date',
-            'status' => 'required|in:pending,in_progress,completed,cancelled',
-            'assigned_to' => 'nullable|max:100',
-            'cost' => 'nullable|numeric|min:0',
-            'notes' => 'nullable|max:500',
+            'maintenance_type' => 'required',
+            'description' => 'nullable',
+            'assigned_to' => 'nullable',
+            'cost' => 'nullable|numeric',
+            'request_date' => 'required|date',
+            'status' => 'required',
+            'notes' => 'nullable',
+            'completion_date' => 'nullable|date',
         ]);
 
+        if ($request->status == 'completed' && !$maintenance->completion_date) {
+            $validated['completion_date'] = now();
+        }
+
         $maintenance->update($validated);
-        return redirect()->route('maintenances.show', $maintenance)->with('success', __('ui.maintenance.updated'));
+        return redirect()->route('maintenances.index')->with('success', 'อัปเดตเรียบร้อย');
     }
 
     public function destroy(Maintenance $maintenance)
     {
         $maintenance->delete();
-        return redirect()->route('maintenances.index')->with('success', __('ui.maintenance.deleted'));
+        return redirect()->route('maintenances.index')->with('success', 'ลบรายการเรียบร้อยแล้ว');
     }
 
-    public function export(Request $request)
-    {
-        $maintenances = Maintenance::with('room')->orderBy('id', 'desc')->get();
-        $filename = 'maintenances_export_' . date('Y-m-d') . '.xlsx';
-
-        $rows = [];
-        $rows[] = ['Room', 'Issue Type', 'Description', 'Reported Date', 'Completed Date', 'Status', 'Assigned To', 'Cost', 'Notes'];
-
-        foreach ($maintenances as $maintenance) {
-            $rows[] = [
-                $maintenance->room->room_number ?? '-',
-                $maintenance->issue_type,
-                $maintenance->description ?? '-',
-                optional($maintenance->reported_date)->format('d/m/Y'),
-                optional($maintenance->completed_date)->format('d/m/Y'),
-                $maintenance->status,
-                $maintenance->assigned_to ?? '-',
-                $maintenance->cost ?? '-',
-                $maintenance->notes ?? '-',
-            ];
-        }
-
-        return xlsx_download($filename, $rows);
-    }
-
+    /**
+     * ฟังก์ชันเริ่มงาน (ปุ่มในรูปที่ Error)
+     */
     public function startWork(Maintenance $maintenance)
     {
-        $maintenance->update(['status' => 'in_progress']);
-        return redirect()->route('maintenances.show', $maintenance)->with('success', __('ui.maintenance.started'));
+        $maintenance->update([
+            'status' => 'in_progress'
+        ]);
+        return back()->with('success', 'เริ่มดำเนินการซ่อมแล้ว');
     }
 
+    /**
+     * ฟังก์ชันเสร็จสิ้นงาน
+     */
     public function completeWork(Maintenance $maintenance)
     {
         $maintenance->update([
             'status' => 'completed',
-            'completed_date' => now()->toDateString(),
+            'completion_date' => now()
         ]);
-
-        return redirect()->route('maintenances.show', $maintenance)->with('success', __('ui.maintenance.completed'));
+        return back()->with('success', 'ดำเนินการซ่อมเสร็จสิ้น');
     }
 }
-
-

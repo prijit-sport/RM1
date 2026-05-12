@@ -1,258 +1,221 @@
 <?php
-
+ 
 namespace App\Services;
-
+ 
 use App\Models\Booking;
+use App\Models\Meter;
+use App\Models\MeterReading;
 use App\Models\Room;
-use App\Support\AuditLogger;
-use App\Support\BillingCalculator;
 use Carbon\Carbon;
-use DateTime;
-use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\ValidationException;
-
+ 
 class BookingService
 {
-    private const ACTIVE_BOOKING_STATUSES = ['pending', 'confirmed', 'checked_in'];
-    private const OCCUPY_ROOM_STATUSES = ['confirmed', 'checked_in'];
-    private const ALLOWED_TRANSITIONS = [
-        'pending' => ['confirmed', 'cancelled'],
-        'confirmed' => ['checked_in', 'cancelled'],
-        'checked_in' => ['checked_out'],
-        'checked_out' => [],
-        'cancelled' => [],
-    ];
-
-    public function create(array $validated): void
+    // ─────────────────────────────────────────
+    //  CREATE
+    // ─────────────────────────────────────────
+    public function create(array $data): Booking
     {
-        if (in_array($validated['status'], ['checked_in', 'checked_out'], true)) {
-            throw ValidationException::withMessages([
-                'status' => __('ui.booking.invalid_initial_status'),
-            ]);
+        $booking = Booking::create($data);
+        assert($booking instanceof Booking);
+ 
+        if ($booking->status === 'confirmed') {
+            $this->lockRoom($booking->room_id);
         }
-
-        // Validate check_in_date is before check_out_date
-        $checkIn = new DateTime($validated['check_in_date']);
-        $checkOut = new DateTime($validated['check_out_date']);
-        
-        if ($checkOut <= $checkIn) {
-            throw ValidationException::withMessages([
-                'check_out_date' => __('ui.booking.check_out_after_check_in'),
-            ]);
-        }
-
-        DB::transaction(function () use ($validated) {
-            $room = $this->lockRoom((int) $validated['room_id']);
-            $pricePerMonth = (float) $room->price_per_month;
-            $validated['total_price'] = $this->calculateTotal(
-                $pricePerMonth,
-                $validated['check_in_date'],
-                $validated['check_out_date']
-            );
-
-            if ($this->hasOverlappingBooking(
-                (int) $validated['room_id'],
-                (string) $validated['check_in_date'],
-                (string) $validated['check_out_date'],
-                null,
-                true
-            )) {
-                throw ValidationException::withMessages([
-                    'room_id' => __('ui.booking.overlap'),
-                ]);
-            }
-
-            $booking = Booking::create($validated);
-            $this->syncRoomStatus((int) $booking->room_id, true);
-            AuditLogger::log('booking.created', $booking, [
-                'status' => $booking->status,
-            ]);
-        });
+ 
+        return $booking;
     }
-
-    public function update(Booking $booking, array $validated): void
+ 
+    // ─────────────────────────────────────────
+    //  UPDATE
+    // ─────────────────────────────────────────
+    public function update(Booking $booking, array $data): Booking
     {
-        DB::transaction(function () use ($booking, $validated) {
-            $lockedBooking = Booking::query()->lockForUpdate()->findOrFail($booking->id);
-            $oldRoomId = (int) $lockedBooking->room_id;
-            $newRoom = $this->lockRoom((int) $validated['room_id']);
-
-            if (! $this->canTransition((string) $lockedBooking->status, (string) $validated['status'])) {
-                throw ValidationException::withMessages([
-                    'status' => __('ui.booking.invalid_transition'),
-                ]);
+        $oldRoomId = $booking->room_id;
+        $oldStatus = $booking->status;
+        $newRoomId = $data['room_id'] ?? $oldRoomId;
+        $newStatus = $data['status']  ?? $oldStatus;
+ 
+        $booking->update($data);
+ 
+        if ($oldRoomId !== $newRoomId) {
+            $this->releaseRoom($oldRoomId);
+            if ($newStatus === 'confirmed') {
+                $this->lockRoom($newRoomId);
             }
-
-            // Validate check_in_date is before check_out_date
-            $checkIn = new DateTime($validated['check_in_date']);
-            $checkOut = new DateTime($validated['check_out_date']);
-            
-            if ($checkOut <= $checkIn) {
-                throw ValidationException::withMessages([
-                    'check_out_date' => __('ui.booking.check_out_after_check_in'),
-                ]);
+            return $booking;
+        }
+ 
+        if ($oldStatus !== $newStatus) {
+            if ($newStatus === 'confirmed') {
+                $this->lockRoom($newRoomId);
+            } elseif ($newStatus === 'cancelled') {
+                $this->releaseRoom($newRoomId);
             }
-
-            $pricePerMonth = (float) $newRoom->price_per_month;
-            $validated['total_price'] = $this->calculateTotal(
-                $pricePerMonth,
-                $validated['check_in_date'],
-                $validated['check_out_date']
-            );
-
-            if (
-                in_array($validated['status'], self::ACTIVE_BOOKING_STATUSES, true)
-                && $this->hasOverlappingBooking(
-                    (int) $validated['room_id'],
-                    (string) $validated['check_in_date'],
-                    (string) $validated['check_out_date'],
-                    (int) $lockedBooking->id,
-                    true
-                )
-            ) {
-                throw ValidationException::withMessages([
-                    'room_id' => __('ui.booking.overlap'),
-                ]);
-            }
-
-            $lockedBooking->update($validated);
-            $this->syncRoomStatus((int) $lockedBooking->room_id, true);
-
-            if ($oldRoomId !== (int) $lockedBooking->room_id) {
-                $this->syncRoomStatus($oldRoomId, true);
-            }
-
-            AuditLogger::log('booking.updated', $lockedBooking, [
-                'status' => $lockedBooking->status,
-            ]);
-        });
+        }
+ 
+        return $booking;
     }
-
+ 
+    // ─────────────────────────────────────────
+    //  CONFIRM + สร้าง Meter + MeterReading
+    // ─────────────────────────────────────────
+    public function confirm(Booking $booking, array $rates = []): Booking
+    {
+        DB::transaction(function () use ($booking, $rates) {
+ 
+            // 1. เปลี่ยนสถานะ
+            $booking->update(['status' => 'confirmed']);
+ 
+            // 2. ล็อกห้อง
+            $this->lockRoom($booking->room_id);
+ 
+            // 3. สร้าง/อัปเดต Meter พร้อม rate ที่ admin กรอก
+            $electricRate = (float) ($rates['electric_rate'] ?? 0);
+            $waterRate    = (float) ($rates['water_rate']    ?? 0);
+            $taxRate      = (float) ($rates['tax_rate']      ?? 0);
+ 
+            $electricMeter = $this->ensureMeter($booking->room_id, 'electric', $electricRate, $taxRate);
+            $waterMeter    = $this->ensureMeter($booking->room_id, 'water',    $waterRate,    $taxRate);
+ 
+            // 4. บันทึก MeterReading เริ่มต้น
+            $checkInDate = $booking->check_in_date
+                ? Carbon::parse($booking->check_in_date)->toDateString()
+                : now()->toDateString();
+ 
+            $this->createInitialReading(
+                $electricMeter,
+                $booking,
+                (float) ($booking->electric_meter_start ?? 0),
+                $checkInDate
+            );
+ 
+            $this->createInitialReading(
+                $waterMeter,
+                $booking,
+                (float) ($booking->water_meter_start ?? 0),
+                $checkInDate
+            );
+        });
+ 
+        return $booking->fresh();
+    }
+ 
+    // ─────────────────────────────────────────
+    //  CANCEL
+    // ─────────────────────────────────────────
+    public function cancel(Booking $booking): Booking
+    {
+        $booking->update(['status' => 'cancelled']);
+        $this->releaseRoom($booking->room_id);
+        return $booking;
+    }
+ 
+    // ─────────────────────────────────────────
+    //  DESTROY
+    // ─────────────────────────────────────────
     public function destroy(Booking $booking): void
     {
-        DB::transaction(function () use ($booking) {
-            $lockedBooking = Booking::query()->lockForUpdate()->findOrFail($booking->id);
-            $roomId = (int) $lockedBooking->room_id;
-            $this->lockRoom($roomId);
-            $lockedBooking->delete();
-            $this->syncRoomStatus($roomId, true);
-            AuditLogger::log('booking.deleted', $booking);
-        });
-    }
-
-    public function confirm(Booking $booking): void
-    {
-        DB::transaction(function () use ($booking) {
-            $lockedBooking = Booking::query()->lockForUpdate()->findOrFail($booking->id);
-            $this->lockRoom((int) $lockedBooking->room_id);
-
-            if (! $this->canTransition((string) $lockedBooking->status, 'confirmed')) {
-                throw ValidationException::withMessages([
-                    'status' => __('ui.booking.confirm_only_pending'),
-                ]);
-            }
-
-            $lockedBooking->update(['status' => 'confirmed']);
-            $this->syncRoomStatus((int) $lockedBooking->room_id, true);
-            AuditLogger::log('booking.confirmed', $lockedBooking);
-        });
-    }
-
-    public function cancel(Booking $booking): void
-    {
-        DB::transaction(function () use ($booking) {
-            $lockedBooking = Booking::query()->lockForUpdate()->findOrFail($booking->id);
-            $this->lockRoom((int) $lockedBooking->room_id);
-
-            if (! $this->canTransition((string) $lockedBooking->status, 'cancelled')) {
-                throw ValidationException::withMessages([
-                    'status' => __('ui.booking.cancel_not_allowed'),
-                ]);
-            }
-
-            $lockedBooking->update(['status' => 'cancelled']);
-            $this->syncRoomStatus((int) $lockedBooking->room_id, true);
-            AuditLogger::log('booking.cancelled', $lockedBooking);
-        });
-    }
-
-    private function calculateTotal(float|int|string $pricePerMonth, string $checkInDate, string $checkOutDate): float
-    {
-        $price = (float) $pricePerMonth;
-        $checkIn = Carbon::parse($checkInDate);
-        $checkOut = Carbon::parse($checkOutDate);
-
-        // Handle zero or negative price / invalid date range
-        if ($price <= 0 || $checkOut <= $checkIn) {
-            return 0;
+        if ($booking->status === 'confirmed') {
+            $this->releaseRoom($booking->room_id);
         }
-
-        return BillingCalculator::calculateMonthlyCharge($price, $checkIn, $checkOut);
+        $booking->delete();
     }
-
-    private function hasOverlappingBooking(
-        int $roomId,
-        string $checkInDate,
-        string $checkOutDate,
-        ?int $ignoreBookingId = null,
-        bool $forUpdate = false
-    ): bool {
-        $query = Booking::query()
-            ->where('room_id', $roomId)
-            ->when($ignoreBookingId, function (Builder $query) use ($ignoreBookingId) {
-                $query->where('id', '!=', $ignoreBookingId);
-            })
-            ->whereIn('status', self::ACTIVE_BOOKING_STATUSES)
-            ->where(function (Builder $query) use ($checkInDate, $checkOutDate) {
-                $query->where('check_in_date', '<', $checkOutDate)
-                    ->where('check_out_date', '>', $checkInDate);
-            });
-
-        if ($forUpdate) {
-            $query->lockForUpdate();
-        }
-
-        return $query->exists();
-    }
-
-    private function syncRoomStatus(int $roomId, bool $lockRoom = false): void
+ 
+    // ═════════════════════════════════════════
+    //  PRIVATE HELPERS
+    // ═════════════════════════════════════════
+ 
+    private function lockRoom(int $roomId): void
     {
-        $roomQuery = Room::query();
-        if ($lockRoom) {
-            $roomQuery->lockForUpdate();
+        Room::where('id', $roomId)->update(['status' => 'occupied']);
+    }
+ 
+    private function releaseRoom(int $roomId): void
+    {
+        $hasOther = Booking::where('room_id', $roomId)
+            ->where('status', 'confirmed')
+            ->exists();
+ 
+        if (! $hasOther) {
+            Room::where('id', $roomId)->update(['status' => 'available']);
         }
-
-        $room = $roomQuery->find($roomId);
-        if (! $room || $room->status === 'maintenance') {
+    }
+ 
+    /**
+     * สร้าง Meter ถ้ายังไม่มี หรืออัปเดต rate ถ้ามีแล้ว
+     */
+    private function ensureMeter(
+        int    $roomId,
+        string $type,
+        float  $ratePerUnit,
+        float  $taxRate
+    ): Meter {
+        $meter = Meter::where('room_id', $roomId)
+            ->where('type', $type)
+            ->first();
+ 
+        if ($meter instanceof Meter) {
+            $meter->update([
+                'rate_per_unit' => $ratePerUnit,
+                'tax_rate'      => $taxRate,
+                'is_active'     => true,
+            ]);
+            return $meter;
+        }
+ 
+        $roomNumber  = Room::find($roomId)?->room_number ?? (string) $roomId;
+        $meterNumber = strtoupper($type[0]) . '-' . $roomNumber . '-' . now()->format('ymd');
+ 
+        $newMeter = Meter::create([
+            'room_id'       => $roomId,
+            'type'          => $type,
+            'meter_number'  => $meterNumber,
+            'unit'          => $type === 'electric' ? 'kWh' : 'หน่วย',
+            'rate_per_unit' => $ratePerUnit,
+            'tax_rate'      => $taxRate,
+            'is_active'     => true,
+            'installed_at'  => now()->toDateString(),
+        ]);
+ 
+        assert($newMeter instanceof Meter);
+        return $newMeter;
+    }
+ 
+    /**
+     * บันทึก MeterReading เริ่มต้น ณ วันเช็คอิน
+     */
+    private function createInitialReading(
+        Meter   $meter,
+        Booking $booking,
+        float   $initialValue,
+        string  $readingDate
+    ): void {
+        $date        = Carbon::parse($readingDate);
+        $periodMonth = (int) $date->format('m');
+        $periodYear  = (int) $date->format('Y');
+ 
+        $exists = MeterReading::where('meter_id', $meter->id)
+            ->where('booking_id', $booking->id)
+            ->where('period_month', $periodMonth)
+            ->where('period_year', $periodYear)
+            ->exists();
+ 
+        if ($exists) {
             return;
         }
-
-        $bookingQuery = Booking::query()
-            ->where('room_id', $roomId)
-            ->whereIn('status', self::OCCUPY_ROOM_STATUSES);
-
-        if ($lockRoom) {
-            $bookingQuery->lockForUpdate();
-        }
-
-        $targetStatus = $bookingQuery->exists() ? 'occupied' : 'available';
-        if ($room->status !== $targetStatus) {
-            $room->update(['status' => $targetStatus]);
-        }
-    }
-
-    private function lockRoom(int $roomId): Room
-    {
-        return Room::query()->lockForUpdate()->findOrFail($roomId);
-    }
-
-    private function canTransition(string $from, string $to): bool
-    {
-        if ($from === $to) {
-            return true;
-        }
-
-        return in_array($to, self::ALLOWED_TRANSITIONS[$from] ?? [], true);
+ 
+        MeterReading::create([
+            'meter_id'      => $meter->id,
+            'booking_id'    => $booking->id,
+            'period_month'  => $periodMonth,
+            'period_year'   => $periodYear,
+            'reading_date'  => $readingDate,
+            'reading_value' => $initialValue,
+            'recorded_by'   => Auth::id(),
+            'notes'         => 'เลขมิเตอร์เริ่มต้น (เช็คอิน)',
+        ]);
     }
 }
+ 

@@ -10,8 +10,8 @@ return new class extends Migration
     {
         Schema::table('invoices', function (Blueprint $table) {
             // Add new fields for better tracking
-            $table->foreignId('guest_id')->nullable()->constrained()->onDelete('set null');
-            $table->foreignId('room_id')->nullable()->constrained()->onDelete('set null');
+           $table->foreignId('guest_id')->nullable()->constrained()->onDelete('no action');
+	   $table->foreignId('room_id')->nullable()->constrained()->onDelete('no action');
             $table->decimal('late_fee', 12, 2)->default(0)->after('total');
             $table->decimal('paid_amount', 12, 2)->nullable()->after('late_fee');
             $table->string('payment_method')->nullable()->after('paid_amount');

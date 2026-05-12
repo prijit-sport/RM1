@@ -107,6 +107,48 @@
     </div>
 </div>
 
+<!-- Room Status by Type -->
+<div class="row g-4 mb-4">
+    @php
+        $roomTypeStatsFillingSafe = $roomTypeStatsFilling ?? [];
+        $types = ['fan' => 'fan', 'air_conditioning' => 'air_conditioning'];
+        $statuses = ['available' => ['label' => 'ว่าง', 'class' => 'success'], 'occupied' => ['label' => 'ไม่ว่าง', 'class' => 'primary'], 'maintenance' => ['label' => 'ซ่อม', 'class' => 'warning']];
+    @endphp
+
+    @foreach($types as $typeKey => $type)
+        @php
+            $stats = $roomTypeStatsFillingSafe[$typeKey] ?? ['available' => 0, 'occupied' => 0, 'maintenance' => 0];
+            $total = ($stats['available'] ?? 0) + ($stats['occupied'] ?? 0) + ($stats['maintenance'] ?? 0);
+        @endphp
+
+        <div class="col-lg-6">
+            <div class="table-card p-4 h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="mb-0">สรุปโซนสถานะ: {{ enum_bi('room_type', $typeKey) }}</h5>
+                    <span class="text-muted">ทั้งหมด {{ number_format($total) }} ห้อง</span>
+                </div>
+
+                <div class="mb-4">
+                    @foreach($statuses as $statusKey => $meta)
+                        @php
+                            $count = (int) ($stats[$statusKey] ?? 0);
+                            $pct = $total > 0 ? ($count / $total) * 100 : 0;
+                        @endphp
+
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>{{ $meta['label'] }}</span>
+                            <span class="fw-bold">{{ number_format($count) }} ห้อง ({{ number_format($pct, 1) }}%)</span>
+                        </div>
+                        <div class="progress" style="height: 10px; margin-bottom: 14px;">
+                            <div class="progress-bar bg-{{ $meta['class'] }}" role="progressbar" style="width: {{ min($pct, 100) }}%"></div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+    @endforeach
+</div>
+
 <!-- Charts Row -->
 <div class="row g-4 mb-4">
     <div class="col-lg-8">

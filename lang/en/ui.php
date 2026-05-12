@@ -58,11 +58,6 @@ return [
         'updated' => 'Guest updated successfully.',
         'deleted' => 'Guest deleted successfully.',
     ],
-    'item' => [
-        'created' => 'Item created successfully.',
-        'updated' => 'Item updated successfully.',
-        'deleted' => 'Item deleted successfully.',
-    ],
     'maintenance' => [
         'created' => 'Maintenance request created successfully.',
         'updated' => 'Maintenance request updated successfully.',
@@ -101,3 +96,4 @@ return [
         'reminders_sent' => 'Sent reminders: :count',
     ],
 ];
+

@@ -24,10 +24,8 @@
                             <div class="col-md-6">
                                 <label class="form-label required">ประเภทห้อง</label>
                                 <select name="room_type" class="form-select @error('room_type') is-invalid @enderror" required>
-                                    <option value="Standard" {{ $room->room_type == 'Standard' ? 'selected' : '' }}>Standard</option>
-                                    <option value="Superior" {{ $room->room_type == 'Superior' ? 'selected' : '' }}>Superior</option>
-                                    <option value="Deluxe" {{ $room->room_type == 'Deluxe' ? 'selected' : '' }}>Deluxe</option>
-                                    <option value="Suite" {{ $room->room_type == 'Suite' ? 'selected' : '' }}>Suite</option>
+                                    <option value="fan" {{ $room->room_type == 'fan' ? 'selected' : '' }}>พัด</option>
+                                    <option value="air_conditioning" {{ $room->room_type == 'air_conditioning' ? 'selected' : '' }}>แอร์</option>
                                 </select>
                                 @error('room_type')
                                     <div class="invalid-feedback">{{ $message }}</div>

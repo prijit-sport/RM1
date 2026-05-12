@@ -1,7 +1,7 @@
 <?php
-
+ 
 namespace App\Services;
-
+ 
 use App\Models\Contract;
 use App\Models\Room;
 use App\Models\Guest;
@@ -9,11 +9,11 @@ use App\Support\AuditLogger;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
-
+ 
 class ContractService
 {
     private const STATUSES = ['draft', 'pending', 'active', 'completed', 'cancelled'];
-
+ 
     /**
      * Create a new contract.
      */
@@ -23,7 +23,7 @@ class ContractService
         if (empty($validated['contract_number'] ?? null)) {
             $validated['contract_number'] = $this->generateContractNumber();
         }
-
+ 
         // Validate dates
         if (isset($validated['start_date']) && isset($validated['end_date'])) {
             $startDate = Carbon::parse($validated['start_date']);
@@ -35,25 +35,25 @@ class ContractService
                 ]);
             }
         }
-
+ 
         // Update room status to occupied if contract is active
         $shouldOccupied = isset($validated['status']) && $validated['status'] === 'active';
-
+ 
         $contract = DB::transaction(function () use ($validated, $shouldOccupied) {
             $contract = Contract::create($validated);
             
             if ($shouldOccupied && $contract->room_id) {
                 $contract->room->update(['status' => 'occupied']);
             }
-
+ 
             AuditLogger::log('contract.created', $contract);
             
             return $contract;
         });
-
+ 
         return $contract;
     }
-
+ 
     /**
      * Update an existing contract.
      */
@@ -61,7 +61,7 @@ class ContractService
     {
         $oldStatus = $contract->status;
         $oldRoomId = $contract->room_id;
-
+ 
         // Validate dates
         if (isset($validated['start_date']) && isset($validated['end_date'])) {
             $startDate = Carbon::parse($validated['start_date']);
@@ -73,30 +73,30 @@ class ContractService
                 ]);
             }
         }
-
+ 
         $newStatus = $validated['status'] ?? $oldStatus;
         $newRoomId = $validated['room_id'] ?? $oldRoomId;
-
+ 
         $contract = DB::transaction(function () use ($contract, $validated, $oldStatus, $newStatus, $oldRoomId, $newRoomId) {
             $contract->update($validated);
-
+ 
             // Handle room status changes
             if ($oldStatus === 'active' && $newStatus !== 'active' && $oldRoomId) {
                 $this->updateRoomStatus($oldRoomId, 'available');
             }
-
+ 
             if ($newStatus === 'active' && $newRoomId) {
                 $this->updateRoomStatus($newRoomId, 'occupied');
             }
-
+ 
             AuditLogger::log('contract.updated', $contract);
             
             return $contract->fresh();
         });
-
+ 
         return $contract;
     }
-
+ 
     /**
      * Activate a contract.
      */
@@ -107,22 +107,22 @@ class ContractService
                 'status' => 'Only pending or draft contracts can be activated.',
             ]);
         }
-
+ 
         $contract = DB::transaction(function () use ($contract) {
             $contract->update(['status' => 'active']);
             
             if ($contract->room_id) {
                 $this->updateRoomStatus($contract->room_id, 'occupied');
             }
-
+ 
             AuditLogger::log('contract.activated', $contract);
             
             return $contract->fresh();
         });
-
+ 
         return $contract;
     }
-
+ 
     /**
      * Cancel a contract.
      */
@@ -133,22 +133,22 @@ class ContractService
                 'status' => 'This contract cannot be cancelled.',
             ]);
         }
-
+ 
         $contract = DB::transaction(function () use ($contract) {
             $contract->update(['status' => 'cancelled']);
             
             if ($contract->room_id) {
                 $this->updateRoomStatus($contract->room_id, 'available');
             }
-
+ 
             AuditLogger::log('contract.cancelled', $contract);
             
             return $contract->fresh();
         });
-
+ 
         return $contract;
     }
-
+ 
     /**
      * Complete a contract.
      */
@@ -159,22 +159,22 @@ class ContractService
                 'status' => 'Only active contracts can be completed.',
             ]);
         }
-
+ 
         $contract = DB::transaction(function () use ($contract) {
             $contract->update(['status' => 'completed']);
             
             if ($contract->room_id) {
                 $this->updateRoomStatus($contract->room_id, 'available');
             }
-
+ 
             AuditLogger::log('contract.completed', $contract);
             
             return $contract->fresh();
         });
-
+ 
         return $contract;
     }
-
+ 
     /**
      * Renew a contract.
      */
@@ -185,27 +185,27 @@ class ContractService
                 $this->complete($contract);
             }
         }
-
+ 
         $newData['room_id'] = $newData['room_id'] ?? $contract->room_id;
         $newData['guest_id'] = $newData['guest_id'] ?? $contract->guest_id;
         $newData['contract_number'] = $this->generateContractNumber();
-
+ 
         return $this->create($newData);
     }
-
+ 
     /**
      * Get expiring contracts.
      */
-    public function getExpiringContracts(int $days = 30): \Illuminate\Database\Eloquent\Collection
+    public function getExpiringContracts(int $days = 30): \Illuminate\Pagination\LengthAwarePaginator
     {
         return Contract::where('status', 'active')
             ->whereDate('end_date', '>=', Carbon::today())
             ->whereDate('end_date', '<=', Carbon::today()->addDays($days))
             ->with(['room', 'guest'])
             ->orderBy('end_date', 'asc')
-            ->get();
+            ->paginate(10);
     }
-
+ 
     /**
      * Get active contract for a room.
      */
@@ -217,7 +217,7 @@ class ContractService
             ->whereDate('end_date', '>=', Carbon::today())
             ->first();
     }
-
+ 
     /**
      * Generate unique contract number.
      */
@@ -229,14 +229,14 @@ class ContractService
         $lastContract = Contract::whereYear('created_at', now()->year)
             ->orderByDesc('id')
             ->first();
-
+ 
         $sequence = $lastContract 
             ? (intval(substr($lastContract->contract_number, -5)) + 1)
             : 1;
-
+ 
         return sprintf('%s-%s-%05d', $prefix, $year, $sequence);
     }
-
+ 
     /**
      * Update room status.
      * Made public to allow access from Controller.
@@ -248,7 +248,7 @@ class ContractService
             $room->update(['status' => $status]);
         }
     }
-
+ 
     /**
      * Calculate contract duration in months.
      */

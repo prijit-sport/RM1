@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -18,12 +19,12 @@ class AdminOnly
     {
         Log::info('[AdminOnly] Checking - URI: ' . $request->uri() . ', Method: ' . $request->method());
         
-        if (!auth()->check()) {
+        if (!Auth::check()) {
             Log::warning('[AdminOnly] User not authenticated - Redirecting to login');
             return redirect()->route('login')->with('error', 'กรุณาเข้าสู่ระบบก่อน');
         }
 
-        $user = auth()->user();
+        $user = Auth::user();
         Log::info('[AdminOnly] User: ' . $user->name . ', Role: ' . ($user->role ? $user->role->name : 'null'));
         
         // If user has no role, deny access (security requirement)

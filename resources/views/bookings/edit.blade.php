@@ -46,25 +46,11 @@
                             </div>
 
                         <div class="row mb-4">
-                            <div class="col-md-6">
-                                <label class="form-label required">วันที่เช็คอิน</label>
-                                <input type="date" name="check_in_date" class="form-control @error('check_in_date') is-invalid @enderror" value="{{ old('check_in_date', $booking->check_in_date) }}" required>
-                                @error('check_in_date')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label required">วันที่เช็คเอาท์</label>
-                                <input type="date" name="check_out_date" class="form-control @error('check_out_date') is-invalid @enderror" value="{{ old('check_out_date', $booking->check_out_date) }}" required>
-                                @error('check_out_date')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-
-                        <div class="row mb-4">
                             <div class="col-md-12">
                                 <label class="form-label required">สถานะ</label>
+
                                 <select name="status" class="form-select @error('status') is-invalid @enderror" required>
+
                                     <option value="pending" {{ $booking->status == 'pending' ? 'selected' : '' }}>รอยืนยัน</option>
                                     <option value="confirmed" {{ $booking->status == 'confirmed' ? 'selected' : '' }}>ยืนยันแล้ว</option>
                                     <option value="checked_in" {{ $booking->status == 'checked_in' ? 'selected' : '' }}>เช็คอินแล้ว</option>

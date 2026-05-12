@@ -36,30 +36,32 @@
                             <th>ราคา/เดือน</th>
                             <th>ความจุ</th>
                             <th>สถานะ</th>
+                            <th>ชั้น</th>
                             <th>คำอธิบาย</th>
                             <th style="width: 80px;">ลบ</th>
+
                         </tr>
                     </thead>
                     <tbody>
                         @php
                             $oldRooms = old('rooms', [
-                                ['room_number' => '', 'room_type' => 'Single', 'price_per_month' => '', 'capacity' => 1, 'status' => 'available', 'description' => ''],
+                                ['room_number' => '', 'room_type' => 'fan', 'price_per_month' => '', 'capacity' => 1, 'floor' => 1, 'status' => 'available', 'description' => ''],
                             ]);
                         @endphp
+
 
                         @foreach ($oldRooms as $i => $room)
                             <tr>
                                 <td><input type="text" class="form-control" name="rooms[{{ $i }}][room_number]" value="{{ $room['room_number'] ?? '' }}" required></td>
+
                                 <td>
-                                    <select class="form-select" name="rooms[{{ $i }}][room_type]" required>
-                                        <option value="Single" @selected(($room['room_type'] ?? '') === 'Single')>{{ enum_bi('room_type', 'Single') }}</option>
-                                        <option value="Double" @selected(($room['room_type'] ?? '') === 'Double')>{{ enum_bi('room_type', 'Double') }}</option>
-                                        <option value="Twin" @selected(($room['room_type'] ?? '') === 'Twin')>{{ enum_bi('room_type', 'Twin') }}</option>
-                                        <option value="Suite" @selected(($room['room_type'] ?? '') === 'Suite')>{{ enum_bi('room_type', 'Suite') }}</option>
-                                        <option value="Deluxe" @selected(($room['room_type'] ?? '') === 'Deluxe')>{{ enum_bi('room_type', 'Deluxe') }}</option>
+
+                                    <select class="form-select room-type" name="rooms[{{ $i }}][room_type]" data-room-index="{{ $i }}" required>
+                                        <option value="fan" @selected(($room['room_type'] ?? '') === 'fan')>{{ enum_bi('room_type', 'fan') }}</option>
+                                        <option value="air_conditioning" @selected(($room['room_type'] ?? '') === 'air_conditioning')>{{ enum_bi('room_type', 'air_conditioning') }}</option>
                                     </select>
                                 </td>
-                                <td><input type="number" min="0" step="0.01" class="form-control" name="rooms[{{ $i }}][price_per_month]" value="{{ $room['price_per_month'] ?? '' }}" required></td>
+                                <td><input type="number" min="0" step="0.01" class="form-control room-price" name="rooms[{{ $i }}][price_per_month]" data-room-index="{{ $i }}" value="{{ $room['price_per_month'] ?? '' }}" required></td>
                                 <td><input type="number" min="1" class="form-control" name="rooms[{{ $i }}][capacity]" value="{{ $room['capacity'] ?? 1 }}" required></td>
                                 <td>
                                     <select class="form-select" name="rooms[{{ $i }}][status]">
@@ -68,7 +70,10 @@
                                         <option value="maintenance" @selected(($room['status'] ?? '') === 'maintenance')>ซ่อมบำรุง</option>
                                     </select>
                                 </td>
+                                <td><input type="number" min="1" class="form-control" name="rooms[{{ $i }}][floor]" value="{{ $room['floor'] ?? 1 }}" required></td>
                                 <td><input type="text" class="form-control" name="rooms[{{ $i }}][description]" value="{{ $room['description'] ?? '' }}"></td>
+
+
                                 <td>
                                     <button type="button" class="btn btn-outline-danger btn-sm remove-row">
                                         <i class="bi bi-trash"></i>
@@ -101,29 +106,61 @@
             return tableBody.querySelectorAll('tr').length;
         }
 
+        const PRICE_BY_TYPE = {
+            fan: 2800,
+            air_conditioning: 3500,
+        };
+
+        function priceInputForIndex(i) {
+            return tableBody.querySelector(`input.room-price[data-room-index="${i}"]`);
+        }
+
+        function applyPriceForSelect(selectEl) {
+            if (!selectEl) return;
+            const i = selectEl.dataset.roomIndex;
+            const priceInput = priceInputForIndex(i);
+
+
+            // fallback: find by closest row (safer if indexes change)
+            if (!priceInput) {
+                const row = selectEl.closest('tr');
+                if (row) {
+                    const fallbackInput = row.querySelector('input.room-price');
+                    if (fallbackInput) priceInput = fallbackInput;
+                }
+            }
+            if (!priceInput) return;
+
+            const roomType = selectEl.value;
+            const nextPrice = PRICE_BY_TYPE[roomType];
+            if (nextPrice === undefined) return;
+
+            priceInput.value = nextPrice;
+        }
+
         function rowTemplate(i) {
             return `
                 <tr>
                     <td><input type="text" class="form-control" name="rooms[${i}][room_number]" required></td>
                     <td>
-                        <select class="form-select" name="rooms[${i}][room_type]" required>
-                            <option value="Single">{{ enum_bi('room_type', 'Single') }}</option>
-                            <option value="Double">{{ enum_bi('room_type', 'Double') }}</option>
-                            <option value="Twin">{{ enum_bi('room_type', 'Twin') }}</option>
-                            <option value="Suite">{{ enum_bi('room_type', 'Suite') }}</option>
-                            <option value="Deluxe">{{ enum_bi('room_type', 'Deluxe') }}</option>
+                        <select class="form-select room-type" name="rooms[${i}][room_type]" data-room-index="${i}" required>
+                            <option value="fan">{{ enum_bi('room_type', 'fan') }}</option>
+                            <option value="air_conditioning">{{ enum_bi('room_type', 'air_conditioning') }}</option>
                         </select>
                     </td>
-                    <td><input type="number" min="0" step="0.01" class="form-control" name="rooms[${i}][price_per_month]" required></td>
+                    <td><input type="number" min="0" step="0.01" class="form-control room-price" name="rooms[${i}][price_per_month]" data-room-index="${i}" required></td>
                     <td><input type="number" min="1" class="form-control" name="rooms[${i}][capacity]" value="1" required></td>
                     <td>
                         <select class="form-select" name="rooms[${i}][status]">
+
                             <option value="available">ว่าง</option>
                             <option value="occupied">ใช้งาน</option>
                             <option value="maintenance">ซ่อมบำรุง</option>
                         </select>
                     </td>
+                    <td><input type="number" min="1" class="form-control" name="rooms[${i}][floor]" value="1" required></td>
                     <td><input type="text" class="form-control" name="rooms[${i}][description]"></td>
+
                     <td>
                         <button type="button" class="btn btn-outline-danger btn-sm remove-row">
                             <i class="bi bi-trash"></i>
@@ -133,8 +170,22 @@
             `;
         }
 
+        // init for existing rows
+        tableBody.querySelectorAll('select.room-type').forEach(selectEl => {
+            applyPriceForSelect(selectEl);
+        });
+
         addRowBtn.addEventListener('click', function () {
             tableBody.insertAdjacentHTML('beforeend', rowTemplate(nextIndex()));
+            const newRow = tableBody.querySelectorAll('tr')[tableBody.querySelectorAll('tr').length - 1];
+            const selectEl = newRow.querySelector('select.room-type');
+            applyPriceForSelect(selectEl);
+        });
+
+        tableBody.addEventListener('change', function (e) {
+            const selectEl = e.target.closest('select.room-type');
+            if (!selectEl) return;
+            applyPriceForSelect(selectEl);
         });
 
         tableBody.addEventListener('click', function (e) {

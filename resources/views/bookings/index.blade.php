@@ -1,9 +1,9 @@
 @extends('layouts.app')
-
+ 
 @section('title', 'จัดการการจอง')
-
+ 
 @section('page-title', 'จัดการการจอง')
-
+ 
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h4 class="mb-0">รายการการจอง</h4>
@@ -16,7 +16,7 @@
         </a>
     </div>
 </div>
-
+ 
 <!-- Search and Filter -->
 <div class="card mb-4">
     <div class="card-body">
@@ -42,7 +42,7 @@
         </form>
     </div>
 </div>
-
+ 
 <!-- Bookings Table -->
 <div class="table-card">
     <div class="table-responsive">
@@ -51,8 +51,6 @@
                 <tr>
                     <th>ห้อง</th>
                     <th>แขก</th>
-                    <th>เช็คอิน</th>
-                    <th>เช็คเอาท์</th>
                     <th>ราคา</th>
                     <th>สถานะ</th>
                     <th>การกระทำ</th>
@@ -61,11 +59,23 @@
             <tbody>
                 @forelse ($bookings as $booking)
                     <tr>
-                        <td><strong>#{{ $booking->room->room_number }}</strong></td>
-                        <td>{{ $booking->guest->first_name }} {{ $booking->guest->last_name }}</td>
-                        <td>{{ \Carbon\Carbon::parse($booking->check_in_date)->format('d/m/Y') }}</td>
-                        <td>{{ \Carbon\Carbon::parse($booking->check_out_date)->format('d/m/Y') }}</td>
-                        <td>฿{{ number_format($booking->total_price, 2) }}</td>
+                        <td>
+                            <strong>
+                                @if($booking->room)
+                                    #{{ $booking->room->room_number }}
+                                @else
+                                    <span class="text-muted">-</span>
+                                @endif
+                            </strong>
+                        </td>
+                        <td>
+                            @if($booking->guest)
+                                {{ $booking->guest->first_name }} {{ $booking->guest->last_name }}
+                            @else
+                                <span class="text-muted fst-italic">ไม่ระบุผู้เช่า</span>
+                            @endif
+                        </td>
+                        <td>฿{{ number_format($booking->total_price ?? 0, 2) }}</td>
                         <td>
                             @php
                                 $statusClasses = [
@@ -76,7 +86,7 @@
                                     'cancelled' => 'bg-danger',
                                 ];
                             @endphp
-                            <span class="badge {{ $statusClasses[$booking->status] ?? '' }}">
+                            <span class="badge {{ $statusClasses[$booking->status] ?? 'bg-light text-dark' }}">
                                 {{ enum_th('booking_status', $booking->status) }}
                             </span>
                         </td>
@@ -109,7 +119,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="7" class="text-center py-4">
+                        <td colspan="5" class="text-center py-4">
                             <i class="bi bi-inbox fs-1 text-muted"></i>
                             <p class="text-muted mt-2">ไม่มีข้อมูลการจอง</p>
                             <a href="{{ route('bookings.create') }}" class="btn btn-primary-custom mt-2">เพิ่มการจองใหม่</a>
@@ -120,7 +130,7 @@
         </table>
     </div>
 </div>
-
+ 
 <!-- Pagination -->
 @if ($bookings->hasPages())
     <div class="d-flex justify-content-center mt-4">
@@ -128,8 +138,4 @@
     </div>
 @endif
 @endsection
-
-
-
-
-
+ 

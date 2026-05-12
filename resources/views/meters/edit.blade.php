@@ -117,7 +117,7 @@
                         </div>
 
                         <div class="d-flex justify-content-between">
-                            <a href="{{ route('meters.show', $meter) }}" class="btn btn-outline-secondary">
+                            <a href="http://rm1.local/meters" class="btn btn-outline-secondary">
                                 <i class="bi bi-arrow-left"></i> ย้อนกลับ
                             </a>
                             <button type="submit" class="btn btn-warning text-white">

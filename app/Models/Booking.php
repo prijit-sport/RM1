@@ -1,105 +1,86 @@
 <?php
-
+ 
 namespace App\Models;
-
-use App\Support\BillingCalculator;
+ 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
-
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+ 
 class Booking extends Model
 {
     use SoftDeletes;
-
+ 
     protected $fillable = [
-        'room_id',
         'guest_id',
+        'room_id',
         'check_in_date',
         'check_out_date',
         'actual_check_in',
         'actual_check_out',
-        'total_price',
+        // total_price ไม่ได้อยู่ใน fillable เพราะคำนวณจาก accessor
+        'rent_amount',
+        'deposit_amount',
+        'electric_meter_start',
+        'water_meter_start',
         'status',
         'notes',
     ];
-
+ 
     protected $casts = [
-        'check_in_date' => 'datetime',
-        'check_out_date' => 'datetime',
-        'actual_check_in' => 'datetime',
-        'actual_check_out' => 'datetime',
-        'total_price' => 'decimal:2',
+        'check_in_date'    => 'date',
+        'check_out_date'   => 'date',
+        'actual_check_in'  => 'date',
+        'actual_check_out' => 'date',
+        'rent_amount'      => 'decimal:2',
+        'deposit_amount'   => 'decimal:2',
     ];
-
-    /**
-     * Get the room for the booking.
-     */
-    public function room(): BelongsTo
-    {
-        return $this->belongsTo(Room::class);
-    }
-
-    /**
-     * Get the guest for the booking.
-     */
+ 
+    // ─────────────────────────────────────────
+    //  RELATIONSHIPS
+    // ─────────────────────────────────────────
+ 
     public function guest(): BelongsTo
     {
         return $this->belongsTo(Guest::class);
     }
-
-    /**
-     * Get the invoices for the booking.
-     */
-    public function invoices()
+ 
+    public function room(): BelongsTo
     {
-        return $this->hasMany(Invoice::class);
+        return $this->belongsTo(Room::class);
     }
-
-    /**
-     * Check if booking is active.
-     */
-    public function isActive(): bool
+ 
+    // ─────────────────────────────────────────
+    //  ACCESSORS
+    // ─────────────────────────────────────────
+ 
+    /** ยอดรวม = ค่าเช่า + มัดจำ (คำนวณ real-time ไม่เก็บใน DB) */
+    public function getTotalPriceAttribute(): float
     {
-        return in_array($this->status, ['pending', 'confirmed', 'checked_in']);
+        return (float) ($this->rent_amount ?? 0) + (float) ($this->deposit_amount ?? 0);
     }
-
-    /**
-     * Calculate actual price based on actual stay.
-     */
-    public function calculateActualPrice(): float
+ 
+    /** label สถานะภาษาไทย */
+    public function getStatusLabelAttribute(): string
     {
-        if (!$this->actual_check_in || !$this->actual_check_out) {
-            return $this->total_price;
-        }
-
-        $monthlyCharge = BillingCalculator::calculateMonthlyCharge(
-            (float) $this->room->price_per_month,
-            $this->actual_check_in,
-            $this->actual_check_out
-        );
-
-        return $monthlyCharge > 0 ? $monthlyCharge : $this->total_price;
+        return match ($this->status) {
+            'confirmed'   => 'ยืนยันแล้ว',
+            'cancelled'   => 'ยกเลิก',
+            'checked_in'  => 'เช็คอินแล้ว',
+            'checked_out' => 'เช็คเอาต์แล้ว',
+            default       => 'รอยืนยัน',
+        };
     }
-
-    /**
-     * Check in the guest.
-     */
-    public function checkIn(): void
+ 
+    /** badge color สำหรับ Bootstrap */
+    public function getStatusBadgeAttribute(): string
     {
-        $this->update([
-            'status' => 'checked_in',
-            'actual_check_in' => now(),
-        ]);
-    }
-
-    /**
-     * Check out the guest.
-     */
-    public function checkOut(): void
-    {
-        $this->update([
-            'status' => 'checked_out',
-            'actual_check_out' => now(),
-        ]);
+        return match ($this->status) {
+            'confirmed'   => 'success',
+            'cancelled'   => 'danger',
+            'checked_in'  => 'primary',
+            'checked_out' => 'secondary',
+            default       => 'warning',
+        };
     }
 }
+ 

@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -17,14 +18,14 @@ class ManagerOrAdmin
     public function handle(Request $request, Closure $next): Response
     {
         // Check authentication first
-        if (!auth()->check()) {
+        if (!Auth::check()) {
             return redirect()->route('login')->with('error', 'กรุณาเข้าสู่ระบบก่อน');
         }
 
-        $user = auth()->user();
+        $user = Auth::user();
         
-        // Force reload role from database to ensure we have the latest
-        $user->load('role');
+
+
         
         // If user has no role, deny access
         if (!$user->role) {

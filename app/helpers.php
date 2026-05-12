@@ -91,6 +91,11 @@ XML;
             abort(500, 'ไม่สามารถสร้างไฟล์ชั่วคราวได้');
         }
 
+        if (!class_exists('ZipArchive')) {
+            @unlink($tempPath);
+            abort(500, 'ZipArchive class not found. PHP zip extension may be missing/enabled incorrectly.');
+        }
+
         $zip = new \ZipArchive();
         if ($zip->open($tempPath, \ZipArchive::OVERWRITE) !== true) {
             @unlink($tempPath);

@@ -66,24 +66,7 @@
         </div>
     </div>
 
-    <!-- Today Stats -->
-    <div class="col-md-6 col-lg-4">
-        <div class="card stat-card border-start border-5 border-primary">
-            <div class="card-body">
-                <div class="text-muted mb-2">📥 เช็คอินวันนี้</div>
-                <div class="fs-2 fw-bold text-primary">{{ $today_check_ins }}</div>
-            </div>
-        </div>
-    </div>
 
-    <div class="col-md-6 col-lg-4">
-        <div class="card stat-card border-start border-5 border-success">
-            <div class="card-body">
-                <div class="text-muted mb-2">📤 เช็คเอาท์วันนี้</div>
-                <div class="fs-2 fw-bold text-success">{{ $today_check_outs }}</div>
-            </div>
-        </div>
-    </div>
 
     <!-- Revenue -->
     <div class="col-md-6 col-lg-4">
@@ -133,14 +116,7 @@
                         <span>ยืนยันแล้ว</span>
                         <span class="badge bg-primary rounded-pill">{{ $confirmed_bookings }}</span>
                     </div>
-                    <div class="list-group-item d-flex justify-content-between align-items-center py-3">
-                        <span>เช็คอินแล้ว</span>
-                        <span class="badge bg-success rounded-pill">{{ $checked_in }}</span>
-                    </div>
-                    <div class="list-group-item d-flex justify-content-between align-items-center py-3">
-                        <span>เช็คเอาท์แล้ว</span>
-                        <span class="badge bg-info rounded-pill">{{ $checked_out }}</span>
-                    </div>
+
                     <div class="list-group-item d-flex justify-content-between align-items-center py-3">
                         <span>ยกเลิก</span>
                         <span class="badge bg-danger rounded-pill">{{ $cancelled }}</span>

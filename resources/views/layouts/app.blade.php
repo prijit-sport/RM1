@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="th">
 <head>
     <meta charset="UTF-8">
@@ -288,10 +288,7 @@
                 @endif
             </a>
             
-            <a href="{{ route('items.index') }}" class="sidebar-menu-item {{ request()->routeIs('items.*') ? 'active' : '' }}">
-                <i class="bi bi-box-seam"></i>
-                <span>จัดการสินค้า</span>
-            </a>
+
             
             <a href="{{ route('meters.index') }}" class="sidebar-menu-item {{ request()->routeIs('meters.*') ? 'active' : '' }}">
                 <i class="bi bi-lightning-charge"></i>

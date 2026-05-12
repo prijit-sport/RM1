@@ -1,32 +1,32 @@
 ﻿@extends('layouts.app')
 
-@section('title', 'เธเธฑเธเธ—เธถเธเน€เธฅเธเธกเธดเน€เธ•เธญเธฃเน')
+@section('title', 'มิเตอร์อ่านค่า')
 
-@section('page-title', 'เธเธฑเธเธ—เธถเธเน€เธฅเธเธกเธดเน€เธ•เธญเธฃเน')
+@section('page-title', 'มิเตอร์อ่านค่า')
 
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
-        <h4 class="mb-1">เธเธฑเธเธ—เธถเธเน€เธฅเธเธกเธดเน€เธ•เธญเธฃเน</h4>
+        <h4 class="mb-1">มิเตอร์อ่านค่า</h4>
         <p class="text-muted mb-0">
-            เธซเนเธญเธ <strong>{{ $meter->room->room_number ?? '-' }}</strong>
+ห้องพัก <strong>{{ $meter->room->room_number ?? '-' }}</strong>
             @if($meter->type === 'water')
-                <span class="badge bg-info">เธเนเธณ</span>
+                <span class="badge bg-info">น้ำ</span>
             @else
-                <span class="badge bg-warning">เนเธเธเนเธฒ</span>
+                <span class="badge bg-warning">ไฟ</span>
             @endif
-            | เน€เธฅเธเธกเธดเน€เธ•เธญเธฃเน: <strong>{{ $meter->meter_number }}</strong>
+| เลขมิเตอร์: <strong>{{ $meter->meter_number }}</strong>
         </p>
     </div>
     <div class="d-flex gap-2">
-        <a href="{{ route('meters.show', $meter) }}" class="btn btn-outline-secondary">
-            <i class="bi bi-arrow-left me-1"></i>เธเธฅเธฑเธ
+        <a href="http://rm1.local/meters" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>ย้อนกลับ
         </a>
         <a href="{{ route('meters.readings.export', $meter) . '?' . http_build_query(request()->only(['date', 'search'])) }}" class="btn btn-success">
             <i class="bi bi-download me-1"></i>{{ __("ui.export") }}
         </a>
         <a href="{{ route('meters.readings.create', $meter) }}" class="btn btn-primary-custom">
-            <i class="bi bi-plus-lg me-1"></i>เน€เธเธดเนเธกเน€เธฅเธ
+            <i class="bi bi-plus-lg me-1"></i>เพิ่มการอ่านค่า
         </a>
     </div>
 </div>
@@ -37,31 +37,31 @@
             <div class="row gy-2">
                 @if($billing['has_reading'])
                     <div class="col-md-3">
-                        <div class="text-muted small">เน€เธฅเธเธเนเธญเธเธซเธเนเธฒ</div>
+                        <div class="text-muted small">ค่าน้ำ/ไฟก่อนหน้า</div>
                         <div>{{ number_format($billing['previous'], 2) }} ({{ $billing['previous_date'] ?? '-' }})</div>
                     </div>
                     <div class="col-md-3">
-                        <div class="text-muted small">เน€เธฅเธเธเธฑเธเธเธธเธเธฑเธ</div>
+                        <div class="text-muted small">ค่ายอดปัจจุบัน</div>
                         <div>{{ number_format($billing['current'], 2) }} ({{ $billing['current_date'] ?? '-' }})</div>
                     </div>
                     <div class="col-md-2">
-                        <div class="text-muted small">เธซเธเนเธงเธขเธ—เธตเนเนเธเน</div>
+                        <div class="text-muted small">การใช้งาน</div>
                         <div>{{ number_format($billing['usage'], 2) }} {{ $meter->unit ?? '' }}</div>
                     </div>
                     <div class="col-md-2">
-                        <div class="text-muted small">เธญเธฑเธ•เธฃเธฒเธ•เนเธญเธซเธเนเธงเธข</div>
-                        <div>{{ number_format($billing['rate'], 2) }} เธเธฒเธ—</div>
+                        <div class="text-muted small">อัตรา</div>
+                        <div>{{ number_format($billing['rate'], 2) }} บาท/หน่วย</div>
                     </div>
                     <div class="col-md-2">
-                        <div class="text-muted small">เธขเธญเธ”เธฃเธงเธก</div>
-                        <div class="fw-bold">{{ number_format($billing['total'], 2) }} เธเธฒเธ—</div>
+                        <div class="text-muted small">ยอดรวม</div>
+                        <div class="fw-bold">{{ number_format($billing['total'], 2) }} บาท</div>
                     </div>
                 @else
-                    <div class="col-12 text-muted">เธขเธฑเธเนเธกเนเธกเธตเน€เธฅเธเธญเนเธฒเธเธฅเนเธฒเธชเธธเธ” เนเธเธฃเธ”เธเธฑเธเธ—เธถเธเน€เธฅเธเนเธซเธกเนเน€เธเธทเนเธญเนเธชเธ”เธเธเธฅเธเธณเธเธงเธ“</div>
+                    <div class="col-12 text-muted">ไม่พบข้อมูลการคำนวณค่าน้ำ/ไฟ</div>
                 @endif
             </div>
             <div class="text-muted small mt-2">
-                เธชเธนเธ•เธฃเธเธณเธเธงเธ“: {{ $billing['formula'] ?? 'Usage ร— Rate + Tax' }}
+                สูตรคำนวณ: {{ $billing['formula'] ?? 'Usage × Rate + Tax' }}
             </div>
         </div>
     </div>
@@ -75,7 +75,7 @@
                 <input type="date" name="date" class="form-control" value="{{ request('date') }}">
             </div>
             <div class="col-md-4">
-                <input type="text" name="search" class="form-control" placeholder="เธเนเธเธซเธฒเธซเธกเธฒเธขเน€เธซเธ•เธธ..." value="{{ request('search') }}">
+                <input type="text" name="search" class="form-control" placeholder="ค้นหา..." value="{{ request('search') }}">
             </div>
             <div class="col-md-2">
                 <button type="submit" class="btn btn-primary w-100">
@@ -92,11 +92,11 @@
         <table class="table table-hover mb-0">
             <thead>
                 <tr>
-                    <th>เธงเธฑเธเธ—เธตเน</th>
-                    <th>เน€เธฅเธเธกเธดเน€เธ•เธญเธฃเน</th>
-                    <th>เธเธนเนเธเธฑเธเธ—เธถเธ</th>
-                    <th>เธซเธกเธฒเธขเน€เธซเธ•เธธ</th>
-                    <th>เธเธฒเธฃเธเธฃเธฐเธ—เธณ</th>
+                    <th>วันที่อ่านค่า</th>
+                    <th>ค่าน้ำ/ไฟ</th>
+                    <th>ผู้บันทึก</th>
+                    <th>หมายเหตุ</th>
+                    <th>การทำงาน</th>
                 </tr>
             </thead>
             <tbody>
@@ -114,7 +114,7 @@
                                 <form action="{{ route('meters.readings.destroy', [$meter, $reading]) }}" method="POST" class="d-inline">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('เนเธเนเนเธเธซเธฃเธทเธญเนเธกเนเธ—เธตเนเธเธฐเธฅเธ?')">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('ยืนยันการลบรายการ?')">
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 </form>
@@ -125,7 +125,7 @@
                     <tr>
                         <td colspan="5" class="text-center py-4">
                             <i class="bi bi-inbox fs-1 text-muted"></i>
-                            <p class="text-muted mt-2">เนเธกเนเธกเธตเธฃเธฒเธขเธเธฒเธฃเธเธฑเธเธ—เธถเธเน€เธฅเธเธกเธดเน€เธ•เธญเธฃเน</p>
+                            <p class="text-muted mt-2">ไม่พบข้อมูลการอ่านค่า</p>
                         </td>
                     </tr>
                 @endforelse
