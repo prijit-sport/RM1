@@ -49,15 +49,32 @@
 
             <div class="form-group">
                 <label for="type">ประเภท *</label>
-                <input type="text" id="type" name="type" value="{{ old('type', $facility->type) }}" required>
+                <select name="type" id="type" required>
+                    <option value="">-- เลือกประเภท --</option>
+                    @php $currentType = old('type', $facility->type); @endphp
+                    <option value="bed"            {{ $currentType == 'bed'            ? 'selected' : '' }}>🛏️ เตียง</option>
+                    <option value="mattress"       {{ $currentType == 'mattress'       ? 'selected' : '' }}>🛌 ที่นอน</option>
+                    <option value="wardrobe"       {{ $currentType == 'wardrobe'       ? 'selected' : '' }}>🚪 ตู้เสื้อผ้า</option>
+                    <option value="dressing_table" {{ $currentType == 'dressing_table' ? 'selected' : '' }}>💄 โต๊ะเครื่องแป้ง</option>
+                    <option value="tv_stand"       {{ $currentType == 'tv_stand'       ? 'selected' : '' }}>📺 ชั้นวางทีวี</option>
+                    <option value="clothes_rack"   {{ $currentType == 'clothes_rack'   ? 'selected' : '' }}>👔 ราวแขวนผ้า</option>
+                </select>
                 @error('type')
                     <div class="error-message">{{ $message }}</div>
                 @enderror
             </div>
 
             <div class="form-group">
-                <label for="location">ที่ตั้ง *</label>
-                <input type="text" id="location" name="location" value="{{ old('location', $facility->location) }}" required>
+                <label for="location">ห้องที่ติดตั้ง (ที่ตั้ง) *</label>
+                <select name="location" id="location" required>
+                    <option value="">-- เลือกห้อง --</option>
+                    @foreach($rooms as $room)
+                        <option value="{{ $room->room_number }}" 
+                            {{ old('location', $facility->location) == $room->room_number ? 'selected' : '' }}>
+                            ห้อง {{ $room->room_number }} ({{ $room->room_type }})
+                        </option>
+                    @endforeach
+                </select>
                 @error('location')
                     <div class="error-message">{{ $message }}</div>
                 @enderror
@@ -70,10 +87,14 @@
 
             <div class="form-group">
                 <label for="status">สถานะ *</label>
-                <select id="status" name="status" required>
-                    <option value="active" {{ old('status', $facility->status) === 'active' ? 'selected' : '' }}>ใช้งาน</option>
-                    <option value="inactive" {{ old('status', $facility->status) === 'inactive' ? 'selected' : '' }}>ไม่ใช้งาน</option>
-                    <option value="maintenance" {{ old('status', $facility->status) === 'maintenance' ? 'selected' : '' }}>บำรุงรักษา</option>
+                <select name="status" id="status" required>
+                    @php $currentStatus = old('status', $facility->status); @endphp
+                    <option value="good"         {{ $currentStatus == 'good'         ? 'selected' : '' }}>✅ ใช้งานได้</option>
+                    <option value="fair"         {{ $currentStatus == 'fair'         ? 'selected' : '' }}>🟡 สภาพปานกลาง</option>
+                    <option value="needs_repair" {{ $currentStatus == 'needs_repair' ? 'selected' : '' }}>⚠️ ต้องซ่อม</option>
+                    <option value="maintenance"  {{ $currentStatus == 'maintenance'  ? 'selected' : '' }}>🔧 กำลังซ่อมบำรุง</option>
+                    <option value="damaged"      {{ $currentStatus == 'damaged'      ? 'selected' : '' }}>❌ ชำรุด</option>
+                    <option value="retired"      {{ $currentStatus == 'retired'      ? 'selected' : '' }}>🗑️ ปลดประจำการ</option>
                 </select>
                 @error('status')
                     <div class="error-message">{{ $message }}</div>
@@ -87,12 +108,16 @@
 
             <div class="form-group">
                 <label for="last_maintenance_date">วันที่บำรุงรักษาล่าสุด</label>
-                <input type="date" id="last_maintenance_date" name="last_maintenance_date" value="{{ old('last_maintenance_date', $facility->last_maintenance_date ? $facility->last_maintenance_date->format('Y-m-d') : '') }}">
+                {{-- แก้ไขโดยใช้ \Carbon\Carbon::parse เพื่อป้องกัน Error format() on string --}}
+                <input type="date" id="last_maintenance_date" name="last_maintenance_date" 
+                    value="{{ old('last_maintenance_date', $facility->last_maintenance_date ? \Carbon\Carbon::parse($facility->last_maintenance_date)->format('Y-m-d') : '') }}">
             </div>
 
             <div class="form-group">
                 <label for="next_maintenance_date">วันที่บำรุงรักษาครั้งถัดไป</label>
-                <input type="date" id="next_maintenance_date" name="next_maintenance_date" value="{{ old('next_maintenance_date', $facility->next_maintenance_date ? $facility->next_maintenance_date->format('Y-m-d') : '') }}">
+                {{-- แก้ไขโดยใช้ \Carbon\Carbon::parse เพื่อป้องกัน Error format() on string --}}
+                <input type="date" id="next_maintenance_date" name="next_maintenance_date" 
+                    value="{{ old('next_maintenance_date', $facility->next_maintenance_date ? \Carbon\Carbon::parse($facility->next_maintenance_date)->format('Y-m-d') : '') }}">
             </div>
 
             <div class="btn-group">

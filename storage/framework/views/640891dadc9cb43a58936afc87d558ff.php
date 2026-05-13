@@ -34,17 +34,17 @@
 </head>
 <body>
     <div class="container">
-        <h1>🔍 รายละเอียด: {{ $facility->name }}</h1>
+        <h1>🔍 รายละเอียด: <?php echo e($facility->name); ?></h1>
 
         <div class="detail-group">
             <div class="detail-row">
                 <div class="detail-label">ชื่อ:</div>
-                <div class="detail-value">{{ $facility->name }}</div>
+                <div class="detail-value"><?php echo e($facility->name); ?></div>
             </div>
             <div class="detail-row">
                 <div class="detail-label">ประเภท:</div>
                 <div class="detail-value">
-                    @php
+                    <?php
                         $types = [
                             'bed' => '🛏️ เตียง',
                             'mattress' => '🛌 ที่นอน',
@@ -53,18 +53,19 @@
                             'tv_stand' => '📺 ชั้นวางทีวี',
                             'clothes_rack' => '👔 ราวแขวนผ้า'
                         ];
-                    @endphp
-                    {{ $types[$facility->type] ?? $facility->type }}
+                    ?>
+                    <?php echo e($types[$facility->type] ?? $facility->type); ?>
+
                 </div>
             </div>
             <div class="detail-row">
                 <div class="detail-label">ที่ตั้ง:</div>
-                <div class="detail-value">ห้อง {{ $facility->location }}</div>
+                <div class="detail-value">ห้อง <?php echo e($facility->location); ?></div>
             </div>
             <div class="detail-row">
                 <div class="detail-label">สถานะ:</div>
                 <div class="detail-value">
-                    @php
+                    <?php
                         $statusClasses = [
                             'good' => 'status-good',
                             'fair' => 'status-fair',
@@ -81,9 +82,10 @@
                             'damaged' => '❌ ชำรุด',
                             'retired' => '🗑️ ปลดประจำการ'
                         ];
-                    @endphp
-                    <span class="badge {{ $statusClasses[$facility->status] ?? 'status-retired' }}">
-                        {{ $statusLabels[$facility->status] ?? $facility->status }}
+                    ?>
+                    <span class="badge <?php echo e($statusClasses[$facility->status] ?? 'status-retired'); ?>">
+                        <?php echo e($statusLabels[$facility->status] ?? $facility->status); ?>
+
                     </span>
                 </div>
             </div>
@@ -92,39 +94,41 @@
         <div class="detail-group">
             <div class="detail-row">
                 <div class="detail-label">คำอธิบาย:</div>
-                <div class="detail-value">{{ $facility->description ?? '-' }}</div>
+                <div class="detail-value"><?php echo e($facility->description ?? '-'); ?></div>
             </div>
             <div class="detail-row">
                 <div class="detail-label">ตารางบำรุงรักษา:</div>
-                <div class="detail-value">{{ $facility->maintenance_schedule ?? '-' }}</div>
+                <div class="detail-value"><?php echo e($facility->maintenance_schedule ?? '-'); ?></div>
             </div>
             
             <div class="detail-row">
                 <div class="detail-label">วันที่บำรุงรักษาล่าสุด:</div>
                 <div class="detail-value">
-                    {{ $facility->last_maintenance_date ? \Carbon\Carbon::parse($facility->last_maintenance_date)->format('d/m/Y') : '-' }}
+                    <?php echo e($facility->last_maintenance_date ? \Carbon\Carbon::parse($facility->last_maintenance_date)->format('d/m/Y') : '-'); ?>
+
                 </div>
             </div>
             <div class="detail-row">
                 <div class="detail-label">วันที่บำรุงรักษาครั้งถัดไป:</div>
                 <div class="detail-value">
-                    {{ $facility->next_maintenance_date ? \Carbon\Carbon::parse($facility->next_maintenance_date)->format('d/m/Y') : '-' }}
+                    <?php echo e($facility->next_maintenance_date ? \Carbon\Carbon::parse($facility->next_maintenance_date)->format('d/m/Y') : '-'); ?>
+
                 </div>
             </div>
         </div>
 
         <div class="btn-group">
-            {{-- ปุ่มแก้ไข --}}
-            <a href="{{ route('facilities.edit', $facility->id) }}" class="btn btn-edit">✏️ แก้ไขข้อมูล</a>
+            
+            <a href="<?php echo e(route('facilities.edit', $facility->id)); ?>" class="btn btn-edit">✏️ แก้ไขข้อมูล</a>
 
-            {{-- ปุ่มแจ้งส่งซ่อมบำรุง (ส่ง facility_id ไปด้วย) --}}
-            <a href="{{ route('maintenances.create', ['facility_id' => $facility->id]) }}" class="btn btn-maintenance">
+            
+            <a href="<?php echo e(route('maintenances.create', ['facility_id' => $facility->id])); ?>" class="btn btn-maintenance">
                 🛠️ แจ้งส่งซ่อมบำรุง
             </a>
 
-            {{-- ปุ่มย้อนกลับ --}}
-            <a href="{{ route('facilities.index') }}" class="btn btn-back">⬅️ กลับหน้ารวม</a>
+            
+            <a href="<?php echo e(route('facilities.index')); ?>" class="btn btn-back">⬅️ กลับหน้ารวม</a>
         </div>
     </div>
 </body>
-</html>
+</html><?php /**PATH C:\xampp\htdocs\Rm1\resources\views/facilities/show.blade.php ENDPATH**/ ?>

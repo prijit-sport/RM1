@@ -1,17 +1,18 @@
-@extends('layouts.app')
 
-@section('title', 'จัดการการจอง')
 
-@section('page-title', 'จัดการการจอง')
+<?php $__env->startSection('title', 'จัดการการจอง'); ?>
 
-@section('content')
+<?php $__env->startSection('page-title', 'จัดการการจอง'); ?>
+
+<?php $__env->startSection('content'); ?>
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h4 class="mb-0">รายการการจอง</h4>
     <div class="d-flex gap-2">
-        <a href="{{ route('bookings.export') }}" class="btn btn-success">
-            <i class="bi bi-download me-1"></i>{{ __("ui.export") }}
+        <a href="<?php echo e(route('bookings.export')); ?>" class="btn btn-success">
+            <i class="bi bi-download me-1"></i><?php echo e(__("ui.export")); ?>
+
         </a>
-        <a href="{{ route('bookings.create') }}" class="btn btn-primary-custom">
+        <a href="<?php echo e(route('bookings.create')); ?>" class="btn btn-primary-custom">
             <i class="bi bi-plus-lg me-1"></i>เพิ่มการจองใหม่
         </a>
     </div>
@@ -59,15 +60,15 @@
     }
 </style>
 
-{{-- ===== สรุปห้องทั้งหมด + รายการห้องว่าง (คลิกเพื่อจองได้เลย) ===== --}}
+
 <div class="row g-3 mb-4">
-    {{-- 🌀 ห้องพัดลม --}}
+    
     <div class="col-md-6">
         <div class="card border-0 shadow-sm h-100 summary-card"
              style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
             <div class="card-body text-white">
 
-                {{-- Header: ชื่อประเภท + ตัวเลขรวม --}}
+                
                 <div class="d-flex align-items-center justify-content-between mb-3 pb-3"
                      style="border-bottom: 1px solid rgba(255,255,255,0.3);">
                     <div>
@@ -75,43 +76,44 @@
                             <i class="bi bi-fan"></i> ห้องพัดลม
                         </h5>
                         <div class="opacity-75 small">
-                            ว่าง {{ $availableFanRooms->count() }} ห้อง / ทั้งหมด {{ $fanTotal }} ห้อง
+                            ว่าง <?php echo e($availableFanRooms->count()); ?> ห้อง / ทั้งหมด <?php echo e($fanTotal); ?> ห้อง
                         </div>
                     </div>
                     <div class="text-end">
-                        <div class="stat-number">{{ $fanTotal }}</div>
+                        <div class="stat-number"><?php echo e($fanTotal); ?></div>
                         <small class="opacity-75">ห้องทั้งหมด</small>
                     </div>
                 </div>
 
-                {{-- Body: รายการห้องว่าง (คลิกเพื่อจอง) --}}
+                
                 <div class="mb-3">
                     <div class="small mb-2 opacity-90">
                         <i class="bi bi-check2-circle"></i>
                         <strong>ห้องที่ว่าง — คลิกเพื่อจอง:</strong>
                     </div>
-                    @if($availableFanRooms->isEmpty())
+                    <?php if($availableFanRooms->isEmpty()): ?>
                         <div class="text-center py-3 opacity-75">
                             <i class="bi bi-x-circle"></i> ไม่มีห้องว่างในขณะนี้
                         </div>
-                    @else
+                    <?php else: ?>
                         <div>
-                            @foreach($availableFanRooms as $room)
-                                <a href="{{ route('bookings.create', ['room_id' => $room->id]) }}"
+                            <?php $__currentLoopData = $availableFanRooms; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $room): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                <a href="<?php echo e(route('bookings.create', ['room_id' => $room->id])); ?>"
                                    class="room-chip"
-                                   title="จองห้อง #{{ $room->room_number }} - ฿{{ number_format($room->price_per_month, 0) }}/เดือน">
-                                    #{{ $room->room_number }}
-                                    @if($room->zone)
-                                        <small>({{ $room->zone }})</small>
-                                    @endif
+                                   title="จองห้อง #<?php echo e($room->room_number); ?> - ฿<?php echo e(number_format($room->price_per_month, 0)); ?>/เดือน">
+                                    #<?php echo e($room->room_number); ?>
+
+                                    <?php if($room->zone): ?>
+                                        <small>(<?php echo e($room->zone); ?>)</small>
+                                    <?php endif; ?>
                                 </a>
-                            @endforeach
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </div>
-                    @endif
+                    <?php endif; ?>
                 </div>
 
-                {{-- Footer: ปุ่มเพิ่มจอง --}}
-                <a href="{{ route('bookings.create', ['room_type' => 'fan']) }}"
+                
+                <a href="<?php echo e(route('bookings.create', ['room_type' => 'fan'])); ?>"
                    class="btn btn-light btn-sm w-100 fw-bold">
                     <i class="bi bi-plus-lg"></i> เพิ่มการจองห้องพัดลม
                 </a>
@@ -119,7 +121,7 @@
         </div>
     </div>
 
-    {{-- ❄️ ห้องแอร์ --}}
+    
     <div class="col-md-6">
         <div class="card border-0 shadow-sm h-100 summary-card"
              style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
@@ -132,11 +134,11 @@
                             <i class="bi bi-snow"></i> ห้องแอร์
                         </h5>
                         <div class="opacity-75 small">
-                            ว่าง {{ $availableAcRooms->count() }} ห้อง / ทั้งหมด {{ $acTotal }} ห้อง
+                            ว่าง <?php echo e($availableAcRooms->count()); ?> ห้อง / ทั้งหมด <?php echo e($acTotal); ?> ห้อง
                         </div>
                     </div>
                     <div class="text-end">
-                        <div class="stat-number">{{ $acTotal }}</div>
+                        <div class="stat-number"><?php echo e($acTotal); ?></div>
                         <small class="opacity-75">ห้องทั้งหมด</small>
                     </div>
                 </div>
@@ -146,27 +148,28 @@
                         <i class="bi bi-check2-circle"></i>
                         <strong>ห้องที่ว่าง — คลิกเพื่อจอง:</strong>
                     </div>
-                    @if($availableAcRooms->isEmpty())
+                    <?php if($availableAcRooms->isEmpty()): ?>
                         <div class="text-center py-3 opacity-75">
                             <i class="bi bi-x-circle"></i> ไม่มีห้องว่างในขณะนี้
                         </div>
-                    @else
+                    <?php else: ?>
                         <div>
-                            @foreach($availableAcRooms as $room)
-                                <a href="{{ route('bookings.create', ['room_id' => $room->id]) }}"
+                            <?php $__currentLoopData = $availableAcRooms; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $room): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                <a href="<?php echo e(route('bookings.create', ['room_id' => $room->id])); ?>"
                                    class="room-chip"
-                                   title="จองห้อง #{{ $room->room_number }} - ฿{{ number_format($room->price_per_month, 0) }}/เดือน">
-                                    #{{ $room->room_number }}
-                                    @if($room->zone)
-                                        <small>({{ $room->zone }})</small>
-                                    @endif
+                                   title="จองห้อง #<?php echo e($room->room_number); ?> - ฿<?php echo e(number_format($room->price_per_month, 0)); ?>/เดือน">
+                                    #<?php echo e($room->room_number); ?>
+
+                                    <?php if($room->zone): ?>
+                                        <small>(<?php echo e($room->zone); ?>)</small>
+                                    <?php endif; ?>
                                 </a>
-                            @endforeach
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </div>
-                    @endif
+                    <?php endif; ?>
                 </div>
 
-                <a href="{{ route('bookings.create', ['room_type' => 'air_conditioning']) }}"
+                <a href="<?php echo e(route('bookings.create', ['room_type' => 'air_conditioning'])); ?>"
                    class="btn btn-light btn-sm w-100 fw-bold">
                     <i class="bi bi-plus-lg"></i> เพิ่มการจองห้องแอร์
                 </a>
@@ -175,36 +178,37 @@
     </div>
 </div>
 
-{{-- ===== Search and Filter ===== --}}
+
 <div class="card mb-4">
     <div class="card-body">
-        <form method="GET" action="{{ route('bookings.index') }}" class="row g-3">
+        <form method="GET" action="<?php echo e(route('bookings.index')); ?>" class="row g-3">
             <div class="col-md-3">
                 <input type="text" name="search" class="form-control"
-                       placeholder="ค้นหาชื่อแขก / เลขห้อง..." value="{{ request('search') }}">
+                       placeholder="ค้นหาชื่อแขก / เลขห้อง..." value="<?php echo e(request('search')); ?>">
             </div>
             <div class="col-md-2">
                 <select name="status" class="form-select">
                     <option value="">ทุกสถานะ</option>
-                    <option value="pending"      {{ request('status') == 'pending' ? 'selected' : '' }}>รอการยืนยัน</option>
-                    <option value="confirmed"    {{ request('status') == 'confirmed' ? 'selected' : '' }}>ยืนยันแล้ว</option>
-                    <option value="checked_in"   {{ request('status') == 'checked_in' ? 'selected' : '' }}>เช็คอินแล้ว</option>
-                    <option value="checked_out"  {{ request('status') == 'checked_out' ? 'selected' : '' }}>เช็คเอาท์แล้ว</option>
-                    <option value="cancelled"    {{ request('status') == 'cancelled' ? 'selected' : '' }}>ยกเลิก</option>
+                    <option value="pending"      <?php echo e(request('status') == 'pending' ? 'selected' : ''); ?>>รอการยืนยัน</option>
+                    <option value="confirmed"    <?php echo e(request('status') == 'confirmed' ? 'selected' : ''); ?>>ยืนยันแล้ว</option>
+                    <option value="checked_in"   <?php echo e(request('status') == 'checked_in' ? 'selected' : ''); ?>>เช็คอินแล้ว</option>
+                    <option value="checked_out"  <?php echo e(request('status') == 'checked_out' ? 'selected' : ''); ?>>เช็คเอาท์แล้ว</option>
+                    <option value="cancelled"    <?php echo e(request('status') == 'cancelled' ? 'selected' : ''); ?>>ยกเลิก</option>
                 </select>
             </div>
             <div class="col-md-2">
                 <select name="room_type" class="form-select">
                     <option value="">ทุกประเภทห้อง</option>
-                    <option value="fan"              {{ request('room_type') == 'fan'              ? 'selected' : '' }}>🌀 ห้องพัดลม</option>
-                    <option value="air_conditioning" {{ request('room_type') == 'air_conditioning' ? 'selected' : '' }}>❄️ ห้องแอร์</option>
+                    <option value="fan"              <?php echo e(request('room_type') == 'fan'              ? 'selected' : ''); ?>>🌀 ห้องพัดลม</option>
+                    <option value="air_conditioning" <?php echo e(request('room_type') == 'air_conditioning' ? 'selected' : ''); ?>>❄️ ห้องแอร์</option>
                 </select>
             </div>
             <div class="col-md-3 d-flex gap-2">
                 <button type="submit" class="btn btn-primary flex-grow-1">
-                    <i class="bi bi-search me-1"></i>{{ __("ui.search") }}
+                    <i class="bi bi-search me-1"></i><?php echo e(__("ui.search")); ?>
+
                 </button>
-                <a href="{{ route('bookings.index') }}" class="btn btn-outline-secondary" title="ล้างตัวกรอง">
+                <a href="<?php echo e(route('bookings.index')); ?>" class="btn btn-outline-secondary" title="ล้างตัวกรอง">
                     <i class="bi bi-arrow-clockwise"></i>
                 </a>
             </div>
@@ -212,7 +216,7 @@
     </div>
 </div>
 
-{{-- ===== Bookings Table ===== --}}
+
 <div class="table-card">
     <div class="table-responsive">
         <table class="table table-hover mb-0">
@@ -227,42 +231,44 @@
                 </tr>
             </thead>
             <tbody>
-                @forelse ($bookings as $booking)
+                <?php $__empty_1 = true; $__currentLoopData = $bookings; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $booking): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                     <tr>
                         <td>
                             <strong>
-                                @if($booking->room)
-                                    #{{ $booking->room->room_number }}
-                                @else
+                                <?php if($booking->room): ?>
+                                    #<?php echo e($booking->room->room_number); ?>
+
+                                <?php else: ?>
                                     <span class="text-muted">-</span>
-                                @endif
+                                <?php endif; ?>
                             </strong>
                         </td>
                         <td>
-                            @if($booking->room)
-                                @php
+                            <?php if($booking->room): ?>
+                                <?php
                                     $type = $booking->room->room_type;
                                     $typeLabel = match($type) {
                                         'fan'              => ['🌀 พัดลม', 'bg-info text-white'],
                                         'air_conditioning' => ['❄️ แอร์',  'bg-primary text-white'],
                                         default            => [$type ?: '-', 'bg-secondary'],
                                     };
-                                @endphp
-                                <span class="badge {{ $typeLabel[1] }}">{{ $typeLabel[0] }}</span>
-                            @else
+                                ?>
+                                <span class="badge <?php echo e($typeLabel[1]); ?>"><?php echo e($typeLabel[0]); ?></span>
+                            <?php else: ?>
                                 <span class="text-muted">-</span>
-                            @endif
+                            <?php endif; ?>
                         </td>
                         <td>
-                            @if($booking->guest)
-                                {{ $booking->guest->first_name }} {{ $booking->guest->last_name }}
-                            @else
+                            <?php if($booking->guest): ?>
+                                <?php echo e($booking->guest->first_name); ?> <?php echo e($booking->guest->last_name); ?>
+
+                            <?php else: ?>
                                 <span class="text-muted fst-italic">ไม่ระบุผู้เช่า</span>
-                            @endif
+                            <?php endif; ?>
                         </td>
-                        <td>฿{{ number_format($booking->total_price ?? 0, 2) }}</td>
+                        <td>฿<?php echo e(number_format($booking->total_price ?? 0, 2)); ?></td>
                         <td>
-                            @php
+                            <?php
                                 $statusClasses = [
                                     'pending'      => 'bg-warning',
                                     'confirmed'    => 'bg-info',
@@ -270,57 +276,60 @@
                                     'checked_out'  => 'bg-secondary',
                                     'cancelled'    => 'bg-danger',
                                 ];
-                            @endphp
-                            <span class="badge {{ $statusClasses[$booking->status] ?? 'bg-light text-dark' }}">
-                                {{ enum_th('booking_status', $booking->status) }}
+                            ?>
+                            <span class="badge <?php echo e($statusClasses[$booking->status] ?? 'bg-light text-dark'); ?>">
+                                <?php echo e(enum_th('booking_status', $booking->status)); ?>
+
                             </span>
                         </td>
                         <td>
                             <div class="d-flex gap-2">
-                                <a href="{{ route('bookings.show', $booking) }}" class="btn btn-sm btn-outline-info">
+                                <a href="<?php echo e(route('bookings.show', $booking)); ?>" class="btn btn-sm btn-outline-info">
                                     <i class="bi bi-eye"></i>
                                 </a>
-                                <a href="{{ route('bookings.edit', $booking) }}" class="btn btn-sm btn-outline-warning">
+                                <a href="<?php echo e(route('bookings.edit', $booking)); ?>" class="btn btn-sm btn-outline-warning">
                                     <i class="bi bi-pencil"></i>
                                 </a>
-                                @if($booking->status == 'pending')
-                                    <form action="{{ route('bookings.confirm', $booking) }}" method="POST" class="d-inline">
-                                        @csrf
+                                <?php if($booking->status == 'pending'): ?>
+                                    <form action="<?php echo e(route('bookings.confirm', $booking)); ?>" method="POST" class="d-inline">
+                                        <?php echo csrf_field(); ?>
                                         <button type="submit" class="btn btn-sm btn-outline-success"
                                                 onclick="return confirm('ยืนยันการจองนี้?')">
                                             <i class="bi bi-check-lg"></i>
                                         </button>
                                     </form>
-                                @endif
-                                @if($booking->status != 'cancelled' && $booking->status != 'checked_out')
-                                    <form action="{{ route('bookings.cancel', $booking) }}" method="POST" class="d-inline">
-                                        @csrf
+                                <?php endif; ?>
+                                <?php if($booking->status != 'cancelled' && $booking->status != 'checked_out'): ?>
+                                    <form action="<?php echo e(route('bookings.cancel', $booking)); ?>" method="POST" class="d-inline">
+                                        <?php echo csrf_field(); ?>
                                         <button type="submit" class="btn btn-sm btn-outline-danger"
                                                 onclick="return confirm('ยกเลิกการจองนี้?')">
                                             <i class="bi bi-x-lg"></i>
                                         </button>
                                     </form>
-                                @endif
+                                <?php endif; ?>
                             </div>
                         </td>
                     </tr>
-                @empty
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                     <tr>
                         <td colspan="6" class="text-center py-4">
                             <i class="bi bi-inbox fs-1 text-muted"></i>
                             <p class="text-muted mt-2">ไม่มีข้อมูลการจอง</p>
-                            <a href="{{ route('bookings.create') }}" class="btn btn-primary-custom mt-2">เพิ่มการจองใหม่</a>
+                            <a href="<?php echo e(route('bookings.create')); ?>" class="btn btn-primary-custom mt-2">เพิ่มการจองใหม่</a>
                         </td>
                     </tr>
-                @endforelse
+                <?php endif; ?>
             </tbody>
         </table>
     </div>
 </div>
 
-@if ($bookings->hasPages())
+<?php if($bookings->hasPages()): ?>
     <div class="d-flex justify-content-center mt-4">
-        {{ $bookings->links('pagination::bootstrap-5') }}
+        <?php echo e($bookings->links('pagination::bootstrap-5')); ?>
+
     </div>
-@endif
-@endsection
+<?php endif; ?>
+<?php $__env->stopSection(); ?>
+<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\xampp\htdocs\Rm1\resources\views/bookings/index.blade.php ENDPATH**/ ?>

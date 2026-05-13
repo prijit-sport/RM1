@@ -13,6 +13,7 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Pagination\Paginator; // เพิ่มบรรทัดนี้เพื่อรองรับ Pagination
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -29,6 +30,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // กำหนดให้ Pagination ใช้ธีมของ Bootstrap 5
+        Paginator::useBootstrapFive();
+
         Gate::policy(Booking::class, BookingPolicy::class);
 
         // Register @role directive for Blade - improved with null safety
@@ -92,7 +96,6 @@ class AppServiceProvider extends ServiceProvider
                 ]);
             }
 
-
             if ($pendingBookings > 0) {
                 $notifications->push([
                     'message' => __('ui.notifications.pending_bookings', ['count' => $pendingBookings]),
@@ -116,4 +119,3 @@ class AppServiceProvider extends ServiceProvider
         });
     }
 }
-

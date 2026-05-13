@@ -1,6 +1,6 @@
-@extends('layouts.app')
 
-@section('content')
+
+<?php $__env->startSection('content'); ?>
 <div class="container py-4">
     <div class="row justify-content-center">
         <div class="col-lg-8">
@@ -10,48 +10,57 @@
                 </div>
                 <div class="card-body p-4">
 
-                    <form action="{{ route('maintenances.store') }}" method="POST" id="maintenanceForm">
-                        @csrf
+                    <form action="<?php echo e(route('maintenances.store')); ?>" method="POST" id="maintenanceForm">
+                        <?php echo csrf_field(); ?>
                         <input type="hidden" name="status" value="pending">
 
-                        {{-- ── 1. เลือกห้องพัก ── --}}
+                        
                         <div class="mb-4">
                             <label class="form-label fw-bold">ห้องพัก <span class="text-danger">*</span></label>
-                            <select name="room_id" id="room_id" class="form-select @error('room_id') is-invalid @enderror" required>
+                            <select name="room_id" id="room_id" class="form-select <?php $__errorArgs = ['room_id'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>" required>
                                 <option value="">-- เลือกห้องพัก --</option>
-                                @foreach($rooms as $room)
-                                    <option value="{{ $room->id }}" data-room-number="{{ $room->room_number }}" {{ (old('room_id') == $room->id || (isset($facility) && $facility->location == $room->room_number)) ? 'selected' : '' }}>
-                                        ห้อง {{ $room->room_number }} - {{ $room->room_type }}
+                                <?php $__currentLoopData = $rooms; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $room): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                    <option value="<?php echo e($room->id); ?>" data-room-number="<?php echo e($room->room_number); ?>" <?php echo e((old('room_id') == $room->id || (isset($facility) && $facility->location == $room->room_number)) ? 'selected' : ''); ?>>
+                                        ห้อง <?php echo e($room->room_number); ?> - <?php echo e($room->room_type); ?>
+
                                     </option>
-                                @endforeach
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                             </select>
                         </div>
 
-                        {{-- ── 2. เลือกสิ่งอำนวยความสะดวก (ที่เพิ่มเข้ามาใหม่) ── --}}
+                        
                         <div class="mb-4">
                             <label class="form-label fw-bold">สิ่งอำนวยความสะดวก / อุปกรณ์</label>
                             <select name="facility_id" id="facility_id" class="form-select">
                                 <option value="">-- เลือกอุปกรณ์ (ถ้ามี) --</option>
-                                @foreach($facilities as $f)
-                                    <option value="{{ $f->id }}" data-room="{{ $f->location }}" {{ (old('facility_id') == $f->id || (isset($facility) && $facility->id == $f->id)) ? 'selected' : '' }}>
-                                        {{ $f->name }}
+                                <?php $__currentLoopData = $facilities; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $f): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                    <option value="<?php echo e($f->id); ?>" data-room="<?php echo e($f->location); ?>" <?php echo e((old('facility_id') == $f->id || (isset($facility) && $facility->id == $f->id)) ? 'selected' : ''); ?>>
+                                        <?php echo e($f->name); ?>
+
                                     </option>
-                                @endforeach
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                             </select>
                             <div class="form-text text-muted">เลือกห้องพักก่อน เพื่อดูรายการอุปกรณ์ในห้องนั้น</div>
                         </div>
 
-                        {{-- ── 3. ประเภทงาน + ความเร่งด่วน ── --}}
+                        
                         <div class="row mb-4">
                             <div class="col-md-6">
                                 <label class="form-label fw-bold">ประเภทงานซ่อม <span class="text-danger">*</span></label>
                                 <select name="maintenance_type" id="maintenance_type" class="form-select" required>
                                     <option value="">-- เลือกประเภท --</option>
-                                    <option value="ไฟฟ้า" {{ old('maintenance_type') == 'ไฟฟ้า' ? 'selected' : '' }}>💡 ไฟฟ้า</option>
-                                    <option value="ประปา/ท่อ" {{ old('maintenance_type') == 'ประปา/ท่อ' ? 'selected' : '' }}>🚰 ประปา/ท่อ</option>
-                                    <option value="เครื่องปรับอากาศ" {{ old('maintenance_type') == 'เครื่องปรับอากาศ' ? 'selected' : '' }}>❄️ เครื่องปรับอากาศ</option>
-                                    <option value="เฟอร์นิเจอร์" {{ (old('maintenance_type') == 'เฟอร์นิเจอร์' || isset($facility)) ? 'selected' : '' }}>🪑 เฟอร์นิเจอร์</option>
-                                    <option value="อื่นๆ" {{ old('maintenance_type') == 'อื่นๆ' ? 'selected' : '' }}>🛠️ อื่นๆ</option>
+                                    <option value="ไฟฟ้า" <?php echo e(old('maintenance_type') == 'ไฟฟ้า' ? 'selected' : ''); ?>>💡 ไฟฟ้า</option>
+                                    <option value="ประปา/ท่อ" <?php echo e(old('maintenance_type') == 'ประปา/ท่อ' ? 'selected' : ''); ?>>🚰 ประปา/ท่อ</option>
+                                    <option value="เครื่องปรับอากาศ" <?php echo e(old('maintenance_type') == 'เครื่องปรับอากาศ' ? 'selected' : ''); ?>>❄️ เครื่องปรับอากาศ</option>
+                                    <option value="เฟอร์นิเจอร์" <?php echo e((old('maintenance_type') == 'เฟอร์นิเจอร์' || isset($facility)) ? 'selected' : ''); ?>>🪑 เฟอร์นิเจอร์</option>
+                                    <option value="อื่นๆ" <?php echo e(old('maintenance_type') == 'อื่นๆ' ? 'selected' : ''); ?>>🛠️ อื่นๆ</option>
                                 </select>
                             </div>
                             <div class="col-md-6">
@@ -64,19 +73,19 @@
                             </div>
                         </div>
 
-                        {{-- ── 4. รายละเอียด ── --}}
+                        
                         <div class="mb-4">
                             <label class="form-label fw-bold">วันที่แจ้งซ่อม <span class="text-danger">*</span></label>
-                            <input type="date" name="request_date" class="form-control" value="{{ old('request_date', date('Y-m-d')) }}" required>
+                            <input type="date" name="request_date" class="form-control" value="<?php echo e(old('request_date', date('Y-m-d'))); ?>" required>
                         </div>
 
                         <div class="mb-4">
                             <label class="form-label fw-bold">รายละเอียดปัญหา <span class="text-danger">*</span></label>
-                            <textarea name="description" id="description" class="form-control" rows="4" placeholder="กรุณาระบุรายละเอียดปัญหา..." required>{{ old('description') }}</textarea>
+                            <textarea name="description" id="description" class="form-control" rows="4" placeholder="กรุณาระบุรายละเอียดปัญหา..." required><?php echo e(old('description')); ?></textarea>
                         </div>
 
                         <div class="d-flex justify-content-between mt-5">
-                            <a href="{{ route('maintenances.index') }}" class="btn btn-light px-4">ยกเลิก</a>
+                            <a href="<?php echo e(route('maintenances.index')); ?>" class="btn btn-light px-4">ยกเลิก</a>
                             <button type="submit" class="btn btn-primary px-5">ยืนยันการแจ้งซ่อม</button>
                         </div>
                     </form>
@@ -86,7 +95,7 @@
     </div>
 </div>
 
-{{-- ── JavaScript สำหรับกรองเฟอร์นิเจอร์ตามห้อง ── --}}
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const roomSelect = document.getElementById('room_id');
@@ -110,10 +119,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // ทำงานทันทีเมื่อโหลดหน้า (กรณีมีค่า old หรือส่งมาจากหน้า Facility)
     if (roomSelect.value) {
-        const currentFacilityId = "{{ old('facility_id', $facility->id ?? '') }}";
+        const currentFacilityId = "<?php echo e(old('facility_id', $facility->id ?? '')); ?>";
         filterFacilities();
         facilitySelect.value = currentFacilityId;
     }
 });
 </script>
-@endsection
+<?php $__env->stopSection(); ?>
+<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\xampp\htdocs\Rm1\resources\views/maintenances/create.blade.php ENDPATH**/ ?>

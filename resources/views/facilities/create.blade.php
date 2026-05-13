@@ -48,7 +48,15 @@
 
             <div class="form-group">
                 <label for="type">ประเภท *</label>
-                <input type="text" id="type" name="type" value="{{ old('type') }}" required>
+                <select name="type" id="type" required>
+                    <option value="">-- เลือกประเภท --</option>
+                    <option value="bed"            {{ old('type', '') == 'bed'            ? 'selected' : '' }}>🛏️ เตียง</option>
+                    <option value="mattress"       {{ old('type', '') == 'mattress'       ? 'selected' : '' }}>🛌 ที่นอน</option>
+                    <option value="wardrobe"       {{ old('type', '') == 'wardrobe'       ? 'selected' : '' }}>🚪 ตู้เสื้อผ้า</option>
+                    <option value="dressing_table" {{ old('type', '') == 'dressing_table' ? 'selected' : '' }}>💄 โต๊ะเครื่องแป้ง</option>
+                    <option value="tv_stand"       {{ old('type', '') == 'tv_stand'       ? 'selected' : '' }}>📺 ชั้นวางทีวี</option>
+                    <option value="clothes_rack"   {{ old('type', '') == 'clothes_rack'   ? 'selected' : '' }}>👔 ราวแขวนผ้า</option>
+                </select>
                 @error('type')
                     <div class="error-message">{{ $message }}</div>
                 @enderror
@@ -69,11 +77,13 @@
 
             <div class="form-group">
                 <label for="status">สถานะ *</label>
-                <select id="status" name="status" required>
-                    <option value="">-- เลือกสถานะ --</option>
-                    <option value="active" {{ old('status') === 'active' ? 'selected' : '' }}>ใช้งาน</option>
-                    <option value="inactive" {{ old('status') === 'inactive' ? 'selected' : '' }}>ไม่ใช้งาน</option>
-                    <option value="maintenance" {{ old('status') === 'maintenance' ? 'selected' : '' }}>บำรุงรักษา</option>
+                <select name="status" id="status" required>
+                    <option value="good"         {{ old('status', 'good') == 'good'         ? 'selected' : '' }}>✅ ใช้งานได้</option>
+                    <option value="fair"         {{ old('status', '')     == 'fair'         ? 'selected' : '' }}>🟡 สภาพปานกลาง</option>
+                    <option value="needs_repair" {{ old('status', '')     == 'needs_repair' ? 'selected' : '' }}>⚠️ ต้องซ่อม</option>
+                    <option value="maintenance"  {{ old('status', '')     == 'maintenance'  ? 'selected' : '' }}>🔧 กำลังซ่อมบำรุง</option>
+                    <option value="damaged"      {{ old('status', '')     == 'damaged'      ? 'selected' : '' }}>❌ ชำรุด</option>
+                    <option value="retired"      {{ old('status', '')     == 'retired'      ? 'selected' : '' }}>🗑️ ปลดประจำการ</option>
                 </select>
                 @error('status')
                     <div class="error-message">{{ $message }}</div>
