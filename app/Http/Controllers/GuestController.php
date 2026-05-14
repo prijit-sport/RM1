@@ -13,7 +13,8 @@ class GuestController extends Controller
     // ─────────────────────────────────────────
     public function index(Request $request)
     {
-        $query = Guest::query();
+        // แก้ไขตรงนี้: เพิ่ม with() เพื่อดึงข้อมูลห้องพักมาพร้อมกับแขกเลย ป้องกันข้อมูลหายและโหลดเร็วขึ้น
+        $query = Guest::with(['bookings.room', 'contracts.room']);
  
         // ค้นหาตามชื่อ / อีเมล / เบอร์โทร / เลขบัตร
         if ($request->filled('search')) {
@@ -176,4 +177,3 @@ class GuestController extends Controller
         return xlsx_download($filename, $rows);
     }
 }
- 

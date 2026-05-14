@@ -88,6 +88,7 @@ Route::middleware(['web'])->group(function () {
         Route::get('invoices/export', [InvoiceController::class, 'export'])->name('invoices.export');
         Route::post('invoices/{invoice}/paid', [InvoiceController::class, 'markAsPaid'])->name('invoices.markAsPaid');
         Route::get('invoices/bulk-create', [InvoiceController::class, 'bulkCreate'])->name('invoices.bulk-create');
+        Route::post('invoices/bulk-store', [InvoiceController::class, 'bulkStore'])->name('invoices.bulk-store'); // เพิ่มบรรทัดนี้
         Route::resource('invoices', InvoiceController::class);
 
         // การซ่อมบำรุง
