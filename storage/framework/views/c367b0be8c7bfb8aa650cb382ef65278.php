@@ -1,9 +1,9 @@
-@extends('layouts.app')
+
  
-@section('title', 'รายละเอียดใบแจ้งหนี้')
-@section('page-title', 'รายละเอียดใบแจ้งหนี้')
+<?php $__env->startSection('title', 'รายละเอียดใบแจ้งหนี้'); ?>
+<?php $__env->startSection('page-title', 'รายละเอียดใบแจ้งหนี้'); ?>
  
-@push('styles')
+<?php $__env->startPush('styles'); ?>
 <style>
 /* ============================================
    PAGE-SPECIFIC: invoices/show
@@ -313,21 +313,17 @@
     .detail-label-romar { width: 130px; }
 }
 </style>
-@endpush
+<?php $__env->stopPush(); ?>
  
-@section('content')
+<?php $__env->startSection('content'); ?>
  
-{{-- ============================================
-     BACK LINK
-     ============================================ --}}
-<a href="{{ route('invoices.index') }}" class="back-link">
+
+<a href="<?php echo e(route('invoices.index')); ?>" class="back-link">
     <i class="bi bi-arrow-left"></i> กลับไปยังรายการใบแจ้งหนี้
 </a>
  
-{{-- ============================================
-     INVOICE HEADER
-     ============================================ --}}
-@php
+
+<?php
     // ดึงข้อมูลผู้เช่าและห้องจาก relationship (null-safe)
     $guest = $invoice->booking?->guest;
     $room  = $invoice->booking?->room;
@@ -343,96 +339,99 @@
     if ($invoice->status === 'overdue' && $invoice->due_date) {
         $overdueDays = (int) abs(now()->startOfDay()->diffInDays($invoice->due_date->startOfDay(), false));
     }
-@endphp
+?>
  
 <div class="invoice-header">
     <div class="invoice-header-left">
         <h1>
             <i class="bi bi-receipt" style="color: var(--romar-primary);"></i>
             ใบแจ้งหนี้
-            <span class="invoice-number-big">{{ $invoice->invoice_number }}</span>
+            <span class="invoice-number-big"><?php echo e($invoice->invoice_number); ?></span>
         </h1>
         <div class="invoice-meta">
             <span><i class="bi bi-calendar-event me-1"></i>
-                ออกเมื่อ {{ optional($invoice->issue_date)->format('d/m/Y') }}
+                ออกเมื่อ <?php echo e(optional($invoice->issue_date)->format('d/m/Y')); ?>
+
             </span>
             <span class="dot-sep">•</span>
-            <span class="status-pill status-{{ $invoice->status }} status-pill-lg">
-                @if($invoice->status === 'overdue' && $overdueDays)
-                    เกินกำหนด {{ $overdueDays }} วัน
-                @else
-                    {{ enum_bi('invoice_status', $invoice->status, ucfirst($invoice->status)) }}
-                @endif
+            <span class="status-pill status-<?php echo e($invoice->status); ?> status-pill-lg">
+                <?php if($invoice->status === 'overdue' && $overdueDays): ?>
+                    เกินกำหนด <?php echo e($overdueDays); ?> วัน
+                <?php else: ?>
+                    <?php echo e(enum_bi('invoice_status', $invoice->status, ucfirst($invoice->status))); ?>
+
+                <?php endif; ?>
             </span>
         </div>
     </div>
  
     <div class="page-actions">
-        @if(in_array($invoice->status, ['sent', 'overdue']))
-            <form action="{{ route('invoices.markAsPaid', $invoice) }}" method="POST" class="d-inline">
-                @csrf
+        <?php if(in_array($invoice->status, ['sent', 'overdue'])): ?>
+            <form action="<?php echo e(route('invoices.markAsPaid', $invoice)); ?>" method="POST" class="d-inline">
+                <?php echo csrf_field(); ?>
                 <button type="submit" class="btn-outline-romar"
                         style="border-color: var(--success); color: var(--success);"
                         onclick="return confirm('ยืนยันการชำระเงิน?')">
                     <i class="bi bi-check-circle"></i> ทำเครื่องหมายชำระแล้ว
                 </button>
             </form>
-        @endif
-        <a href="{{ route('invoices.edit', $invoice) }}" class="btn-romar">
+        <?php endif; ?>
+        <a href="<?php echo e(route('invoices.edit', $invoice)); ?>" class="btn-romar">
             <i class="bi bi-pencil"></i> แก้ไข
         </a>
     </div>
 </div>
  
-{{-- Flash messages --}}
-@if(session('success'))
+
+<?php if(session('success')): ?>
     <div class="alert alert-success alert-dismissible fade show" role="alert">
-        <i class="bi bi-check-circle me-2"></i>{{ session('success') }}
+        <i class="bi bi-check-circle me-2"></i><?php echo e(session('success')); ?>
+
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
-@endif
+<?php endif; ?>
  
-{{-- ============================================
-     MINI INFO BAR (4 metrics)
-     ============================================ --}}
+
 <div class="info-bar">
     <div class="info-bar-item">
         <div class="info-bar-label">ยอดรวม</div>
         <div class="info-bar-value amount-big">
-            ฿ {{ number_format($invoice->total, 2) }}
+            ฿ <?php echo e(number_format($invoice->total, 2)); ?>
+
         </div>
     </div>
     <div class="info-bar-item">
         <div class="info-bar-label">วันที่ออก</div>
         <div class="info-bar-value">
-            {{ optional($invoice->issue_date)->format('d/m/Y') ?? '—' }}
+            <?php echo e(optional($invoice->issue_date)->format('d/m/Y') ?? '—'); ?>
+
         </div>
     </div>
     <div class="info-bar-item">
         <div class="info-bar-label">วันครบกำหนด</div>
         <div class="info-bar-value">
-            {{ optional($invoice->due_date)->format('d/m/Y') ?? '—' }}
+            <?php echo e(optional($invoice->due_date)->format('d/m/Y') ?? '—'); ?>
+
         </div>
     </div>
     <div class="info-bar-item">
         <div class="info-bar-label">สถานะ</div>
         <div class="info-bar-value">
-            <span class="status-pill status-{{ $invoice->status }}">
-                {{ enum_bi('invoice_status', $invoice->status, ucfirst($invoice->status)) }}
+            <span class="status-pill status-<?php echo e($invoice->status); ?>">
+                <?php echo e(enum_bi('invoice_status', $invoice->status, ucfirst($invoice->status))); ?>
+
             </span>
         </div>
     </div>
 </div>
  
-{{-- ============================================
-     MAIN CONTENT - 2 COLUMNS
-     ============================================ --}}
+
 <div class="row g-3">
  
-    {{-- ===== LEFT COLUMN (8/12) — รายละเอียดเงิน + หมายเหตุ ===== --}}
+    
     <div class="col-lg-8">
  
-        {{-- Card: รายการในใบแจ้งหนี้ --}}
+        
         <div class="section-card">
             <div class="section-card-head">
                 <i class="bi bi-list-ul"></i>
@@ -451,190 +450,176 @@
                             <td>
                                 <div style="font-weight: 500;">ค่าเช่ารายเดือน</div>
                                 <div class="doc-num-sub">
-                                    Booking #{{ $invoice->booking_id }}
-                                    @if($room) — ห้อง {{ $room->room_number }} @endif
+                                    Booking #<?php echo e($invoice->booking_id); ?>
+
+                                    <?php if($room): ?> — ห้อง <?php echo e($room->room_number); ?> <?php endif; ?>
                                 </div>
                             </td>
-                            <td>฿ {{ number_format($invoice->amount, 2) }}</td>
+                            <td>฿ <?php echo e(number_format($invoice->amount, 2)); ?></td>
                         </tr>
-                        @if($invoice->tax > 0)
+                        <?php if($invoice->tax > 0): ?>
                             <tr>
                                 <td>
                                     <div style="font-weight: 500;">ภาษี</div>
                                     <div class="doc-num-sub">VAT</div>
                                 </td>
-                                <td>฿ {{ number_format($invoice->tax, 2) }}</td>
+                                <td>฿ <?php echo e(number_format($invoice->tax, 2)); ?></td>
                             </tr>
-                        @endif
+                        <?php endif; ?>
                     </tbody>
                 </table>
  
-                {{-- Summary --}}
+                
                 <div class="total-summary">
                     <div class="total-row">
                         <span>ยอดก่อนภาษี</span>
-                        <span>฿ {{ number_format($invoice->amount, 2) }}</span>
+                        <span>฿ <?php echo e(number_format($invoice->amount, 2)); ?></span>
                     </div>
-                    @if($invoice->tax > 0)
+                    <?php if($invoice->tax > 0): ?>
                         <div class="total-row">
                             <span>ภาษี</span>
-                            <span>฿ {{ number_format($invoice->tax, 2) }}</span>
+                            <span>฿ <?php echo e(number_format($invoice->tax, 2)); ?></span>
                         </div>
-                    @endif
+                    <?php endif; ?>
                     <div class="total-row grand">
                         <span>ยอดรวมทั้งสิ้น</span>
-                        <span class="amount-big">฿ {{ number_format($invoice->total, 2) }}</span>
+                        <span class="amount-big">฿ <?php echo e(number_format($invoice->total, 2)); ?></span>
                     </div>
                 </div>
             </div>
         </div>
  
-        {{-- Card: หมายเหตุ (ถ้ามี) --}}
-        @if(!empty($invoice->notes))
+        
+        <?php if(!empty($invoice->notes)): ?>
             <div class="section-card">
                 <div class="section-card-head">
                     <i class="bi bi-sticky"></i>
                     หมายเหตุ
                 </div>
                 <div class="section-card-body">
-                    <div class="notes-box">{{ $invoice->notes }}</div>
+                    <div class="notes-box"><?php echo e($invoice->notes); ?></div>
                 </div>
             </div>
-        @endif
+        <?php endif; ?>
  
     </div>
  
-    {{-- ===== RIGHT COLUMN (4/12) — ผู้เช่า + ห้อง ===== --}}
+    
     <div class="col-lg-4">
  
-        {{-- Card: ผู้เช่า --}}
+        
         <div class="section-card">
             <div class="section-card-head">
                 <i class="bi bi-person"></i>
                 ผู้เช่า
             </div>
             <div class="section-card-body">
-                @if($guest)
+                <?php if($guest): ?>
                     <div class="tenant-block">
-                        <div class="person-avatar {{ $avatarVariant }}">{{ $initial }}</div>
+                        <div class="person-avatar <?php echo e($avatarVariant); ?>"><?php echo e($initial); ?></div>
                         <div>
-                            <div class="tenant-block-name">{{ $fullName }}</div>
-                            <div class="tenant-block-sub">รหัสผู้เช่า #{{ $guest->id }}</div>
+                            <div class="tenant-block-name"><?php echo e($fullName); ?></div>
+                            <div class="tenant-block-sub">รหัสผู้เช่า #<?php echo e($guest->id); ?></div>
                         </div>
                     </div>
                     <ul class="contact-list">
-                        @if(!empty($guest->phone))
+                        <?php if(!empty($guest->phone)): ?>
                             <li>
                                 <i class="bi bi-telephone"></i>
-                                <a href="tel:{{ $guest->phone }}" style="color: inherit; text-decoration: none;">
-                                    {{ $guest->phone }}
+                                <a href="tel:<?php echo e($guest->phone); ?>" style="color: inherit; text-decoration: none;">
+                                    <?php echo e($guest->phone); ?>
+
                                 </a>
                             </li>
-                        @endif
-                        @if(!empty($guest->email))
+                        <?php endif; ?>
+                        <?php if(!empty($guest->email)): ?>
                             <li>
                                 <i class="bi bi-envelope"></i>
-                                <a href="mailto:{{ $guest->email }}" style="color: inherit; text-decoration: none;">
-                                    {{ $guest->email }}
+                                <a href="mailto:<?php echo e($guest->email); ?>" style="color: inherit; text-decoration: none;">
+                                    <?php echo e($guest->email); ?>
+
                                 </a>
                             </li>
-                        @endif
-                        @if(!empty($guest->id_number))
+                        <?php endif; ?>
+                        <?php if(!empty($guest->id_number)): ?>
                             <li>
                                 <i class="bi bi-credit-card-2-front"></i>
-                                <span class="doc-num" style="font-size:0.85rem;">{{ $guest->id_number }}</span>
+                                <span class="doc-num" style="font-size:0.85rem;"><?php echo e($guest->id_number); ?></span>
                             </li>
-                        @endif
+                        <?php endif; ?>
                     </ul>
-                    <a href="{{ route('guests.show', $guest) }}" class="btn-outline-romar w-100 justify-content-center mt-3">
+                    <a href="<?php echo e(route('guests.show', $guest)); ?>" class="btn-outline-romar w-100 justify-content-center mt-3">
                         <i class="bi bi-arrow-right-circle"></i> ดูข้อมูลผู้เช่า
                     </a>
-                @else
+                <?php else: ?>
                     <div class="text-muted text-center py-3" style="font-size: 0.9rem;">
                         <i class="bi bi-person-x" style="font-size: 1.5rem; display: block; margin-bottom: 6px;"></i>
                         ไม่พบข้อมูลผู้เช่า
                     </div>
-                @endif
+                <?php endif; ?>
             </div>
         </div>
  
-        {{-- Card: ห้อง / การจอง --}}
+        
         <div class="section-card">
             <div class="section-card-head">
                 <i class="bi bi-door-closed"></i>
                 ห้องพัก / การจอง
             </div>
             <div class="section-card-body">
-                @if($room)
+                <?php if($room): ?>
                     <div style="text-align:center; padding: 8px 0 14px;">
                         <span class="room-badge" style="font-size: 1.05rem; padding: 8px 18px;">
-                            <i class="bi bi-door-closed"></i> {{ $room->room_number }}
+                            <i class="bi bi-door-closed"></i> <?php echo e($room->room_number); ?>
+
                         </span>
                     </div>
-                @endif
+                <?php endif; ?>
                 <div class="detail-row-romar">
                     <div class="detail-label-romar">รหัสการจอง</div>
                     <div class="detail-value-romar">
-                        <span class="doc-num">#{{ $invoice->booking_id }}</span>
+                        <span class="doc-num">#<?php echo e($invoice->booking_id); ?></span>
                     </div>
                 </div>
-                @if($room && !empty($room->room_type))
+                <?php if($room && !empty($room->room_type)): ?>
                     <div class="detail-row-romar">
                         <div class="detail-label-romar">ประเภทห้อง</div>
-                        <div class="detail-value-romar">{{ $room->room_type }}</div>
+                        <div class="detail-value-romar"><?php echo e($room->room_type); ?></div>
                     </div>
-                @endif
-                @if($room && !empty($room->zone))
+                <?php endif; ?>
+                <?php if($room && !empty($room->zone)): ?>
                     <div class="detail-row-romar">
                         <div class="detail-label-romar">โซน</div>
-                        <div class="detail-value-romar">{{ $room->zone }}</div>
+                        <div class="detail-value-romar"><?php echo e($room->zone); ?></div>
                     </div>
-                @endif
+                <?php endif; ?>
             </div>
         </div>
  
     </div>
 </div>
  
-{{-- ============================================
-     DANGER ZONE — ลบใบแจ้งหนี้
-     (เก็บไว้ตาม route invoices.destroy เดิม
-      แต่ย้ายลงล่างเพื่อกันลบโดยไม่ตั้งใจ)
-     ============================================ --}}
-@can('delete', $invoice)
+
+<?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('delete', $invoice)): ?>
     <div class="danger-zone">
         <div class="danger-zone-text">
             <strong><i class="bi bi-exclamation-triangle"></i> ลบใบแจ้งหนี้</strong>
             การลบจะนำใบแจ้งหนี้นี้ออกจากระบบอย่างถาวร ไม่สามารถกู้คืนได้
         </div>
-        <form method="POST" action="{{ route('invoices.destroy', $invoice->id) }}"
-              onsubmit="return confirm('คุณแน่ใจหรือไม่ที่จะลบใบแจ้งหนี้ {{ $invoice->invoice_number }} ?\nการกระทำนี้ไม่สามารถยกเลิกได้');">
-            @csrf
-            @method('DELETE')
+        <form method="POST" action="<?php echo e(route('invoices.destroy', $invoice->id)); ?>"
+              onsubmit="return confirm('คุณแน่ใจหรือไม่ที่จะลบใบแจ้งหนี้ <?php echo e($invoice->invoice_number); ?> ?\nการกระทำนี้ไม่สามารถยกเลิกได้');">
+            <?php echo csrf_field(); ?>
+            <?php echo method_field('DELETE'); ?>
             <button type="submit" class="btn-danger-romar">
                 <i class="bi bi-trash"></i> ลบใบแจ้งหนี้นี้
             </button>
         </form>
     </div>
-@else
-    {{-- ถ้าโปรเจคไม่ได้ใช้ Policy ให้ใช้บล็อกนี้แทน (uncomment ข้างล่าง + comment ส่วน @can ข้างบน) --}}
-    {{--
-    <div class="danger-zone">
-        <div class="danger-zone-text">
-            <strong><i class="bi bi-exclamation-triangle"></i> ลบใบแจ้งหนี้</strong>
-            การลบจะนำใบแจ้งหนี้นี้ออกจากระบบอย่างถาวร
-        </div>
-        <form method="POST" action="{{ route('invoices.destroy', $invoice->id) }}"
-              onsubmit="return confirm('คุณแน่ใจหรือไม่ที่จะลบใบแจ้งหนี้นี้?');">
-            @csrf
-            @method('DELETE')
-            <button type="submit" class="btn-danger-romar">
-                <i class="bi bi-trash"></i> ลบใบแจ้งหนี้นี้
-            </button>
-        </form>
-    </div>
-    --}}
-@endcan
+<?php else: ?>
+    
+    
+<?php endif; ?>
  
-@endsection
+<?php $__env->stopSection(); ?>
  
+<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\xampp\htdocs\Rm1\resources\views/invoices/show.blade.php ENDPATH**/ ?>

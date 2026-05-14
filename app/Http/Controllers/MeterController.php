@@ -8,9 +8,14 @@ use App\Models\MeterReading;
 use App\Services\MeterBillingService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\View\View;
+use Illuminate\Http\RedirectResponse;
  
 class MeterController extends Controller
 {
+    /**
+     * Constructor with service injection.
+     */
     public function __construct(protected MeterBillingService $billingService)
     {
     }
@@ -18,7 +23,10 @@ class MeterController extends Controller
     // ─────────────────────────────────────────
     //  INDEX — จัดกลุ่มตามห้อง
     // ─────────────────────────────────────────
-    public function index(Request $request)
+    /**
+     * Display a listing of meters grouped by room.
+     */
+    public function index(Request $request): View
     {
         // ดึง rooms ที่มีมิเตอร์ พร้อม eager load
         $query = Room::with([
@@ -66,7 +74,10 @@ class MeterController extends Controller
     // ─────────────────────────────────────────
     //  CREATE FORM
     // ─────────────────────────────────────────
-    public function create()
+    /**
+     * Show the form for creating a new meter.
+     */
+    public function create(): View
     {
         $rooms = Room::orderBy('zone')->orderBy('room_number')->get();
         return view('meters.create', compact('rooms'));
@@ -75,7 +86,10 @@ class MeterController extends Controller
     // ─────────────────────────────────────────
     //  STORE
     // ─────────────────────────────────────────
-    public function store(Request $request)
+    /**
+     * Store a newly created meter in storage.
+     */
+    public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
             'room_id'      => ['required', 'exists:rooms,id'],
@@ -97,7 +111,6 @@ class MeterController extends Controller
  
         $validated['is_active'] = (bool) ($validated['is_active'] ?? true);
         $meter = Meter::create($validated);
-        assert($meter instanceof Meter);
  
         return redirect()->route('meters.show', $meter)->with('success', __('ui.meter.created'));
     }
@@ -105,7 +118,10 @@ class MeterController extends Controller
     // ─────────────────────────────────────────
     //  SHOW
     // ─────────────────────────────────────────
-    public function show(Meter $meter)
+    /**
+     * Display the specified meter.
+     */
+    public function show(Meter $meter): View
     {
         $meter->load(['room', 'readings' => fn ($q) =>
             $q->latest('reading_date')->limit(10)->with('recordedBy')
@@ -117,7 +133,10 @@ class MeterController extends Controller
     // ─────────────────────────────────────────
     //  EDIT FORM
     // ─────────────────────────────────────────
-    public function edit(Meter $meter)
+    /**
+     * Show the form for editing the specified meter.
+     */
+    public function edit(Meter $meter): View
     {
         $rooms = Room::orderBy('zone')->orderBy('room_number')->get();
         return view('meters.edit', compact('meter', 'rooms'));
@@ -126,7 +145,10 @@ class MeterController extends Controller
     // ─────────────────────────────────────────
     //  UPDATE
     // ─────────────────────────────────────────
-    public function update(Request $request, Meter $meter)
+    /**
+     * Update the specified meter in storage.
+     */
+    public function update(Request $request, Meter $meter): RedirectResponse
     {
         $validated = $request->validate([
             'room_id'      => ['required', 'exists:rooms,id'],
@@ -157,7 +179,10 @@ class MeterController extends Controller
     // ─────────────────────────────────────────
     //  DESTROY
     // ─────────────────────────────────────────
-    public function destroy(Meter $meter)
+    /**
+     * Remove the specified meter from storage.
+     */
+    public function destroy(Meter $meter): RedirectResponse
     {
         $meter->delete();
         return redirect()->route('meters.index')->with('success', __('ui.meter.deleted'));
@@ -166,18 +191,21 @@ class MeterController extends Controller
     // ─────────────────────────────────────────
     //  EXPORT
     // ─────────────────────────────────────────
+    /**
+     * Export meters to Excel file.
+     */
     public function export(Request $request)
     {
         $query = Meter::with('room');
  
         if ($request->filled('search')) {
-            $query->where('meter_number', 'like', '%' . $request->search . '%');
+            $query->where('meter_number', 'like', '%' . $request->string('search') . '%');
         }
         if ($request->filled('type')) {
-            $query->where('type', $request->type);
+            $query->where('type', $request->string('type'));
         }
         if ($request->filled('status')) {
-            $query->where('is_active', $request->status);
+            $query->where('is_active', $request->boolean('status'));
         }
  
         $meters   = $query->orderBy('id', 'desc')->get();
@@ -193,8 +221,8 @@ class MeterController extends Controller
                 $meter->type === 'water' ? 'น้ำ' : 'ไฟฟ้า',
                 $meter->meter_number,
                 $meter->unit ?? '-',
-                number_format($meter->rate_per_unit ?? 0, 2),
-                number_format($meter->tax_rate ?? 0, 2),
+                number_format((float) ($meter->rate_per_unit ?? 0), 2),
+                number_format((float) ($meter->tax_rate ?? 0), 2),
                 $meter->is_active ? 'ใช้งาน' : 'ปิดใช้',
                 $meter->installed_at ? $meter->installed_at->format('d/m/Y') : '-',
                 $meter->notes ?? '-',

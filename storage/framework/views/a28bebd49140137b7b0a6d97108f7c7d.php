@@ -1,122 +1,114 @@
-@extends('layouts.app')
  
-@section('title', 'จัดการใบแจ้งหนี้')
-@section('page-title', 'จัดการใบแจ้งหนี้')
+<?php $__env->startSection('title', 'จัดการใบแจ้งหนี้'); ?>
+<?php $__env->startSection('page-title', 'จัดการใบแจ้งหนี้'); ?>
  
-@push('styles')
-    {{-- กรณีไม่ได้ include romar-theme.css ใน layouts.app ให้ใช้บรรทัดนี้ --}}
-    {{-- <link rel="stylesheet" href="{{ asset('css/romar-theme.css') }}"> --}}
-@endpush
+<?php $__env->startPush('styles'); ?>
+    
+    
+<?php $__env->stopPush(); ?>
  
-@section('content')
+<?php $__env->startSection('content'); ?>
  
-{{-- ============================================
-     PAGE HEADER
-     ============================================ --}}
+
 <div class="page-header-romar">
     <div class="page-title-wrap">
         <h1><i class="bi bi-receipt"></i> จัดการใบแจ้งหนี้</h1>
         <p>ออก ตรวจสอบ และติดตามใบแจ้งหนี้ค่าเช่ารายเดือน</p>
     </div>
     <div class="page-actions">
-        <a href="{{ route('invoices.bulk-create') }}" class="btn-outline-romar">
+        <a href="<?php echo e(route('invoices.bulk-create')); ?>" class="btn-outline-romar">
             <i class="bi bi-plus-circle"></i> สร้างหลายใบ
         </a>
-        <a href="{{ route('invoices.export') }}" class="btn-outline-romar">
-            <i class="bi bi-download"></i> {{ __('ui.export') }}
+        <a href="<?php echo e(route('invoices.export')); ?>" class="btn-outline-romar">
+            <i class="bi bi-download"></i> <?php echo e(__('ui.export')); ?>
+
         </a>
-        <a href="{{ route('invoices.create') }}" class="btn-romar">
+        <a href="<?php echo e(route('invoices.create')); ?>" class="btn-romar">
             <i class="bi bi-plus-lg"></i> เพิ่มใบแจ้งหนี้
         </a>
     </div>
 </div>
  
-{{-- Flash success --}}
-@if(session('success'))
+
+<?php if(session('success')): ?>
     <div class="alert alert-success alert-dismissible fade show" role="alert">
-        <i class="bi bi-check-circle me-2"></i>{{ session('success') }}
+        <i class="bi bi-check-circle me-2"></i><?php echo e(session('success')); ?>
+
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
-@endif
+<?php endif; ?>
  
-{{-- ============================================
-     QUICK STATS (4 cards)
-     ตัวแปร $stats มาจาก Controller (ดู InvoiceController::index)
-     ============================================ --}}
+
 <div class="stats-grid">
     <div class="stat-card" style="--stat-color: var(--romar-primary); --stat-bg: var(--romar-soft);">
         <div class="stat-icon"><i class="bi bi-receipt-cutoff"></i></div>
         <div class="stat-label">ใบแจ้งหนี้ทั้งหมด</div>
-        <div class="stat-value">{{ number_format($stats['total'] ?? 0) }}</div>
-        @if(($stats['monthly_diff'] ?? 0) !== 0)
-            <div class="stat-meta {{ $stats['monthly_diff'] > 0 ? 'up' : 'down' }}">
-                <i class="bi bi-arrow-{{ $stats['monthly_diff'] > 0 ? 'up' : 'down' }}-short"></i>
-                {{ $stats['monthly_diff'] > 0 ? '+' : '' }}{{ $stats['monthly_diff'] }} จากเดือนที่แล้ว
+        <div class="stat-value"><?php echo e(number_format($stats['total'] ?? 0)); ?></div>
+        <?php if(($stats['monthly_diff'] ?? 0) !== 0): ?>
+            <div class="stat-meta <?php echo e($stats['monthly_diff'] > 0 ? 'up' : 'down'); ?>">
+                <i class="bi bi-arrow-<?php echo e($stats['monthly_diff'] > 0 ? 'up' : 'down'); ?>-short"></i>
+                <?php echo e($stats['monthly_diff'] > 0 ? '+' : ''); ?><?php echo e($stats['monthly_diff']); ?> จากเดือนที่แล้ว
             </div>
-        @endif
+        <?php endif; ?>
     </div>
  
     <div class="stat-card" style="--stat-color: var(--success); --stat-bg: var(--success-soft);">
         <div class="stat-icon"><i class="bi bi-check-circle"></i></div>
         <div class="stat-label">ชำระแล้ว</div>
-        <div class="stat-value">{{ number_format($stats['paid_count'] ?? 0) }}</div>
-        <div class="stat-meta">มูลค่ารวม ฿ {{ number_format($stats['paid_amount'] ?? 0) }}</div>
+        <div class="stat-value"><?php echo e(number_format($stats['paid_count'] ?? 0)); ?></div>
+        <div class="stat-meta">มูลค่ารวม ฿ <?php echo e(number_format($stats['paid_amount'] ?? 0)); ?></div>
     </div>
  
     <div class="stat-card" style="--stat-color: var(--warning); --stat-bg: var(--warning-soft);">
         <div class="stat-icon"><i class="bi bi-clock-history"></i></div>
         <div class="stat-label">รอชำระ</div>
-        <div class="stat-value">{{ number_format($stats['sent_count'] ?? 0) }}</div>
-        <div class="stat-meta">มูลค่ารวม ฿ {{ number_format($stats['sent_amount'] ?? 0) }}</div>
+        <div class="stat-value"><?php echo e(number_format($stats['sent_count'] ?? 0)); ?></div>
+        <div class="stat-meta">มูลค่ารวม ฿ <?php echo e(number_format($stats['sent_amount'] ?? 0)); ?></div>
     </div>
  
     <div class="stat-card" style="--stat-color: var(--danger); --stat-bg: var(--danger-soft);">
         <div class="stat-icon"><i class="bi bi-exclamation-triangle"></i></div>
         <div class="stat-label">เกินกำหนด</div>
-        <div class="stat-value">{{ number_format($stats['overdue_count'] ?? 0) }}</div>
-        @if(($stats['overdue_count'] ?? 0) > 0)
+        <div class="stat-value"><?php echo e(number_format($stats['overdue_count'] ?? 0)); ?></div>
+        <?php if(($stats['overdue_count'] ?? 0) > 0): ?>
             <div class="stat-meta down"><i class="bi bi-bell"></i> ต้องติดตามด่วน</div>
-        @else
+        <?php else: ?>
             <div class="stat-meta">ไม่มีรายการเกินกำหนด</div>
-        @endif
+        <?php endif; ?>
     </div>
 </div>
  
-{{-- ============================================
-     SEARCH & FILTER
-     ============================================ --}}
-<form method="GET" action="{{ route('invoices.index') }}" class="filter-bar">
+
+<form method="GET" action="<?php echo e(route('invoices.index')); ?>" class="filter-bar">
     <div class="search-input-romar">
         <i class="bi bi-search"></i>
         <input type="text"
                name="search"
                placeholder="ค้นหาเลขที่ใบแจ้งหนี้, ชื่อผู้เช่า, ห้อง..."
-               value="{{ request('search') }}">
+               value="<?php echo e(request('search')); ?>">
     </div>
  
     <select name="status" class="filter-select-romar" onchange="this.form.submit()">
         <option value="">ทุกสถานะ</option>
-        <option value="draft"     {{ request('status') == 'draft'     ? 'selected' : '' }}>Draft</option>
-        <option value="sent"      {{ request('status') == 'sent'      ? 'selected' : '' }}>รอชำระ</option>
-        <option value="paid"      {{ request('status') == 'paid'      ? 'selected' : '' }}>ชำระแล้ว</option>
-        <option value="overdue"   {{ request('status') == 'overdue'   ? 'selected' : '' }}>เกินกำหนด</option>
-        <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>ยกเลิก</option>
+        <option value="draft"     <?php echo e(request('status') == 'draft'     ? 'selected' : ''); ?>>Draft</option>
+        <option value="sent"      <?php echo e(request('status') == 'sent'      ? 'selected' : ''); ?>>รอชำระ</option>
+        <option value="paid"      <?php echo e(request('status') == 'paid'      ? 'selected' : ''); ?>>ชำระแล้ว</option>
+        <option value="overdue"   <?php echo e(request('status') == 'overdue'   ? 'selected' : ''); ?>>เกินกำหนด</option>
+        <option value="cancelled" <?php echo e(request('status') == 'cancelled' ? 'selected' : ''); ?>>ยกเลิก</option>
     </select>
  
     <button type="submit" class="btn-romar">
         <i class="bi bi-funnel"></i> กรอง
     </button>
  
-    @if(request()->hasAny(['search', 'status']))
-        <a href="{{ route('invoices.index') }}" class="btn-outline-romar">
+    <?php if(request()->hasAny(['search', 'status'])): ?>
+        <a href="<?php echo e(route('invoices.index')); ?>" class="btn-outline-romar">
             <i class="bi bi-x-lg"></i> ล้าง
         </a>
-    @endif
+    <?php endif; ?>
 </form>
  
-{{-- ============================================
-     DATA TABLE
-     ============================================ --}}
+
 <div class="data-card">
     <div class="table-responsive">
         <table class="data-table">
@@ -132,8 +124,8 @@
                 </tr>
             </thead>
             <tbody>
-                @forelse ($invoices as $invoice)
-                    @php
+                <?php $__empty_1 = true; $__currentLoopData = $invoices; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $invoice): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                    <?php
                         // ดึงข้อมูลผู้เช่า/ห้องจาก relationship
                         $guest = $invoice->booking?->guest;
                         $room  = $invoice->booking?->room;
@@ -145,89 +137,93 @@
                         // เลือก variant สีจาก hash ของชื่อ เพื่อให้แต่ละคนสีไม่ซ้ำ
                         $variants = ['', 'v1', 'v2', 'v3', 'v4'];
                         $avatarVariant = $variants[$guest ? (crc32($guest->id) % 5) : 0];
-                    @endphp
+                    ?>
                     <tr>
-                        {{-- เลขที่ + booking id --}}
+                        
                         <td>
-                            <div class="doc-num">{{ $invoice->invoice_number }}</div>
-                            <div class="doc-num-sub">Booking #{{ $invoice->booking_id }}</div>
+                            <div class="doc-num"><?php echo e($invoice->invoice_number); ?></div>
+                            <div class="doc-num-sub">Booking #<?php echo e($invoice->booking_id); ?></div>
                         </td>
  
-                        {{-- ผู้เช่า / ห้อง --}}
+                        
                         <td>
                             <div class="person">
-                                <div class="person-avatar {{ $avatarVariant }}">
-                                    {{ $initial }}
+                                <div class="person-avatar <?php echo e($avatarVariant); ?>">
+                                    <?php echo e($initial); ?>
+
                                 </div>
                                 <div>
-                                    <div class="person-name">{{ $fullName }}</div>
-                                    @if($room)
+                                    <div class="person-name"><?php echo e($fullName); ?></div>
+                                    <?php if($room): ?>
                                         <span class="room-badge">
-                                            <i class="bi bi-door-closed"></i> {{ $room->room_number }}
+                                            <i class="bi bi-door-closed"></i> <?php echo e($room->room_number); ?>
+
                                         </span>
-                                    @endif
+                                    <?php endif; ?>
                                 </div>
                             </div>
                         </td>
  
-                        {{-- ยอดรวม --}}
+                        
                         <td>
                             <span class="amount">
-                                <span class="currency">฿</span>{{ number_format($invoice->total, 2) }}
+                                <span class="currency">฿</span><?php echo e(number_format($invoice->total, 2)); ?>
+
                             </span>
                         </td>
  
-                        {{-- วันออก --}}
-                        <td>{{ optional($invoice->issue_date)->format('d/m/Y') }}</td>
+                        
+                        <td><?php echo e(optional($invoice->issue_date)->format('d/m/Y')); ?></td>
  
-                        {{-- ครบกำหนด --}}
-                        <td>{{ optional($invoice->due_date)->format('d/m/Y') }}</td>
+                        
+                        <td><?php echo e(optional($invoice->due_date)->format('d/m/Y')); ?></td>
  
-                        {{-- สถานะ --}}
+                        
                         <td>
-                            @php
+                            <?php
                                 // กรณี overdue คำนวณวันที่เกิน
                                 $overdueDays = null;
                                 if ($invoice->status === 'overdue' && $invoice->due_date) {
                                     $overdueDays = now()->startOfDay()->diffInDays($invoice->due_date->startOfDay(), false);
                                     $overdueDays = abs($overdueDays);
                                 }
-                            @endphp
-                            <span class="status-pill status-{{ $invoice->status }}">
-                                @if($invoice->status === 'overdue' && $overdueDays)
-                                    เกินกำหนด {{ $overdueDays }} วัน
-                                @else
-                                    {{ enum_bi('invoice_status', $invoice->status, ucfirst($invoice->status)) }}
-                                @endif
+                            ?>
+                            <span class="status-pill status-<?php echo e($invoice->status); ?>">
+                                <?php if($invoice->status === 'overdue' && $overdueDays): ?>
+                                    เกินกำหนด <?php echo e($overdueDays); ?> วัน
+                                <?php else: ?>
+                                    <?php echo e(enum_bi('invoice_status', $invoice->status, ucfirst($invoice->status))); ?>
+
+                                <?php endif; ?>
                             </span>
                         </td>
  
-                        {{-- การกระทำ --}}
+                        
                         <td>
                             <div class="action-bar">
-                                <a href="{{ route('invoices.show', $invoice) }}"
+                                <a href="<?php echo e(route('invoices.show', $invoice)); ?>"
                                    class="action-btn-romar view" title="ดูรายละเอียด">
                                     <i class="bi bi-eye"></i>
                                 </a>
-                                <a href="{{ route('invoices.edit', $invoice) }}"
+                                <a href="<?php echo e(route('invoices.edit', $invoice)); ?>"
                                    class="action-btn-romar edit" title="แก้ไข">
                                     <i class="bi bi-pencil"></i>
                                 </a>
-                                @if(in_array($invoice->status, ['sent', 'overdue']))
-                                    <form action="{{ route('invoices.markAsPaid', $invoice) }}"
+                                <?php if(in_array($invoice->status, ['sent', 'overdue'])): ?>
+                                    <form action="<?php echo e(route('invoices.markAsPaid', $invoice)); ?>"
                                           method="POST" class="d-inline">
-                                        @csrf
+                                        <?php echo csrf_field(); ?>
                                         <button type="submit" class="action-btn-romar paid"
                                                 title="ทำเครื่องหมายว่าชำระแล้ว"
                                                 onclick="return confirm('ยืนยันการชำระเงิน?')">
                                             <i class="bi bi-check-lg"></i>
                                         </button>
                                     </form>
-                                @endif
+                                <?php endif; ?>
                             </div>
                         </td>
                     </tr>
-                @empty
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                     <tr>
                         <td colspan="7">
                             <div class="empty-state">
@@ -236,42 +232,45 @@
                                 </div>
                                 <div class="empty-state-title">ยังไม่มีข้อมูลใบแจ้งหนี้</div>
                                 <div class="empty-state-text">
-                                    @if(request()->hasAny(['search', 'status']))
+                                    <?php if(request()->hasAny(['search', 'status'])): ?>
                                         ไม่พบรายการตามเงื่อนไขที่เลือก ลองเปลี่ยนคำค้นหา
-                                    @else
+                                    <?php else: ?>
                                         เริ่มออกใบแจ้งหนี้ใบแรกของคุณ
-                                    @endif
+                                    <?php endif; ?>
                                 </div>
-                                @if(!request()->hasAny(['search', 'status']))
-                                    <a href="{{ route('invoices.create') }}" class="btn-romar">
+                                <?php if(!request()->hasAny(['search', 'status'])): ?>
+                                    <a href="<?php echo e(route('invoices.create')); ?>" class="btn-romar">
                                         <i class="bi bi-plus-lg"></i> เพิ่มใบแจ้งหนี้
                                     </a>
-                                @else
-                                    <a href="{{ route('invoices.index') }}" class="btn-outline-romar">
+                                <?php else: ?>
+                                    <a href="<?php echo e(route('invoices.index')); ?>" class="btn-outline-romar">
                                         <i class="bi bi-arrow-counterclockwise"></i> ล้างตัวกรอง
                                     </a>
-                                @endif
+                                <?php endif; ?>
                             </div>
                         </td>
                     </tr>
-                @endforelse
+                <?php endif; ?>
             </tbody>
         </table>
     </div>
  
-    {{-- Pagination --}}
-    @if ($invoices->hasPages())
+    
+    <?php if($invoices->hasPages()): ?>
         <div class="pagination-wrap">
             <div class="pagination-info">
-                แสดง {{ $invoices->firstItem() }}-{{ $invoices->lastItem() }}
-                จาก {{ number_format($invoices->total()) }} รายการ
+                แสดง <?php echo e($invoices->firstItem()); ?>-<?php echo e($invoices->lastItem()); ?>
+
+                จาก <?php echo e(number_format($invoices->total())); ?> รายการ
             </div>
             <div>
-                {{ $invoices->withQueryString()->links('pagination::bootstrap-5') }}
+                <?php echo e($invoices->withQueryString()->links('pagination::bootstrap-5')); ?>
+
             </div>
         </div>
-    @endif
+    <?php endif; ?>
 </div>
  
-@endsection
+<?php $__env->stopSection(); ?>
  
+<?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\xampp\htdocs\Rm1\resources\views/invoices/index.blade.php ENDPATH**/ ?>

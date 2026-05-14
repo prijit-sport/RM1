@@ -62,9 +62,18 @@
                 @enderror
             </div>
 
+            <!-- แก้ไขส่วนที่ตั้ง (Location) ให้เป็น Dropdown แบบดึงข้อมูลห้องมาแสดง -->
             <div class="form-group">
-                <label for="location">ที่ตั้ง *</label>
-                <input type="text" id="location" name="location" value="{{ old('location') }}" required>
+                <label for="location">ห้องที่ติดตั้ง (ที่ตั้ง) *</label>
+                <select name="location" id="location" required>
+                    <option value="">-- เลือกห้อง --</option>
+                    @foreach($rooms as $room)
+                        <option value="{{ $room->room_number }}" 
+                            {{ old('location') == $room->room_number ? 'selected' : '' }}>
+                            ห้อง {{ $room->room_number }} ({{ $room->room_type }})
+                        </option>
+                    @endforeach
+                </select>
                 @error('location')
                     <div class="error-message">{{ $message }}</div>
                 @enderror
