@@ -11,7 +11,8 @@ use Carbon\Carbon;
  * 
  * @property int $id
  * @property int $meter_id (FK)
- * @property-read Carbon $reading_date
+ * @property Carbon $reading_date
+
  * @property float $reading_value (kWh หรือ m3)
  * @property int|null $recorded_by (FK users)
  * @property string|null $notes

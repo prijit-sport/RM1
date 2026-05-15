@@ -6,11 +6,11 @@ use App\Models\Invoice;
 use App\Models\Contract;
 use App\Models\Booking;
 use App\Models\Guest;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 
 class NotificationService
 {
+
     /**
      * Send invoice reminder email
      */
@@ -99,21 +99,25 @@ class NotificationService
      */
     public function sendBulkInvoiceReminders(): int
     {
-        $overdueInvoices = Invoice::whereIn('status', ['sent', 'overdue'])
+        $query = Invoice::whereIn('status', ['sent', 'overdue'])
             ->whereDate('due_date', '<', now())
-            ->with(['guest', 'room'])
-            ->get();
+            ->with(['guest', 'room']);
 
+        $totalOverdue = (clone $query)->count();
         $sentCount = 0;
-        /** @var Invoice $invoice */
-        foreach ($overdueInvoices as $invoice) {
-            if ($this->sendInvoiceReminder($invoice)) {
-                $sentCount++;
+
+        // ลดการใช้หน่วยความจำ: ค่อยๆ ดึงทีละก้อน
+        $query->chunkById(200, function ($invoices) use (&$sentCount) {
+            /** @var Invoice $invoice */
+            foreach ($invoices as $invoice) {
+                if ($this->sendInvoiceReminder($invoice)) {
+                    $sentCount++;
+                }
             }
-        }
+        });
 
         Log::info('[Notification] Bulk invoice reminders completed', [
-            'total_overdue' => $overdueInvoices->count(),
+            'total_overdue' => $totalOverdue,
             'sent' => $sentCount,
         ]);
 

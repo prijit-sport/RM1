@@ -103,7 +103,7 @@ class MeterReadingController extends Controller
             $booking,
             $validated['period_month'],
             $validated['period_year'],
-            $periodEnd->toDateString(),
+            $periodEnd,
             (float) $validated['reading_value'],
             $validated['notes'] ?? null
         );
@@ -240,7 +240,7 @@ class MeterReadingController extends Controller
         Booking $booking,
         int     $month,
         int     $year,
-        string  $readingDate,
+        Carbon  $readingDate,
         float   $readingValue,
         ?string $notes
     ): MeterReading {
@@ -253,7 +253,8 @@ class MeterReadingController extends Controller
  
         assert($model instanceof MeterReading);
  
-        $model->reading_date  = $readingDate;
+        $model->reading_date = $readingDate;
+
         $model->reading_value = $readingValue;
         $model->recorded_by   = Auth::id();
         $model->notes         = $notes;

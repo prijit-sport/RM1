@@ -35,6 +35,95 @@
         .page-title { font-size: 1.3em; font-weight: 700; color: #222; }
         .page-subtitle { font-size: 0.85em; color: #888; margin-top: 2px; }
  
+        /* ── Type Selector Card ── */
+        .type-selector-card {
+            background: white;
+            border-radius: 14px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+ 
+        .type-selector-title {
+            font-weight: 600;
+            margin-bottom: 14px;
+            color: #444;
+            font-size: 0.95em;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+ 
+        .type-buttons {
+            display: flex;
+            gap: 12px;
+        }
+ 
+        .type-btn {
+            flex: 1;
+            padding: 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            text-align: center;
+            text-decoration: none;
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+ 
+        .type-btn:hover {
+            border-color: #667eea;
+            background: #f8faff;
+            transform: translateY(-2px);
+        }
+ 
+        .type-btn.active {
+            border-color: #667eea;
+            background: #f0f4ff;
+            box-shadow: 0 2px 8px rgba(102,126,234,0.15);
+        }
+ 
+        .type-btn.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background: #f5f5f5;
+        }
+ 
+        .type-btn.disabled:hover {
+            border-color: #e2e8f0;
+            transform: none;
+            background: #f5f5f5;
+        }
+ 
+        .type-icon {
+            font-size: 1.8em;
+        }
+ 
+        .type-label {
+            font-weight: 600;
+            color: #333;
+            font-size: 0.95em;
+        }
+ 
+        .type-meter {
+            font-size: 0.75em;
+            color: #999;
+            margin-top: 2px;
+        }
+ 
+        .type-btn.disabled .type-label {
+            color: #999;
+        }
+ 
+        .type-btn.disabled .type-meter {
+            color: #ccc;
+        }
+ 
         /* ── Card ── */
         .card {
             background: white;
@@ -209,7 +298,53 @@
         <a href="{{ route('meters.readings.index', $meter) }}" class="back-btn">←</a>
         <div>
             <div class="page-title">บันทึกเลขมิเตอร์</div>
-            <div class="page-subtitle">ห้อง {{ $meter->room->room_number ?? '-' }} · มิเตอร์ {{ $meter->meter_number }}</div>
+            <div class="page-subtitle">ห้อง {{ $meter->room->room_number ?? '-' }}</div>
+        </div>
+    </div>
+ 
+    {{-- ✅ Type Selector Card --}}
+    <div class="type-selector-card">
+        <div class="type-selector-title">
+            🔀 เลือกประเภทมิเตอร์
+        </div>
+        <div class="type-buttons">
+            @php
+                $room = $meter->room;
+                $electricMeter = $room->meters->where('type', 'electric')->first();
+                $waterMeter = $room->meters->where('type', 'water')->first();
+            @endphp
+            
+            {{-- ⚡ ไฟฟ้า --}}
+            @if($electricMeter)
+                <a href="{{ route('meters.readings.create', $electricMeter) }}" 
+                   class="type-btn {{ $meter->type === 'electric' ? 'active' : '' }}">
+                    <div class="type-icon">⚡</div>
+                    <div class="type-label">ไฟฟ้า</div>
+                    <div class="type-meter">{{ $electricMeter->meter_number }}</div>
+                </a>
+            @else
+                <div class="type-btn disabled">
+                    <div class="type-icon">⚡</div>
+                    <div class="type-label">ไฟฟ้า</div>
+                    <div class="type-meter">ไม่มีมิเตอร์</div>
+                </div>
+            @endif
+ 
+            {{-- 💧 น้ำประปา --}}
+            @if($waterMeter)
+                <a href="{{ route('meters.readings.create', $waterMeter) }}" 
+                   class="type-btn {{ $meter->type === 'water' ? 'active' : '' }}">
+                    <div class="type-icon">💧</div>
+                    <div class="type-label">น้ำประปา</div>
+                    <div class="type-meter">{{ $waterMeter->meter_number }}</div>
+                </a>
+            @else
+                <div class="type-btn disabled">
+                    <div class="type-icon">💧</div>
+                    <div class="type-label">น้ำประปา</div>
+                    <div class="type-meter">ไม่มีมิเตอร์</div>
+                </div>
+            @endif
         </div>
     </div>
  

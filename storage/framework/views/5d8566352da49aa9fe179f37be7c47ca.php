@@ -5,17 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="<?php echo e(csrf_token()); ?>">
     <title><?php echo $__env->yieldContent('title', 'ระบบจัดการอพาร์ทเมนท์'); ?></title>
-
-    <!-- Bootstrap 5 CSS -->
+ 
+    <!-- ✅ Bootstrap 5 CSS (CDN) -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Bootstrap Icons -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
-    <!-- Google Fonts -->
+    
+    <!-- ✅ Bootstrap Icons (เพียงไฟล์เดียว - ไม่ซ้ำ) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    
+    <!-- ✅ Google Fonts (with font-display=swap for faster loading) -->
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.css" rel="stylesheet">
-    <link rel="stylesheet" href="<?php echo e(asset('css/romar-theme.css')); ?>">
-
+    
+    <!-- ✅ Custom Theme CSS (check if exists) -->
+    <?php if(file_exists(public_path('css/romar-theme.css'))): ?>
+        <link rel="stylesheet" href="<?php echo e(asset('css/romar-theme.css?v=' . filemtime(public_path('css/romar-theme.css')))); ?>">
+    <?php endif; ?>
+ 
     <?php echo $__env->yieldPushContent('styles'); ?>
     <style>
         :root {
@@ -28,18 +33,18 @@
             --dark-color: #1f2937;
             --light-color: #f3f4f6;
         }
-
+ 
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-
+ 
         body {
             font-family: 'Prompt', sans-serif;
             background-color: #f5f6fa;
         }
-
+ 
         .sidebar {
             min-height: 100vh;
             background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
@@ -48,7 +53,7 @@
             width: 260px;
             z-index: 1000;
         }
-
+ 
         .sidebar-brand {
             padding: 20px;
             font-size: 1.25rem;
@@ -59,11 +64,11 @@
             align-items: center;
             gap: 10px;
         }
-
+ 
         .sidebar-menu {
             padding: 15px 0;
         }
-
+ 
         .sidebar-menu-item {
             padding: 12px 20px;
             color: rgba(255, 255, 255, 0.7);
@@ -75,29 +80,29 @@
             border-left: 3px solid transparent;
             font-size: 0.95rem;
         }
-
+ 
         .sidebar-menu-item:hover {
             background: rgba(255, 255, 255, 0.1);
             color: #fff;
         }
-
+ 
         .sidebar-menu-item.active {
             background: rgba(79, 70, 229, 0.2);
             color: #fff;
             border-left-color: var(--primary-color);
         }
-
+ 
         .sidebar-menu-item i {
             font-size: 1.1rem;
             width: 24px;
             text-align: center;
         }
-
+ 
         .main-content {
             margin-left: 260px;
             min-height: 100vh;
         }
-
+ 
         .topbar {
             background: #fff;
             padding: 15px 30px;
@@ -109,7 +114,7 @@
             top: 0;
             z-index: 100;
         }
-
+ 
         .user-avatar {
             width: 40px;
             height: 40px;
@@ -122,11 +127,11 @@
             font-weight: 600;
             font-size: 0.9rem;
         }
-
+ 
         .notification-badge {
             position: relative;
         }
-
+ 
         .notification-badge::after {
             content: '';
             position: absolute;
@@ -138,8 +143,8 @@
             border-radius: 50%;
             border: 2px solid #fff;
         }
-
-        /* 🆕 Notification Dropdown Styles */
+ 
+        /* Notification Dropdown Styles */
         .notification-dropdown {
             min-width: 340px;
             padding: 0;
@@ -148,7 +153,7 @@
             border-radius: 12px;
             overflow: hidden;
         }
-
+ 
         .notification-header {
             background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
             color: white;
@@ -158,7 +163,7 @@
             justify-content: space-between;
             align-items: center;
         }
-
+ 
         .notification-item {
             padding: 12px 18px;
             border-bottom: 1px solid #f0f0f0;
@@ -169,16 +174,16 @@
             color: #333;
             transition: background-color 0.2s ease;
         }
-
+ 
         .notification-item:hover {
             background-color: #f8f9fa;
             color: #333;
         }
-
+ 
         .notification-item:last-child {
             border-bottom: none;
         }
-
+ 
         .notification-icon {
             width: 38px;
             height: 38px;
@@ -189,23 +194,23 @@
             flex-shrink: 0;
             font-size: 1.1rem;
         }
-
+ 
         .notification-icon.warning {
             background: #fff3cd;
             color: #f59e0b;
         }
-
+ 
         .notification-icon.danger {
             background: #fee2e2;
             color: #ef4444;
         }
-
+ 
         .notification-empty {
             text-align: center;
             padding: 30px 20px;
             color: #6c757d;
         }
-
+ 
         .stat-card {
             background: #fff;
             border-radius: 12px;
@@ -213,12 +218,12 @@
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
             transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
-
+ 
         .stat-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
         }
-
+ 
         .stat-icon {
             width: 50px;
             height: 50px;
@@ -228,18 +233,18 @@
             justify-content: center;
             font-size: 1.5rem;
         }
-
+ 
         .table-card {
             background: #fff;
             border-radius: 12px;
             overflow: hidden;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
         }
-
+ 
         .table-card .table {
             margin-bottom: 0;
         }
-
+ 
         .table-card .table thead th {
             background: #f8f9fa;
             border-bottom: 2px solid #e9ecef;
@@ -247,34 +252,34 @@
             color: #495057;
             padding: 15px;
         }
-
+ 
         .table-card .table tbody td {
             padding: 15px;
             vertical-align: middle;
         }
-
+ 
         .status-badge {
             padding: 5px 12px;
             border-radius: 20px;
             font-size: 0.8rem;
             font-weight: 500;
         }
-
+ 
         .status-available {
             background: #d1fae5;
             color: #065f46;
         }
-
+ 
         .status-occupied {
             background: #dbeafe;
             color: #1e40af;
         }
-
+ 
         .status-maintenance {
             background: #fef3c7;
             color: #92400e;
         }
-
+ 
         .btn-primary-custom {
             background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
             border: none;
@@ -284,33 +289,33 @@
             font-weight: 500;
             transition: all 0.3s ease;
         }
-
+ 
         .btn-primary-custom:hover {
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(79, 70, 229, 0.4);
             color: #fff;
         }
-
+ 
         .alert {
             border: none;
             border-radius: 8px;
         }
-
+ 
         @media (max-width: 768px) {
             .sidebar {
                 transform: translateX(-100%);
                 transition: transform 0.3s ease;
             }
-
+ 
             .sidebar.show {
                 transform: translateX(0);
             }
-
+ 
             .main-content {
                 margin-left: 0;
             }
         }
-
+ 
         <?php echo $__env->yieldPushContent('styles'); ?>
     </style>
 </head>
@@ -321,34 +326,34 @@
             <i class="bi bi-building"></i>
             <span>ระบบจัดการอพาร์ทเมนท์</span>
         </div>
-
+ 
         <nav class="sidebar-menu">
             <a href="<?php echo e(route('dashboard')); ?>" class="sidebar-menu-item <?php echo e(request()->routeIs('dashboard') ? 'active' : ''); ?>">
                 <i class="bi bi-speedometer2"></i>
                 <span>แดชบอร์ด</span>
             </a>
-
+ 
             <a href="<?php echo e(route('rooms.index')); ?>" class="sidebar-menu-item <?php echo e(request()->routeIs('rooms.*') ? 'active' : ''); ?>">
                 <i class="bi bi-door-open"></i>
                 <span>ห้องพัก</span>
             </a>
-
+ 
             <a href="<?php echo e(route('guests.index')); ?>" class="sidebar-menu-item <?php echo e(request()->routeIs('guests.*') ? 'active' : ''); ?>">
                 <i class="bi bi-people"></i>
                 <span>ผู้เช่า</span>
             </a>
-
+ 
             <a href="<?php echo e(route('bookings.index')); ?>" class="sidebar-menu-item <?php echo e(request()->routeIs('bookings.*') ? 'active' : ''); ?>">
                 <i class="bi bi-calendar-check"></i>
                 <span>การจอง</span>
             </a>
-
+ 
             <?php if(auth()->check() && auth()->user() && auth()->user()->hasRole('Admin')): ?>
             <a href="<?php echo e(route('contracts.index')); ?>" class="sidebar-menu-item <?php echo e(request()->routeIs('contracts.*') ? 'active' : ''); ?>">
                 <i class="bi bi-file-earmark-text"></i>
                 <span>สัญญาเช่า</span>
             </a>
-
+ 
             <a href="<?php echo e(route('invoices.index')); ?>" class="sidebar-menu-item <?php echo e(request()->routeIs('invoices.*') ? 'active' : ''); ?>">
                 <i class="bi bi-receipt"></i>
                 <span>ใบแจ้งหนี้</span>
@@ -356,12 +361,12 @@
                 <span class="badge bg-danger ms-auto"><?php echo e($pendingPayments); ?></span>
                 <?php endif; ?>
             </a>
-
+ 
             <a href="<?php echo e(route('meters.index')); ?>" class="sidebar-menu-item <?php echo e(request()->routeIs('meters.*') ? 'active' : ''); ?>">
                 <i class="bi bi-lightning-charge"></i>
                 <span>มิเตอร์น้ำ/ไฟ</span>
             </a>
-
+ 
             <a href="<?php echo e(route('maintenances.index')); ?>" class="sidebar-menu-item <?php echo e(request()->routeIs('maintenances.*') ? 'active' : ''); ?>">
                 <i class="bi bi-tools"></i>
                 <span>ซ่อมบำรุง</span>
@@ -369,25 +374,25 @@
                 <span class="badge bg-warning ms-auto"><?php echo e($pendingMaintenance); ?></span>
                 <?php endif; ?>
             </a>
-
+ 
             <a href="<?php echo e(route('facilities.index')); ?>" class="sidebar-menu-item <?php echo e(request()->routeIs('facilities.*') ? 'active' : ''); ?>">
                 <i class="bi bi-building"></i>
                 <span>สิ่งอำนวยความสะดวก</span>
             </a>
-
+ 
             <a href="<?php echo e(route('roles.index')); ?>" class="sidebar-menu-item <?php echo e(request()->routeIs('roles.*') ? 'active' : ''); ?>">
                 <i class="bi bi-shield-lock"></i>
                 <span>บทบาทและสิทธิ์</span>
             </a>
             <?php endif; ?>
-
+ 
             <a href="<?php echo e(route('reports.index')); ?>" class="sidebar-menu-item <?php echo e(request()->routeIs('reports.*') ? 'active' : ''); ?>">
                 <i class="bi bi-graph-up"></i>
                 <span>รายงาน</span>
             </a>
         </nav>
     </aside>
-
+ 
     <!-- Main Content -->
     <main class="main-content">
         <!-- Topbar -->
@@ -398,19 +403,16 @@
                 </button>
                 <h5 class="mb-0"><?php echo $__env->yieldContent('page-title', 'หน้าหลัก'); ?></h5>
             </div>
-
+ 
             <div class="d-flex align-items-center gap-3">
-
-                
-                
+ 
                 
                 <?php
-                    // คำนวณจำนวนแจ้งเตือนจากตัวแปรที่มีอยู่
                     $pendingPayments    = $pendingPayments    ?? 0;
                     $pendingMaintenance = $pendingMaintenance ?? 0;
                     $totalNotifications = $pendingPayments + $pendingMaintenance;
                 ?>
-
+ 
                 <div class="dropdown">
                     <button class="btn btn-light position-relative <?php echo e($totalNotifications > 0 ? 'notification-badge' : ''); ?>"
                             data-bs-toggle="dropdown" aria-expanded="false">
@@ -422,9 +424,8 @@
                             </span>
                         <?php endif; ?>
                     </button>
-
+ 
                     <ul class="dropdown-menu dropdown-menu-end notification-dropdown">
-                        
                         <li>
                             <div class="notification-header">
                                 <span><i class="bi bi-bell-fill me-2"></i>การแจ้งเตือน</span>
@@ -433,9 +434,8 @@
                                 <?php endif; ?>
                             </div>
                         </li>
-
+ 
                         <?php if($totalNotifications === 0): ?>
-                            
                             <li>
                                 <div class="notification-empty">
                                     <i class="bi bi-check-circle-fill text-success" style="font-size: 2rem;"></i>
@@ -444,7 +444,6 @@
                                 </div>
                             </li>
                         <?php else: ?>
-                            
                             <?php if($pendingMaintenance > 0): ?>
                                 <li>
                                     <a href="<?php echo e(route('maintenances.index', ['status' => 'pending'])); ?>"
@@ -462,8 +461,7 @@
                                     </a>
                                 </li>
                             <?php endif; ?>
-
-                            
+ 
                             <?php if($pendingPayments > 0): ?>
                                 <li>
                                     <a href="<?php echo e(route('invoices.index')); ?>"
@@ -484,7 +482,7 @@
                         <?php endif; ?>
                     </ul>
                 </div>
-
+ 
                 <!-- User Menu -->
                 <div class="dropdown">
                     <button class="btn d-flex align-items-center gap-2" data-bs-toggle="dropdown">
@@ -515,7 +513,7 @@
                 </div>
             </div>
         </header>
-
+ 
         <!-- Content -->
         <div class="container-fluid p-4">
             <!-- Flash Messages -->
@@ -526,7 +524,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
             <?php endif; ?>
-
+ 
             <?php if(session('error')): ?>
             <div class="alert alert-danger alert-dismissible fade show" role="alert">
                 <i class="bi bi-exclamation-circle me-2"></i><?php echo e(session('error')); ?>
@@ -534,7 +532,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
             <?php endif; ?>
-
+ 
             <?php if(session('warning')): ?>
             <div class="alert alert-warning alert-dismissible fade show" role="alert">
                 <i class="bi bi-exclamation-triangle me-2"></i><?php echo e(session('warning')); ?>
@@ -542,7 +540,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
             <?php endif; ?>
-
+ 
             <?php if(session('info')): ?>
             <div class="alert alert-info alert-dismissible fade show" role="alert">
                 <i class="bi bi-info-circle me-2"></i><?php echo e(session('info')); ?>
@@ -550,20 +548,20 @@
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
             <?php endif; ?>
-
+ 
             <?php echo $__env->yieldContent('content'); ?>
         </div>
     </main>
-
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
+ 
+    <!-- ✅ Bootstrap JS (ใช้ defer เพื่อ async loading) -->
+    <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+ 
     <script>
         // Sidebar toggle for mobile
         document.getElementById('sidebarToggle')?.addEventListener('click', function() {
             document.querySelector('.sidebar').classList.toggle('show');
         });
-
+ 
         // Auto-hide alerts after 5 seconds
         setTimeout(function() {
             const alerts = document.querySelectorAll('.alert');
@@ -573,7 +571,8 @@
             });
         }, 5000);
     </script>
-
+ 
     <?php echo $__env->yieldPushContent('scripts'); ?>
 </body>
-</html><?php /**PATH C:\xampp\htdocs\Rm1\resources\views/layouts/app.blade.php ENDPATH**/ ?>
+</html>
+ <?php /**PATH C:\xampp\htdocs\Rm1\resources\views/layouts/app.blade.php ENDPATH**/ ?>

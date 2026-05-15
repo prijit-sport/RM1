@@ -107,21 +107,22 @@ class MeterBillingService
             }
  
             // ค่าก่อนหน้า: reading ล่าสุดก่อนเดือนนี้ หรือ initial จากการจอง
+            $initValue = $type === 'electric'
+                ? (float) ($booking->electric_meter_start ?? 0)
+                : (float) ($booking->water_meter_start   ?? 0);
+
+            // ลดจำนวน query: ดึง previous reading ด้วย query เดียวที่จำเป็น
             /** @var MeterReading|null $prev */
             $prev = MeterReading::where('meter_id', $meter->id)
                 ->whereDate('reading_date', '<', $periodStart->toDateString())
                 ->orderByDesc('reading_date')
                 ->first();
- 
-            $initValue = $type === 'electric'
-                ? (float) ($booking->electric_meter_start ?? 0)
-                : (float) ($booking->water_meter_start   ?? 0);
- 
+
             $prevValue = (float) ($prev?->reading_value ?? $initValue);
             $usage     = max(0, (float) $reading->reading_value - $prevValue);
             $base      = round($usage * (float) ($meter->rate_per_unit ?? 0), 2);
             $tax       = round($base * ((float) ($meter->tax_rate ?? 0) / 100), 2);
- 
+
             $totals[$type] = round($base + $tax, 2);
         }
  

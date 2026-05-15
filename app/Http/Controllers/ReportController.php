@@ -178,13 +178,18 @@ class ReportController extends Controller
             $invoices_paid_amount    = (float) Invoice::where('status', 'paid')->sum('total');
             $invoices_pending_amount = (float) Invoice::whereIn('status', ['pending', 'sent'])->sum('total');
             $invoices_overdue_amount = (float) Invoice::where('status', 'overdue')->sum('total');
- 
+
             $top_overdue_guests = Invoice::with('guest')
                 ->where('status', 'overdue')
                 ->orderByDesc('total')
                 ->limit(10)
                 ->get();
-        } catch (\Throwable $e) {}
+        } catch (\Throwable $e) {
+            \Log::error('[ReportController] getFinancialData invoices query failed', [
+                'error' => $e->getMessage(),
+            ]);
+        }
+
  
         return compact(
             'monthly_revenue', 'revenue_by_room_type',
@@ -322,28 +327,36 @@ class ReportController extends Controller
                 ->sum('meter_readings.reading_value');
  
             // Top 5 ห้องใช้ไฟฟ้าเยอะสุดในเดือนนี้
-            $top_electric_rooms = MeterReading::join('meters', 'meter_readings.meter_id', '=', 'meters.id')
-                ->join('rooms', 'meters.room_id', '=', 'rooms.id')
-                ->where('meters.type', 'electric')
-                ->whereMonth('meter_readings.reading_date', now()->month)
-                ->whereYear('meter_readings.reading_date', now()->year)
-                ->selectRaw('rooms.room_number, SUM(meter_readings.reading_value) as total')
-                ->groupBy('rooms.id', 'rooms.room_number')
-                ->orderByDesc('total')
-                ->limit(5)
-                ->get();
+            // ✅ แก้ไข - เพิ่ม HAVING เพื่อกรองค่า > 0
+$top_electric_rooms = MeterReading::join('meters', 'meter_readings.meter_id', '=', 'meters.id')
+    ->join('rooms', 'meters.room_id', '=', 'rooms.id')
+    ->where('meters.type', 'electric')
+    ->where('meter_readings.reading_value', '>', 0)  // ← เพิ่มนี้
+    ->whereNotNull('meter_readings.reading_value')     // ← เพิ่มนี้
+    ->whereMonth('meter_readings.reading_date', now()->month)
+    ->whereYear('meter_readings.reading_date', now()->year)
+    ->selectRaw('rooms.room_number, SUM(meter_readings.reading_value) as total')
+    ->groupBy('rooms.id', 'rooms.room_number')
+    ->havingRaw('SUM(meter_readings.reading_value) > 0')  // ← เพิ่มนี้
+    ->orderByDesc('total')
+    ->limit(5)
+    ->get();
  
             // Top 5 ห้องใช้น้ำเยอะสุดในเดือนนี้
-            $top_water_rooms = MeterReading::join('meters', 'meter_readings.meter_id', '=', 'meters.id')
-                ->join('rooms', 'meters.room_id', '=', 'rooms.id')
-                ->where('meters.type', 'water')
-                ->whereMonth('meter_readings.reading_date', now()->month)
-                ->whereYear('meter_readings.reading_date', now()->year)
-                ->selectRaw('rooms.room_number, SUM(meter_readings.reading_value) as total')
-                ->groupBy('rooms.id', 'rooms.room_number')
-                ->orderByDesc('total')
-                ->limit(5)
-                ->get();
+            // ✅ แก้ไข
+$top_water_rooms = MeterReading::join('meters', 'meter_readings.meter_id', '=', 'meters.id')
+    ->join('rooms', 'meters.room_id', '=', 'rooms.id')
+    ->where('meters.type', 'water')
+    ->where('meter_readings.reading_value', '>', 0)  // ← เพิ่ม
+    ->whereNotNull('meter_readings.reading_value')     // ← เพิ่ม
+    ->whereMonth('meter_readings.reading_date', now()->month)
+    ->whereYear('meter_readings.reading_date', now()->year)
+    ->selectRaw('rooms.room_number, SUM(meter_readings.reading_value) as total')
+    ->groupBy('rooms.id', 'rooms.room_number')
+    ->havingRaw('SUM(meter_readings.reading_value) > 0')  // ← เพิ่ม
+    ->orderByDesc('total')
+    ->limit(5)
+    ->get();
         } catch (\Throwable $e) {}
  
         return compact('current_month_electric', 'current_month_water', 'top_electric_rooms', 'top_water_rooms');
