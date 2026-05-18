@@ -23,10 +23,7 @@ class ManagerOrAdmin
         }
 
         $user = Auth::user();
-        
 
-
-        
         // If user has no role, deny access
         if (!$user->role) {
             abort(403, 'คุณไม่มีสิทธิ์เข้าถึงหน้านี้');
