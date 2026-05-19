@@ -14,7 +14,7 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\MeterController;
 use App\Http\Controllers\MeterReadingController;
 use App\Http\Controllers\AccountController;
-use App\Http\Controllers\TenantsStatusController;
+use App\Http\Controllers\Api\TenantsStatusController;
 use Illuminate\Support\Facades\Route;
  
 /*
@@ -77,7 +77,7 @@ Route::middleware(['web'])->group(function () {
     });
  
     // --- Manager or Admin ---
-    Route::middleware(['auth', 'manager_or_admin'])->group(function () {
+Route::middleware(['auth'])->group(function () {
         // ── สัญญาเช่า ──
         Route::get('contracts/export', [ContractController::class, 'export'])->name('contracts.export');
         Route::get('contracts/expiring', [ContractController::class, 'expiring'])->name('contracts.expiring');

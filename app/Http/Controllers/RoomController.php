@@ -12,7 +12,10 @@ class RoomController extends Controller
     // ─────────────────────────────────────────
     public function index(Request $request)
     {
+        $this->authorize('viewAny', Room::class);
+
         $query = Room::query();
+
 
         // 1. กรองข้อมูลตามการค้นหา (Search)
         if ($request->filled('search')) {

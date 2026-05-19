@@ -10,18 +10,26 @@ class RoleController extends Controller
 {
     public function index()
     {
+        $this->authorize('viewAny', Role::class);
+
         $roles = Role::paginate(10);
         return view('roles.index', compact('roles'));
     }
 
+
     public function create()
     {
+        $this->authorize('create', Role::class);
+
         $permissions = Permission::all();
         return view('roles.create', compact('permissions'));
     }
 
+
     public function store(Request $request)
     {
+        $this->authorize('create', Role::class);
+
         $validated = $request->validate([
             'name' => 'required|unique:roles|max:50',
             'description' => 'nullable|max:255',
@@ -41,18 +49,27 @@ class RoleController extends Controller
 
     public function show(Role $role)
     {
+        $this->authorize('view', $role);
+
         return view('roles.show', compact('role'));
     }
 
+
     public function edit(Role $role)
     {
+        $this->authorize('update', $role);
+
         $permissions = Permission::all();
         return view('roles.edit', compact('role', 'permissions'));
     }
 
+
     public function update(Request $request, Role $role)
     {
+        $this->authorize('update', $role);
+
         $validated = $request->validate([
+
             'name' => 'required|unique:roles,name,' . $role->id . '|max:50',
             'description' => 'nullable|max:255',
             'permissions' => 'array',
@@ -71,9 +88,12 @@ class RoleController extends Controller
 
     public function destroy(Role $role)
     {
+        $this->authorize('delete', $role);
+
         $role->delete();
         return redirect()->route('roles.index')->with('success', __('ui.role.deleted'));
     }
+
 
     public function export(Request $request)
     {

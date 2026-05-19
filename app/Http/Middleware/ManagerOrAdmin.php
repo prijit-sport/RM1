@@ -29,12 +29,13 @@ class ManagerOrAdmin
             abort(403, 'คุณไม่มีสิทธิ์เข้าถึงหน้านี้');
         }
         
-        // Check if user has Manager or Admin role
-        $userRole = $user->role->name;
+// Check if user has Manager or Admin role
+        // (Allow if role name matches; guard against null relation)
+        $userRole = $user->role?->name;
         if (!in_array($userRole, ['Admin', 'Manager'], true)) {
-            abort(403, 'คุณไม่มีสิทธิ์เข้าถึงหน้านี้');
+            abort(403);
         }
-        
+
         return $next($request);
     }
 }

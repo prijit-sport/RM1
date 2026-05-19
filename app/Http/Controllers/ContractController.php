@@ -16,7 +16,10 @@ class ContractController extends Controller
  
     public function index(Request $request)
     {
+        $this->authorize('viewAny', Contract::class);
+
         $contracts = Contract::with(['room', 'guest'])
+
             ->when($request->filled('status'), function ($query) use ($request) {
                 $query->where('status', $request->status);
             })
@@ -42,7 +45,10 @@ class ContractController extends Controller
  
     public function create()
     {
+        $this->authorize('create', Contract::class);
+
         $rooms = Room::whereIn('status', ['available', 'occupied'])
+
             ->orderBy('room_number')
             ->get();
         $guests = Guest::all();
@@ -53,7 +59,10 @@ class ContractController extends Controller
  
     public function store(Request $request)
     {
+        $this->authorize('create', Contract::class);
+
         $validated = $request->validate([
+
             'contract_number'     => 'nullable|string|max:255|unique:contracts,contract_number',
             'room_id'             => 'required|exists:rooms,id',
             'guest_id'            => 'required|exists:guests,id',
@@ -89,14 +98,20 @@ class ContractController extends Controller
  
     public function show(Contract $contract)
     {
+        $this->authorize('view', $contract);
+
         $contract->load(['room', 'guest']);
+
  
         return view('contracts.show', compact('contract'));
     }
  
     public function edit(Contract $contract)
     {
+        $this->authorize('update', $contract);
+
         $rooms = Room::all();
+
         $guests = Guest::all();
  
         return view('contracts.edit', compact('contract', 'rooms', 'guests'));
@@ -104,7 +119,10 @@ class ContractController extends Controller
  
     public function update(Request $request, Contract $contract)
     {
+        $this->authorize('update', $contract);
+
         $validated = $request->validate([
+
             'contract_number'     => 'nullable|string|max:255|unique:contracts,contract_number,' . $contract->id,
             'room_id'             => 'required|exists:rooms,id',
             'guest_id'            => 'required|exists:guests,id',
@@ -140,8 +158,11 @@ class ContractController extends Controller
  
     public function destroy(Contract $contract)
     {
+        $this->authorize('delete', $contract);
+
         $roomId = $contract->room_id;
         $contract->delete();
+
  
         // Update room status if contract was active
         if ($roomId) {
@@ -153,6 +174,8 @@ class ContractController extends Controller
  
     public function export(Request $request)
     {
+        $this->authorize('export', Contract::class);
+
         $contracts = Contract::with(['room', 'guest'])->orderBy('id', 'desc')->get();
         $filename = 'contracts_export_' . date('Y-m-d') . '.xlsx';
  

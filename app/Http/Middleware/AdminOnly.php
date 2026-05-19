@@ -5,7 +5,7 @@ namespace App\Http\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
+
 use Symfony\Component\HttpFoundation\Response;
 
 class AdminOnly
@@ -17,30 +17,22 @@ class AdminOnly
      */
     public function handle(Request $request, Closure $next): Response
     {
-        Log::info('[AdminOnly] Checking - URI: ' . $request->uri() . ', Method: ' . $request->method());
-        
         if (!Auth::check()) {
-            Log::warning('[AdminOnly] User not authenticated - Redirecting to login');
             return redirect()->route('login')->with('error', 'กรุณาเข้าสู่ระบบก่อน');
         }
 
         $user = Auth::user();
-        Log::info('[AdminOnly] User: ' . $user->name . ', Role: ' . ($user->role ? $user->role->name : 'null'));
-        
-        // If user has no role, deny access (security requirement)
+
+        // If user has no role, deny access
         if (!$user->role) {
-            Log::warning('[AdminOnly] User has no role - denying access for user: ' . $user->name);
             abort(403, 'คุณไม่มีสิทธิ์เข้าถึงหน้านี้');
         }
-        
-        // Check if user has Admin role
-        if (!$user->hasRole('Admin')) {
-            Log::warning('[AdminOnly] User is not Admin - User: ' . $user->name);
-            // Redirect to dashboard instead of showing blank error page
-            return redirect()->route('dashboard')->with('error', 'คุณไม่มีสิทธิ์เข้าถึงหน้านี้');
+
+// Check if user has Admin role (null-safe)
+        if ($user->role?->name !== 'Admin') {
+            abort(403);
         }
 
-        Log::info('[AdminOnly] Access granted - User: ' . $user->name);
         return $next($request);
     }
 }

@@ -9,28 +9,33 @@ class BookingPolicy
 {
     public function viewAny(User $user): bool
     {
-        return true;
+        return $user->hasRole('Manager') || $user->hasRole('Admin');
     }
+
 
     public function view(User $user, Booking $booking): bool
     {
-        return true;
+        return $user->hasRole('Manager') || $user->hasRole('Admin');
     }
+
 
     public function create(User $user): bool
     {
-        return true;
+        return $user->hasRole('Manager') || $user->hasRole('Admin');
     }
+
 
     public function update(User $user, Booking $booking): bool
     {
-        return true;
+        return $user->hasRole('Manager') || $user->hasRole('Admin');
     }
+
 
     public function delete(User $user, Booking $booking): bool
     {
-        return true;
+        return $user->hasRole('Manager') || $user->hasRole('Admin');
     }
+
 
     public function confirm(User $user, Booking $booking): bool
     {
@@ -44,6 +49,7 @@ class BookingPolicy
 
     public function export(User $user): bool
     {
-        return true;
+        return $user->hasRole('Manager') || $user->hasRole('Admin');
     }
+
 }

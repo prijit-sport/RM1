@@ -34,6 +34,11 @@ class AppServiceProvider extends ServiceProvider
         Paginator::useBootstrapFive();
 
         Gate::policy(Booking::class, BookingPolicy::class);
+        Gate::policy(\App\Models\Room::class, \App\Policies\RoomPolicy::class);
+        Gate::policy(\App\Models\Guest::class, \App\Policies\GuestPolicy::class);
+        Gate::policy(\App\Models\Role::class, \App\Policies\RolePolicy::class);
+        Gate::policy(\App\Models\Contract::class, \App\Policies\ContractPolicy::class);
+
 
         // Register @role directive for Blade - improved with null safety
         Blade::directive('role', function ($role) {

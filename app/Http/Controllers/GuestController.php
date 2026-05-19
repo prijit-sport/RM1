@@ -13,8 +13,11 @@ class GuestController extends Controller
     // ─────────────────────────────────────────
     public function index(Request $request)
     {
+        $this->authorize('viewAny', Guest::class);
+
         // แก้ไขตรงนี้: เพิ่ม with() เพื่อดึงข้อมูลห้องพักมาพร้อมกับแขกเลย ป้องกันข้อมูลหายและโหลดเร็วขึ้น
         $query = Guest::with(['bookings.room', 'contracts.room']);
+
  
         // ค้นหาตามชื่อ / อีเมล / เบอร์โทร / เลขบัตร
         if ($request->filled('search')) {

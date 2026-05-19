@@ -22,6 +22,8 @@ class InvoiceController extends Controller
 
     public function index(Request $request)
     {
+        $this->authorize('viewAny', Invoice::class);
+
         $query = Invoice::query()->with(['booking.room', 'booking.guest']);
 
         if ($request->filled('search')) {
@@ -43,6 +45,8 @@ class InvoiceController extends Controller
 
     public function create()
     {
+        $this->authorize('create', Invoice::class);
+
         $bookings = Booking::with(['room', 'guest'])->orderByDesc('id')->get();
         $invoiceNumber = $this->invoiceService->generateInvoiceNumber();
 
@@ -51,6 +55,8 @@ class InvoiceController extends Controller
 
     public function store(StoreInvoiceRequest $request)
     {
+        $this->authorize('create', Invoice::class);
+
         $validated = $request->validated();
         if (empty($validated['invoice_number'])) {
             $validated['invoice_number'] = $this->invoiceService->generateInvoiceNumber();
@@ -67,6 +73,8 @@ class InvoiceController extends Controller
 
     public function show(Invoice $invoice)
     {
+        $this->authorize('view', $invoice);
+
         $invoice->loadMissing(['booking.room', 'booking.guest']);
 
         return view('invoices.show', compact('invoice'));
@@ -74,6 +82,8 @@ class InvoiceController extends Controller
 
     public function edit(Invoice $invoice)
     {
+        $this->authorize('update', $invoice);
+
         $bookings = Booking::with(['room', 'guest'])->orderByDesc('id')->get();
 
         return view('invoices.edit', compact('invoice', 'bookings'));
@@ -81,6 +91,8 @@ class InvoiceController extends Controller
 
     public function update(UpdateInvoiceRequest $request, Invoice $invoice)
     {
+        $this->authorize('update', $invoice);
+
         $validated = $request->validated();
         $validated['total'] = $validated['total'] ?? $this->invoiceService->calculateTotal(
             (float) $validated['amount'],
@@ -94,6 +106,8 @@ class InvoiceController extends Controller
 
     public function destroy(Invoice $invoice)
     {
+        $this->authorize('delete', $invoice);
+
         $invoice->delete();
 
         return redirect()->route('invoices.index')->with('success', __('ui.invoice.deleted'));
@@ -101,6 +115,8 @@ class InvoiceController extends Controller
 
     public function bulkCreate()
     {
+        $this->authorize('create', Invoice::class);
+
         $bookings = Booking::with(['room', 'guest'])->orderByDesc('id')->get();
 
         return view('invoices.bulk-create', compact('bookings'));
@@ -108,6 +124,8 @@ class InvoiceController extends Controller
 
     public function bulkStore(Request $request)
     {
+        $this->authorize('create', Invoice::class);
+
         $validated = $request->validate([
             'invoices' => ['required', 'array', 'min:1'],
             'invoices.*.booking_id' => ['required', 'exists:bookings,id'],
@@ -156,6 +174,8 @@ class InvoiceController extends Controller
 
     public function export(Request $request)
     {
+        $this->authorize('export', Invoice::class);
+
         $filename = 'invoices_export_' . date('Y-m-d') . '.xlsx';
         $rows = [
             ['Invoice Number', 'Booking ID', 'Amount', 'Tax', 'Total', 'Issue Date', 'Due Date', 'Status', 'Notes'],
@@ -184,6 +204,8 @@ class InvoiceController extends Controller
 
     public function markAsPaid(Invoice $invoice)
     {
+        $this->authorize('update', $invoice);
+
         if (! in_array($invoice->status, ['sent', 'overdue'], true)) {
             return redirect()->route('invoices.show', $invoice)->with('warning', __('ui.invoice.mark_paid_only_sent_overdue'));
         }
@@ -196,11 +218,15 @@ class InvoiceController extends Controller
 
     public function generatePdf(Invoice $invoice)
     {
+        $this->authorize('view', $invoice);
+
         return redirect()->route('invoices.show', $invoice)->with('info', __('ui.common.pdf_coming_soon'));
     }
 
     public function remindAll()
     {
+        $this->authorize('export', Invoice::class);
+
         $dueInvoices = Invoice::whereIn('status', ['sent', 'overdue'])
             ->whereDate('due_date', '<', now())
             ->get();
