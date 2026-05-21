@@ -8,19 +8,19 @@ use App\Models\User;
 class BookingPolicy
 {
     /**
-     * ✅ User ที่ login แล้ว (ไม่ว่า role อะไร) สามารถดูรายการจองได้
+     * ✅ Admin และ Staff สามารถดูรายการจองทั้งหมดได้
      */
     public function viewAny(User $user): bool
     {
-        return true;
+        return $user->hasRole('Admin') || $user->hasRole('Staff');
     }
  
     /**
-     * ✅ User ที่ login แล้ว สามารถดูรายละเอียดจองได้
+     * ✅ Admin และ Staff สามารถดูรายละเอียดจองแต่ละรายได้
      */
     public function view(User $user, Booking $booking): bool
     {
-        return true;
+        return $user->hasRole('Admin') || $user->hasRole('Staff');
     }
  
     /**
@@ -36,12 +36,8 @@ class BookingPolicy
      */
     public function update(User $user, Booking $booking): bool
     {
-        return $user->hasRole('Admin')
-            || $user->hasRole('Staff')
-            || $user->hasRole('User')
-            || $user->hasRole('Manager');
+        return $user->hasRole('Admin') || $user->hasRole('Staff');
     }
-
  
     /**
      * ✅ Admin และ Staff สามารถลบจองได้
@@ -56,18 +52,16 @@ class BookingPolicy
      */
     public function confirm(User $user, Booking $booking): bool
     {
-        return $user->hasRole('Admin') || $user->hasRole('Manager');
+        return $user->hasRole('Admin') || $user->hasRole('Staff');
     }
-
  
     /**
      * ✅ Admin และ Staff สามารถยกเลิกจองได้
      */
     public function cancel(User $user, Booking $booking): bool
     {
-        return $user->hasRole('Admin') || $user->hasRole('Manager');
+        return $user->hasRole('Admin') || $user->hasRole('Staff');
     }
-
  
     /**
      * ✅ Admin และ Staff สามารถ export ข้อมูลจองได้
