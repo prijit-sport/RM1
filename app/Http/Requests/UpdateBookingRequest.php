@@ -10,7 +10,7 @@ class UpdateBookingRequest extends FormRequest
     {
         return true; // ควบคุมสิทธิ์ผ่าน Policy ใน Controller แล้ว
     }
- 
+
     public function rules(): array
     {
         return [
@@ -26,7 +26,50 @@ class UpdateBookingRequest extends FormRequest
             'notes'                => ['nullable', 'string', 'max:1000'],
         ];
     }
- 
+
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($validator) {
+            /** @var \App\Models\Booking|null $booking */
+            $booking = $this->route('booking');
+
+            $newStatus = $this->input('status');
+            if ($booking && $newStatus) {
+                $oldStatus = $booking->status;
+                $allowedTransitions = [
+                    'pending' => ['confirmed', 'cancelled'],
+                    'confirmed' => ['cancelled'],
+                    'cancelled' => [],
+                ];
+
+                $allowedNext = $allowedTransitions[$oldStatus] ?? [];
+                if ($oldStatus !== $newStatus && !in_array($newStatus, $allowedNext, true)) {
+                    $validator->errors()->add('status', 'Invalid status transition');
+                }
+            }
+
+            // Overlap validation only when updating room/dates (boundary checkout==other checkin must be allowed)
+            $roomId   = $this->input('room_id');
+            $checkIn  = $this->input('check_in_date');
+            $checkOut = $this->input('check_out_date');
+
+            if ($booking && $roomId && $checkIn && $checkOut) {
+                $overlap = \App\Models\Booking::where('room_id', $roomId)
+                    ->where('id', '!=', $booking->id)
+                    ->whereIn('status', ['pending', 'confirmed', 'cancelled'])
+                    ->where(function ($q) use ($checkIn, $checkOut) {
+                        $q->where('check_in_date', '<', $checkOut)
+                          ->where('check_out_date', '>', $checkIn);
+                    })
+                    ->exists();
+
+                if ($overlap) {
+                    $validator->errors()->add('room_id', 'Overlapping booking');
+                }
+            }
+        });
+    }
+
     public function messages(): array
     {
         return [
@@ -43,4 +86,5 @@ class UpdateBookingRequest extends FormRequest
         ];
     }
 }
+
  

@@ -51,8 +51,9 @@ class AccountController extends Controller
 
         $user->save();
 
-        return redirect()->back()->with('success', 'โปรไฟล์ถูกอัปเดตเรียบร้อยแล้ว');
+        return redirect()->route('profile.edit')->with('success', 'โปรไฟล์ถูกอัปเดตเรียบร้อยแล้ว');
     }
+
 
     /**
      * แสดงหน้าตั้งค่าระบบ
@@ -75,7 +76,23 @@ class AccountController extends Controller
      */
     public function updateSettings(Request $request)
     {
-        // บันทึก Logic การตั้งค่าเพิ่มเติมที่นี่ในอนาคต
-        return redirect()->back()->with('success', 'การตั้งค่าระบบถูกบันทึกแล้ว');
+        $validated = $request->validate([
+            'locale' => ['required', 'string'],
+            'items_per_page' => ['required', 'integer'],
+            'compact_mode' => ['nullable'],
+        ]);
+
+        // compact_mode from form may come as '1' or true
+        $compactMode = filter_var($request->input('compact_mode'), FILTER_VALIDATE_BOOLEAN);
+
+        // persist to session using the keys expected by tests
+        session([
+            'settings.locale' => $validated['locale'],
+            'settings.items_per_page' => $validated['items_per_page'],
+            'settings.compact_mode' => $compactMode,
+        ]);
+
+        return redirect()->route('settings.edit')->with('success', 'การตั้งค่าระบบถูกบันทึกแล้ว');
     }
+
 }

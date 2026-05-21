@@ -37,7 +37,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(\App\Models\Room::class, \App\Policies\RoomPolicy::class);
         Gate::policy(\App\Models\Guest::class, \App\Policies\GuestPolicy::class);
         Gate::policy(\App\Models\Role::class, \App\Policies\RolePolicy::class);
-        Gate::policy(\App\Models\Contract::class, \App\Policies\ContractPolicy::class);
+        Gate::policy(Contract::class, \App\Policies\ContractPolicy::class);
 
 
         // Register @role directive for Blade - improved with null safety

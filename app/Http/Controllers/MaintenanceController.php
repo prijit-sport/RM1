@@ -25,10 +25,11 @@ class MaintenanceController extends Controller
         // ดึงรายการรอซ่อม 5 รายการล่าสุด
         $pending = Maintenance::with(['room', 'facility'])
             ->whereIn('status', ['pending', 'in_progress'])
-            ->orderByRaw("FIELD(status, 'pending', 'in_progress')")
+            ->orderByRaw("CASE status WHEN 'pending' THEN 1 WHEN 'in_progress' THEN 2 ELSE 3 END")
             ->orderByDesc('request_date')
             ->take(5)
             ->get();
+
 
         // ดึงรายการที่ซ่อมเสร็จแล้ว 5 รายการล่าสุด
         $recentlyCompleted = Maintenance::with(['room', 'facility'])

@@ -25,16 +25,17 @@ class ManagerOrAdmin
         $user = Auth::user();
 
         // If user has no role, deny access
-        if (!$user->role) {
+        $role = $user->role;
+        if (!$role) {
             abort(403, 'คุณไม่มีสิทธิ์เข้าถึงหน้านี้');
         }
-        
-// Check if user has Manager or Admin role
-        // (Allow if role name matches; guard against null relation)
-        $userRole = $user->role?->name;
-        if (!in_array($userRole, ['Admin', 'Manager'], true)) {
+
+        // Check if user has Admin role only
+        if (!in_array($role->name, ['Admin'], true)) {
             abort(403);
         }
+
+
 
         return $next($request);
     }

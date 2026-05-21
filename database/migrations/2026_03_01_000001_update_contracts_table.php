@@ -22,8 +22,13 @@ return new class extends Migration
             $table->index('end_date');
         });
 
-        DB::statement("ALTER TABLE contracts ADD CONSTRAINT CHK_contracts_status CHECK (status IN ('draft', 'pending', 'active', 'completed', 'cancelled'))");
+        // SQLite doesn't support `ALTER TABLE ... ADD CONSTRAINT ... CHECK`.
+        // Only apply the constraint when supported (e.g. MySQL/PostgreSQL).
+        if (Schema::getConnection()->getDriverName() !== 'sqlite') {
+            DB::statement("ALTER TABLE contracts ADD CONSTRAINT CHK_contracts_status CHECK (status IN ('draft', 'pending', 'active', 'completed', 'cancelled'))");
+        }
     }
+
 
     public function down(): void
     {

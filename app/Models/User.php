@@ -6,7 +6,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Support\Facades\Log;
 use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
@@ -57,12 +56,12 @@ class User extends Authenticatable
         return $this->belongsTo(Role::class, 'role_id');
     }
 
-    public function hasPermission($permission)
+    public function hasPermission(string $permission)
     {
         return $this->role && $this->role->permissions()->where('name', $permission)->exists();
     }
 
-    public function hasRole($role)
+    public function hasRole(string $role)
     {
         // Ensure role is loaded
         if (!$this->relationLoaded('role')) {
@@ -83,20 +82,25 @@ class User extends Authenticatable
     /**
      * Check if user has any of the given permissions
      */
+    /**
+     * Check if user has any of the given permissions.
+     *
+     * @param array|string $permissions
+     */
     public function hasAnyPermission($permissions): bool
     {
         if (!$this->role) {
             return false;
         }
-        
+
         $permissions = is_array($permissions) ? $permissions : func_get_args();
-        
+
         foreach ($permissions as $permission) {
             if ($this->hasPermission($permission)) {
                 return true;
             }
         }
-        
+
         return false;
     }
 }

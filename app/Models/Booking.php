@@ -48,11 +48,13 @@ class Booking extends Model
         'actual_check_out',
         'rent_amount',
         'deposit_amount',
+        'total_price',
         'electric_meter_start',
         'water_meter_start',
         'status',
         'notes',
     ];
+
  
     protected $casts = [
         'check_in_date'    => 'date',
