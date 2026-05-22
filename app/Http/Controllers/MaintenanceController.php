@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Maintenance;
 use App\Models\Room;
-use App\Models\Facility; // สำคัญ: ต้อง Import Model Facility เพื่อแก้ Error Undefined variable
+use App\Models\Facility;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
@@ -17,16 +17,18 @@ class MaintenanceController extends Controller
     {
         $pendingCount = Maintenance::where('status', 'pending')->count();
         $inProgressCount = Maintenance::where('status', 'in_progress')->count();
+        
+        // ใช้ updated_at แทน completion_date
         $completedThisMonth = Maintenance::where('status', 'completed')
-            ->whereMonth('completion_date', Carbon::now()->month)
-            ->whereYear('completion_date', Carbon::now()->year)
+            ->whereMonth('updated_at', Carbon::now()->month)
+            ->whereYear('updated_at', Carbon::now()->year)
             ->count();
 
         // ดึงรายการรอซ่อม 5 รายการล่าสุด
         $pending = Maintenance::with(['room', 'facility'])
             ->whereIn('status', ['pending', 'in_progress'])
             ->orderByRaw("CASE status WHEN 'pending' THEN 1 WHEN 'in_progress' THEN 2 ELSE 3 END")
-            ->orderByDesc('request_date')
+            ->orderByDesc('created_at') // ✅ เปลี่ยนจาก request_date เป็น created_at
             ->take(5)
             ->get();
 
@@ -34,7 +36,7 @@ class MaintenanceController extends Controller
         // ดึงรายการที่ซ่อมเสร็จแล้ว 5 รายการล่าสุด
         $recentlyCompleted = Maintenance::with(['room', 'facility'])
             ->where('status', 'completed')
-            ->orderByDesc('completion_date')
+            ->orderByDesc('updated_at')
             ->take(5)
             ->get();
 
@@ -64,12 +66,9 @@ class MaintenanceController extends Controller
     public function create(Request $request)
     {
         $rooms = Room::all();
-        
-        // ดึงสิ่งอำนวยความสะดวกทั้งหมดส่งไปให้หน้า Create เลือก (แก้ Error $facilities)
         $facilities = Facility::all(); 
         
         $facility = null;
-        // กรณีคลิกมาจากหน้ารายละเอียดสิ่งอำนวยความสะดวกโดยตรง
         if ($request->has('facility_id')) {
             $facility = Facility::find($request->facility_id);
         }
@@ -87,14 +86,13 @@ class MaintenanceController extends Controller
             'facility_id'      => 'nullable|exists:facilities,id',
             'maintenance_type' => 'required',
             'description'      => 'required',
-            'request_date'     => 'required|date',
+            // ✅ ลบ 'request_date' ออกจากการ Validate
             'status'           => 'required',
             'notes'            => 'nullable',
         ]);
 
         $maintenance = Maintenance::create($validated);
 
-        // หากมีการเลือกสิ่งอำนวยความสะดวก ให้เปลี่ยนสถานะอุปกรณ์เป็น 'ต้องซ่อม' (needs_repair)
         if ($request->filled('facility_id')) {
             Facility::where('id', $request->facility_id)->update([
                 'status' => 'needs_repair'
@@ -135,20 +133,13 @@ class MaintenanceController extends Controller
             'description'      => 'nullable',
             'assigned_to'      => 'nullable',
             'cost'             => 'nullable|numeric',
-            'request_date'     => 'required|date',
+            // ✅ ลบ 'request_date' ออกจากการ Validate
             'status'           => 'required',
             'notes'            => 'nullable',
-            'completion_date'  => 'nullable|date',
         ]);
-
-        // ถ้าเปลี่ยนสถานะเป็น completed ให้บันทึกวันที่เสร็จสิ้นอัตโนมัติ
-        if ($request->status == 'completed' && !$maintenance->completion_date) {
-            $validated['completion_date'] = now();
-        }
 
         $maintenance->update($validated);
 
-        // หากซ่อมเสร็จสิ้น ให้ไปอัปเดตสถานะ Facility กลับเป็น 'ใช้งานได้' (good)
         if ($request->status == 'completed' && $maintenance->facility_id) {
             Facility::where('id', $maintenance->facility_id)->update([
                 'status' => 'good',
@@ -175,7 +166,6 @@ class MaintenanceController extends Controller
     {
         $maintenance->update(['status' => 'in_progress']);
 
-        // อัปเดตสถานะอุปกรณ์เป็น 'กำลังซ่อมบำรุง' (maintenance)
         if ($maintenance->facility_id) {
             Facility::where('id', $maintenance->facility_id)->update([
                 'status' => 'maintenance'
@@ -191,11 +181,9 @@ class MaintenanceController extends Controller
     public function completeWork(Maintenance $maintenance)
     {
         $maintenance->update([
-            'status' => 'completed',
-            'completion_date' => now()
+            'status' => 'completed'
         ]);
 
-        // อัปเดตสถานะอุปกรณ์กลับเป็น 'ใช้งานได้' (good)
         if ($maintenance->facility_id) {
             Facility::where('id', $maintenance->facility_id)->update([
                 'status' => 'good',

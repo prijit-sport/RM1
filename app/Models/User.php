@@ -103,4 +103,13 @@ class User extends Authenticatable
 
         return false;
     }
+
+    /**
+     * Compatibility with Illuminate\Foundation\Auth\User::canAny signature.
+     */
+    public function canAny($abilities, $arguments = []): bool
+    {
+        return $this->hasAnyPermission(is_array($abilities) ? $abilities : [$abilities]);
+    }
 }
+

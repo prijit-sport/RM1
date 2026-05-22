@@ -9,25 +9,23 @@ use Illuminate\Support\Facades\DB;
 class GuestController extends Controller
 {
     // ─────────────────────────────────────────
-    //  INDEX - หน้ารายการแขกทั้งหมด (พร้อม search)
+    //  INDEX - รายการผู้เช่าทั้งหมด
     // ─────────────────────────────────────────
     public function index(Request $request)
     {
         $this->authorize('viewAny', Guest::class);
-
-        // แก้ไขตรงนี้: เพิ่ม with() เพื่อดึงข้อมูลห้องพักมาพร้อมกับแขกเลย ป้องกันข้อมูลหายและโหลดเร็วขึ้น
-        $query = Guest::with(['bookings.room', 'contracts.room']);
-
  
-        // ค้นหาตามชื่อ / อีเมล / เบอร์โทร / เลขบัตร
+        // ใช้เฉพาะ contracts.room (ไม่ต้องการ bookings แล้ว)
+        $query = Guest::with(['contracts.room']);
+ 
         if ($request->filled('search')) {
             $s = $request->input('search');
             $query->where(function ($q) use ($s) {
                 $q->where('first_name', 'like', "%{$s}%")
-                  ->orWhere('last_name', 'like', "%{$s}%")
-                  ->orWhere('email', 'like', "%{$s}%")
-                  ->orWhere('phone', 'like', "%{$s}%")
-                  ->orWhere('id_number', 'like', "%{$s}%");
+                  ->orWhere('last_name',  'like', "%{$s}%")
+                  ->orWhere('email',      'like', "%{$s}%")
+                  ->orWhere('phone',      'like', "%{$s}%")
+                  ->orWhere('id_number',  'like', "%{$s}%");
             });
         }
  
@@ -37,7 +35,7 @@ class GuestController extends Controller
     }
  
     // ─────────────────────────────────────────
-    //  CREATE - หน้าฟอร์มเพิ่มแขกใหม่ (ทีละคน)
+    //  CREATE - ฟอร์มเพิ่มผู้เช่าใหม่
     // ─────────────────────────────────────────
     public function create()
     {
@@ -45,7 +43,7 @@ class GuestController extends Controller
     }
  
     // ─────────────────────────────────────────
-    //  STORE - บันทึกแขกใหม่ (ทีละคน)
+    //  STORE - บันทึกผู้เช่าใหม่
     // ─────────────────────────────────────────
     public function store(Request $request)
     {
@@ -58,15 +56,20 @@ class GuestController extends Controller
             'city'       => 'nullable|max:100',
             'country'    => 'nullable|max:100',
             'id_number'  => 'required|unique:guests|max:50',
+            'nationality'=> 'nullable|max:100',
+            'date_of_birth' => 'nullable|date',
+            'emergency_contact' => 'nullable|max:100',
+            'emergency_phone'   => 'nullable|max:20',
+            'notes'      => 'nullable|max:1000',
         ]);
  
         Guest::create($validated);
  
-        return redirect()->route('guests.index')->with('success', __('ui.guest.created'));
+        return redirect()->route('guests.index')->with('success', 'เพิ่มผู้เช่าเรียบร้อยแล้ว');
     }
  
     // ─────────────────────────────────────────
-    //  BULK CREATE - หน้าฟอร์มเพิ่มแขกหลายคน
+    //  BULK CREATE - เพิ่มหลายคนพร้อมกัน
     // ─────────────────────────────────────────
     public function bulkCreate()
     {
@@ -74,7 +77,7 @@ class GuestController extends Controller
     }
  
     // ─────────────────────────────────────────
-    //  BULK STORE - บันทึกแขกหลายคนพร้อมกัน
+    //  BULK STORE - บันทึกหลายคน
     // ─────────────────────────────────────────
     public function bulkStore(Request $request)
     {
@@ -87,7 +90,6 @@ class GuestController extends Controller
             'guests.*.phone'         => ['required', 'string', 'max:20'],
         ]);
  
-        // ใช้ transaction — ถ้าแถวใดแถวหนึ่งพัง จะ rollback ทั้งหมด
         DB::transaction(function () use ($validated): void {
             foreach ($validated['guests'] as $guestData) {
                 Guest::create([
@@ -102,19 +104,20 @@ class GuestController extends Controller
  
         return redirect()
             ->route('guests.index')
-            ->with('success', __('ui.guest.bulk_created', ['count' => count($validated['guests'])]));
+            ->with('success', 'เพิ่มผู้เช่า ' . count($validated['guests']) . ' คนเรียบร้อยแล้ว');
     }
  
     // ─────────────────────────────────────────
-    //  SHOW - ดูรายละเอียดแขก
+    //  SHOW - ดูรายละเอียดผู้เช่า
     // ─────────────────────────────────────────
     public function show(Guest $guest)
     {
+        $guest->load(['contracts.room']);
         return view('guests.show', compact('guest'));
     }
  
     // ─────────────────────────────────────────
-    //  EDIT - หน้าฟอร์มแก้ไขแขก
+    //  EDIT - ฟอร์มแก้ไข
     // ─────────────────────────────────────────
     public function edit(Guest $guest)
     {
@@ -122,7 +125,7 @@ class GuestController extends Controller
     }
  
     // ─────────────────────────────────────────
-    //  UPDATE - อัปเดตข้อมูลแขก
+    //  UPDATE - อัปเดตข้อมูล
     // ─────────────────────────────────────────
     public function update(Request $request, Guest $guest)
     {
@@ -135,48 +138,54 @@ class GuestController extends Controller
             'city'       => 'nullable|max:100',
             'country'    => 'nullable|max:100',
             'id_number'  => 'required|max:50|unique:guests,id_number,' . $guest->id,
+            'nationality'=> 'nullable|max:100',
+            'date_of_birth' => 'nullable|date',
+            'emergency_contact' => 'nullable|max:100',
+            'emergency_phone'   => 'nullable|max:20',
+            'notes'      => 'nullable|max:1000',
         ]);
  
         $guest->update($validated);
  
-        return redirect()->route('guests.show', $guest)->with('success', __('ui.guest.updated'));
+        return redirect()->route('guests.show', $guest)->with('success', 'อัปเดตข้อมูลเรียบร้อยแล้ว');
     }
  
     // ─────────────────────────────────────────
-    //  DESTROY - ลบแขก
+    //  DESTROY - ลบผู้เช่า
     // ─────────────────────────────────────────
     public function destroy(Guest $guest)
     {
         $guest->delete();
- 
-        return redirect()->route('guests.index')->with('success', __('ui.guest.deleted'));
+        return redirect()->route('guests.index')->with('success', 'ลบข้อมูลเรียบร้อยแล้ว');
     }
  
     // ─────────────────────────────────────────
-    //  EXPORT - ส่งออกรายชื่อแขกเป็น Excel
+    //  EXPORT - ส่งออก Excel
     // ─────────────────────────────────────────
     public function export(Request $request)
     {
-        $guests = Guest::orderBy('id')->get();
+        $guests = Guest::with('contracts.room')->orderBy('id')->get();
  
-        $rows = [];
-        $rows[] = ['First Name', 'Last Name', 'Email', 'Phone', 'Address', 'City', 'Country', 'ID Number'];
+        $rows   = [];
+        $rows[] = ['ชื่อ', 'นามสกุล', 'อีเมล', 'เบอร์โทร', 'เลขบัตร', 'ห้องพัก', 'สถานะ'];
  
         foreach ($guests as $guest) {
+            $contract = $guest->contracts->where('status', 'active')->first();
+            $room     = $contract?->room;
+ 
             $rows[] = [
                 $guest->first_name,
                 $guest->last_name,
                 $guest->email     ?? '-',
                 $guest->phone     ?? '-',
-                $guest->address   ?? '-',
-                $guest->city      ?? '-',
-                $guest->country   ?? '-',
                 $guest->id_number ?? '-',
+                $room?->room_number ?? 'ไม่มีห้อง',
+                $contract ? 'มีผู้เช่า' : 'ว่าง',
             ];
         }
  
         $filename = 'guests_export_' . date('Y-m-d') . '.xlsx';
- 
         return xlsx_download($filename, $rows);
     }
 }
+ 

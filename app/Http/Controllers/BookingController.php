@@ -30,7 +30,6 @@ class BookingController extends Controller
             })
             ->when($request->filled('search'), function (Builder $query) use ($request) {
                 $search = trim($request->string('search'));
-
                 $query->where(function (Builder $subQuery) use ($search) {
                     $subQuery->whereHas('guest', function (Builder $guestQuery) use ($search) {
                         $guestQuery->where('first_name', 'like', "%{$search}%")
@@ -49,20 +48,19 @@ class BookingController extends Controller
             ->paginate(10)
             ->withQueryString();
 
-        // ───── นับจำนวนห้องทั้งหมดแยกประเภท ─────
+        // ✅ แก้ room_type จาก 'air_conditioning' → 'air'
         $fanTotal = Room::where('room_type', 'fan')->count();
-        $acTotal  = Room::where('room_type', 'air_conditioning')->count();
+        $acTotal  = Room::where('room_type', 'air')->count();
 
-        // ───── ดึงรายการห้องว่างของแต่ละประเภท (สำหรับ chip คลิกเพื่อจอง) ─────
         $availableFanRooms = Room::where('room_type', 'fan')
             ->where('status', 'available')
             ->orderBy('room_number')
-            ->get(['id', 'room_number', 'zone', 'price_per_month']);
+            ->get(['id', 'room_number', 'price_per_month', 'zone']);
 
-        $availableAcRooms = Room::where('room_type', 'air_conditioning')
+        $availableAcRooms = Room::where('room_type', 'air')
             ->where('status', 'available')
             ->orderBy('room_number')
-            ->get(['id', 'room_number', 'zone', 'price_per_month']);
+            ->get(['id', 'room_number', 'price_per_month', 'zone']);
 
         return view('bookings.index', compact(
             'bookings',
@@ -80,10 +78,10 @@ class BookingController extends Controller
     {
         $this->authorize('create', Booking::class);
 
-        $rooms = Room::where('status', 'available')
-            ->orderBy('zone')
+        // ✅ แก้: ดึงทุกห้อง (ไม่กรอง available) + เพิ่ม 'zone'
+        $rooms = Room::orderBy('zone')
             ->orderBy('room_number')
-            ->get(['id', 'zone', 'room_number', 'room_type', 'price_per_month', 'status']);
+            ->get(['id', 'room_number', 'room_type', 'price_per_month', 'status', 'zone']);
 
         $guests = Guest::orderBy('first_name')->get(['id', 'first_name', 'last_name']);
 
@@ -123,13 +121,10 @@ class BookingController extends Controller
     {
         $this->authorize('update', $booking);
 
-        $rooms = Room::where(function (Builder $query) use ($booking) {
-                $query->where('status', 'available')
-                      ->orWhere('id', $booking->room_id);
-            })
-            ->orderBy('zone')
+        // ✅ แก้: ดึงทุกห้อง + เพิ่ม 'zone'
+        $rooms = Room::orderBy('zone')
             ->orderBy('room_number')
-            ->get(['id', 'zone', 'room_number', 'room_type', 'price_per_month', 'status']);
+            ->get(['id', 'room_number', 'room_type', 'price_per_month', 'status', 'zone']);
 
         $guests = Guest::orderBy('first_name')->get(['id', 'first_name', 'last_name']);
 
@@ -157,7 +152,16 @@ class BookingController extends Controller
     {
         $this->authorize('delete', $booking);
 
+        // 1. เก็บข้อมูลห้องพักไว้ก่อนการจองจะถูกลบ
+        $room = $booking->room;
+
+        // 2. ลบข้อมูลการจองผ่าน Service
         $this->bookingService->destroy($booking);
+
+        // 3. คืนสถานะห้องเป็นว่าง
+        if ($room) {
+            $room->update(['status' => 'available']);
+        }
 
         return redirect()
             ->route('bookings.index')
@@ -185,7 +189,16 @@ class BookingController extends Controller
     {
         $this->authorize('cancel', $booking);
 
+        // 1. เก็บข้อมูลห้องพักไว้ก่อน
+        $room = $booking->room;
+
+        // 2. ยกเลิกการจองผ่าน Service
         $this->bookingService->cancel($booking);
+
+        // 3. คืนสถานะห้องเป็นว่าง
+        if ($room) {
+            $room->update(['status' => 'available']);
+        }
 
         return redirect()
             ->route('bookings.show', $booking)
@@ -201,22 +214,7 @@ class BookingController extends Controller
 
         $filename = 'bookings_export_' . date('Y-m-d') . '.xlsx';
 
-        $rows = [
-            [
-                __('ui.booking.export_id'),
-                __('ui.booking.export_room'),
-                __('ui.booking.export_guest'),
-                __('ui.booking.export_check_in'),
-                __('ui.booking.export_check_out'),
-                __('ui.booking.export_rent'),
-                __('ui.booking.export_deposit'),
-                __('ui.booking.export_total'),
-                __('ui.booking.export_electric_meter'),
-                __('ui.booking.export_water_meter'),
-                __('ui.booking.export_status'),
-                __('ui.booking.export_notes'),
-            ],
-        ];
+        $rows = [['ID', 'ห้อง', 'โซน', 'ผู้เช่า', 'วันเข้าพัก', 'ค่าเช่า', 'มัดจำ', 'มิเตอร์ไฟ', 'มิเตอร์น้ำ', 'สถานะ', 'หมายเหตุ']];
 
         Booking::with(['room', 'guest'])
             ->orderBy('id')
@@ -225,15 +223,14 @@ class BookingController extends Controller
                     $rows[] = [
                         $booking->id,
                         $booking->room->room_number ?? '-',
+                        $booking->room->zone ?? '-',
                         trim(($booking->guest->first_name ?? '') . ' ' . ($booking->guest->last_name ?? '')) ?: '-',
                         optional($booking->check_in_date)->format('d/m/Y'),
-                        optional($booking->check_out_date)->format('d/m/Y'),
                         $booking->rent_amount ?? '-',
                         $booking->deposit_amount ?? '-',
-                        $booking->total_price ?? '-',
                         $booking->electric_meter_start ?? '-',
                         $booking->water_meter_start ?? '-',
-                        $booking->status,
+                        $booking->status_label,
                         $booking->notes ?? '-',
                     ];
                 }

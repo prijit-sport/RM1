@@ -1,0 +1,474 @@
+/* =========================================================
+   ROMAR APARTMENT — UNIFIED THEME
+   วางที่: public/css/romar-theme.css
+   เรียกใช้ใน layouts.app:
+       <link rel="stylesheet" href="{{ asset('css/romar-theme.css') }}">
+       <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+       <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.css" rel="stylesheet">
+   ========================================================= */
+ 
+:root {
+    --romar-primary: #2d4a9e;
+    --romar-primary-dark: #1e3470;
+    --romar-primary-light: #4a90d9;
+    --romar-accent: #7bb4ed;
+    --romar-soft: #eaf2fd;
+    --romar-bg: #f6f8fc;
+ 
+    --success: #10b981;
+    --success-soft: #d1fae5;
+    --warning: #f59e0b;
+    --warning-soft: #fef3c7;
+    --danger:  #ef4444;
+    --danger-soft: #fee2e2;
+    --info:    #06b6d4;
+    --info-soft: #cffafe;
+    --muted:   #6b7280;
+    --muted-soft: #f3f4f6;
+ 
+    --text-primary: #1f2937;
+    --text-secondary: #6b7280;
+    --border: #e5e7eb;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.04), 0 1px 3px rgba(0,0,0,0.06);
+    --shadow-md: 0 4px 12px rgba(45, 74, 158, 0.08);
+    --shadow-lg: 0 10px 30px rgba(45, 74, 158, 0.12);
+}
+ 
+/* ใช้ Sarabun เป็น base font (ทับ Bootstrap default) */
+body {
+    font-family: 'Sarabun', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+    background: var(--romar-bg) !important;
+    color: var(--text-primary);
+}
+ 
+/* =====================================================
+   PAGE HEADER
+   ===================================================== */
+.page-header-romar {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+.page-title-wrap h1 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+    display: flex; align-items: center; gap: 10px;
+}
+.page-title-wrap h1 i { color: var(--romar-primary); }
+.page-title-wrap p {
+    color: var(--text-secondary);
+    margin: 4px 0 0 0;
+    font-size: 0.88rem;
+}
+.page-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+ 
+/* =====================================================
+   BUTTONS
+   ===================================================== */
+.btn-romar {
+    background: linear-gradient(135deg, var(--romar-primary), var(--romar-primary-light));
+    border: none;
+    color: white;
+    padding: 10px 18px;
+    border-radius: 10px;
+    font-weight: 500;
+    font-size: 0.88rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 2px 6px rgba(45, 74, 158, 0.25);
+    text-decoration: none;
+}
+.btn-romar:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(45, 74, 158, 0.35);
+    color: white;
+}
+.btn-outline-romar {
+    background: white;
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    padding: 10px 18px;
+    border-radius: 10px;
+    font-weight: 500;
+    font-size: 0.88rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+}
+.btn-outline-romar:hover {
+    border-color: var(--romar-primary);
+    color: var(--romar-primary);
+    background: var(--romar-soft);
+}
+.btn-outline-romar.warn { border-color: var(--warning); color: var(--warning); }
+.btn-outline-romar.warn:hover { background: var(--warning-soft); color: var(--warning); }
+ 
+/* =====================================================
+   STATS CARDS
+   ===================================================== */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 18px;
+    margin-bottom: 26px;
+}
+.stat-card {
+    background: white;
+    border-radius: 14px;
+    padding: 20px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s;
+}
+.stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.stat-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--stat-color, var(--romar-primary));
+}
+.stat-icon {
+    width: 44px; height: 44px;
+    border-radius: 11px;
+    background: var(--stat-bg, var(--romar-soft));
+    color: var(--stat-color, var(--romar-primary));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.25rem;
+    margin-bottom: 12px;
+}
+.stat-label {
+    color: var(--text-secondary);
+    font-size: 0.82rem;
+    font-weight: 500;
+    margin-bottom: 4px;
+}
+.stat-value {
+    font-size: 1.7rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.1;
+}
+.stat-meta {
+    margin-top: 6px;
+    font-size: 0.73rem;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+.stat-meta.up { color: var(--success); }
+.stat-meta.down { color: var(--danger); }
+ 
+/* =====================================================
+   FILTER BAR
+   ===================================================== */
+.filter-bar {
+    background: white;
+    border-radius: 12px;
+    padding: 14px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border);
+    margin-bottom: 18px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+.search-input-romar {
+    flex: 1;
+    min-width: 240px;
+    position: relative;
+}
+.search-input-romar i {
+    position: absolute; left: 14px; top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-secondary);
+}
+.search-input-romar input {
+    width: 100%;
+    padding: 10px 14px 10px 40px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 0.88rem;
+    background: var(--romar-bg);
+    transition: all 0.2s;
+}
+.search-input-romar input:focus {
+    outline: none;
+    border-color: var(--romar-primary);
+    background: white;
+    box-shadow: 0 0 0 3px rgba(45, 74, 158, 0.1);
+}
+.filter-select-romar {
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 0.88rem;
+    background: var(--romar-bg);
+    color: var(--text-primary);
+    cursor: pointer;
+    min-width: 140px;
+}
+ 
+/* =====================================================
+   DATA TABLE
+   ===================================================== */
+.data-card {
+    background: white;
+    border-radius: 14px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border);
+    overflow: hidden;
+}
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0;
+}
+.data-table thead { background: var(--romar-bg); }
+.data-table th {
+    padding: 14px 20px;
+    text-align: left;
+    font-size: 0.74rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--border);
+}
+.data-table td {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.88rem;
+    vertical-align: middle;
+}
+.data-table tbody tr { transition: background 0.15s; }
+.data-table tbody tr:hover { background: var(--romar-bg); }
+.data-table tbody tr:last-child td { border-bottom: none; }
+ 
+.doc-num {
+    font-weight: 600;
+    color: var(--romar-primary);
+    font-family: 'Inter', monospace;
+    font-size: 0.86rem;
+}
+.doc-num-sub {
+    font-size: 0.73rem;
+    color: var(--text-secondary);
+    font-weight: 400;
+    margin-top: 2px;
+}
+ 
+/* Person cell (avatar + name) */
+.person {
+    display: flex; align-items: center; gap: 12px;
+}
+.person-avatar {
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--romar-primary-light), var(--romar-accent));
+    color: white;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 600;
+    font-size: 0.88rem;
+    flex-shrink: 0;
+}
+.person-avatar.v1 { background: linear-gradient(135deg, #f59e0b, #fbbf24); }
+.person-avatar.v2 { background: linear-gradient(135deg, #10b981, #34d399); }
+.person-avatar.v3 { background: linear-gradient(135deg, #ef4444, #f87171); }
+.person-avatar.v4 { background: linear-gradient(135deg, #8b5cf6, #a78bfa); }
+.person-name { font-weight: 500; color: var(--text-primary); }
+.person-sub { font-size: 0.76rem; color: var(--text-secondary); }
+ 
+.room-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 4px 10px;
+    background: var(--romar-soft);
+    color: var(--romar-primary);
+    border-radius: 7px;
+    font-weight: 600;
+    font-size: 0.82rem;
+}
+.amount {
+    font-weight: 700;
+    color: var(--text-primary);
+    font-family: 'Inter', sans-serif;
+}
+.amount .currency {
+    color: var(--text-secondary);
+    font-weight: 500;
+    margin-right: 2px;
+}
+ 
+/* Status pills (ทับ Bootstrap .badge) */
+.status-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 11px;
+    border-radius: 20px;
+    font-size: 0.76rem;
+    font-weight: 600;
+}
+.status-pill::before {
+    content: '';
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+}
+.status-paid      { background: var(--success-soft); color: var(--success); }
+.status-sent      { background: var(--warning-soft); color: var(--warning); }
+.status-overdue   { background: var(--danger-soft);  color: var(--danger); }
+.status-draft     { background: var(--muted-soft);   color: var(--muted); }
+.status-cancelled { background: var(--muted-soft);   color: var(--muted); }
+.status-active    { background: var(--success-soft); color: var(--success); }
+.status-pending   { background: var(--warning-soft); color: var(--warning); }
+.status-completed { background: var(--info-soft);    color: var(--info); }
+.status-expiring  { background: #fef3c7;             color: #d97706; }
+ 
+/* Action buttons */
+.action-bar {
+    display: flex; gap: 4px; justify-content: flex-end;
+}
+.action-btn-romar {
+    width: 34px; height: 34px;
+    border: 1px solid var(--border);
+    background: white;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.15s;
+    text-decoration: none;
+    padding: 0;
+}
+.action-btn-romar:hover { transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+.action-btn-romar.view:hover   { background: var(--info-soft);    color: var(--info);    border-color: var(--info); }
+.action-btn-romar.edit:hover   { background: var(--warning-soft); color: var(--warning); border-color: var(--warning); }
+.action-btn-romar.pdf:hover    { background: var(--danger-soft);  color: var(--danger);  border-color: var(--danger); }
+.action-btn-romar.paid:hover   { background: var(--success-soft); color: var(--success); border-color: var(--success); }
+.action-btn-romar.delete:hover { background: var(--danger-soft);  color: var(--danger);  border-color: var(--danger); }
+ 
+/* Days countdown (for contracts) */
+.days-left {
+    display: inline-flex; flex-direction: column;
+    line-height: 1.15;
+}
+.days-left-num {
+    font-weight: 700;
+    color: var(--text-primary);
+    font-size: 1rem;
+}
+.days-left-num.warn { color: var(--warning); }
+.days-left-num.danger { color: var(--danger); }
+.days-left-label {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+}
+ 
+/* =====================================================
+   PAGINATION (ทับ Bootstrap default)
+   ===================================================== */
+.pagination-wrap {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 20px;
+    background: var(--romar-bg);
+    border-top: 1px solid var(--border);
+}
+.pagination-info {
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+}
+/* Override Bootstrap pagination ที่ Laravel generate ออกมาให้เข้ากับธีม */
+.pagination-wrap .pagination {
+    margin: 0;
+    gap: 4px;
+}
+.pagination-wrap .page-link {
+    min-width: 34px;
+    height: 34px;
+    padding: 0 10px;
+    border: 1px solid var(--border);
+    background: white;
+    border-radius: 8px !important;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+}
+.pagination-wrap .page-link:hover {
+    border-color: var(--romar-primary);
+    color: var(--romar-primary);
+    background: white;
+}
+.pagination-wrap .page-item.active .page-link {
+    background: var(--romar-primary);
+    color: white;
+    border-color: var(--romar-primary);
+    font-weight: 600;
+}
+ 
+/* =====================================================
+   EMPTY STATE
+   ===================================================== */
+.empty-state {
+    padding: 60px 20px;
+    text-align: center;
+}
+.empty-state-icon {
+    width: 80px; height: 80px;
+    border-radius: 50%;
+    background: var(--romar-soft);
+    color: var(--romar-primary);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.2rem;
+    margin-bottom: 18px;
+}
+.empty-state-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+}
+.empty-state-text {
+    color: var(--text-secondary);
+    font-size: 0.88rem;
+    margin-bottom: 20px;
+}
+ 
+/* =====================================================
+   RESPONSIVE
+   ===================================================== */
+@media (max-width: 1100px) {
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 768px) {
+    .stats-grid { grid-template-columns: 1fr; }
+    .data-table th:nth-child(n+5),
+    .data-table td:nth-child(n+5) { display: none; }
+    .page-header-romar { flex-direction: column; align-items: stretch; }
+    .page-actions { width: 100%; }
+    .page-actions > * { flex: 1; justify-content: center; }
+}
+ 
