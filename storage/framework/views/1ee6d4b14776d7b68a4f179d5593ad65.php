@@ -225,7 +225,7 @@
                             <td>
                                 <?php if($booking->room_id): ?>
                                     <a href="<?php echo e(route('rooms.show', $booking->room_id)); ?>" class="text-decoration-none">
-                                        <?php echo e(isset($booking->room) && $booking->room?->room_number ? $booking->room->room_number : '-'); ?>
+                                        <?php echo e(isset($booking->room) && ($booking->room?->room_number ?? '') !== '' ? $booking->room->room_number : '-'); ?>
 
                                     </a>
                                 <?php else: ?> -

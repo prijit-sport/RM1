@@ -152,20 +152,20 @@ class BookingController extends Controller
     {
         $this->authorize('delete', $booking);
 
-        // 1. เก็บข้อมูลห้องพักไว้ก่อนการจองจะถูกลบ
-        $room = $booking->room;
+        // 1. จำ ID ของห้องไว้ก่อนลบข้อมูลการจอง
+        $roomId = $booking->room_id;
 
         // 2. ลบข้อมูลการจองผ่าน Service
         $this->bookingService->destroy($booking);
 
-        // 3. คืนสถานะห้องเป็นว่าง
-        if ($room) {
-            $room->update(['status' => 'available']);
+        // 3. บังคับอัปเดตตารางห้องพักให้เป็นว่างทันที
+        if ($roomId) {
+            Room::where('id', $roomId)->update(['status' => 'available']);
         }
 
         return redirect()
             ->route('bookings.index')
-            ->with('success', __('ui.booking.deleted'));
+            ->with('success', 'ลบการจอง และคืนสถานะห้องกลับเป็นว่างเรียบร้อยแล้ว');
     }
 
     // ─────────────────────────────────────────
@@ -189,20 +189,20 @@ class BookingController extends Controller
     {
         $this->authorize('cancel', $booking);
 
-        // 1. เก็บข้อมูลห้องพักไว้ก่อน
-        $room = $booking->room;
+        // 1. จำ ID ของห้องไว้ก่อนยกเลิกข้อมูลการจอง
+        $roomId = $booking->room_id;
 
-        // 2. ยกเลิกการจองผ่าน Service
+        // 2. ยกเลิกข้อมูลการจองผ่าน Service
         $this->bookingService->cancel($booking);
 
-        // 3. คืนสถานะห้องเป็นว่าง
-        if ($room) {
-            $room->update(['status' => 'available']);
+        // 3. บังคับอัปเดตตารางห้องพักให้เป็นว่างทันที
+        if ($roomId) {
+            Room::where('id', $roomId)->update(['status' => 'available']);
         }
 
         return redirect()
             ->route('bookings.show', $booking)
-            ->with('success', __('ui.booking.cancelled'));
+            ->with('success', 'ยกเลิกการจอง และคืนสถานะห้องกลับเป็นว่างเรียบร้อยแล้ว');
     }
 
     // ─────────────────────────────────────────

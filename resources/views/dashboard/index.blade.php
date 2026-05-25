@@ -1,8 +1,8 @@
 @extends('layouts.app')
-
+ 
 @section('title', 'แดชบอร์ด')
 @section('page-title', 'แดชบอร์ด')
-
+ 
 @push('styles')
 <style>
     .stat-card { border: none; overflow: hidden; }
@@ -12,9 +12,9 @@
     .progress-card:hover { transform: translateY(-3px); }
 </style>
 @endpush
-
+ 
 @section('content')
-
+ 
 {{-- ═══ KPI Cards ═══ --}}
 <div class="row g-4 mb-4">
     <div class="col-md-6 col-xl-3">
@@ -34,7 +34,7 @@
             </div>
         </div>
     </div>
-
+ 
     <div class="col-md-6 col-xl-3">
         <div class="stat-card">
             <div class="d-flex justify-content-between align-items-start">
@@ -51,7 +51,7 @@
             </div>
         </div>
     </div>
-
+ 
     <div class="col-md-6 col-xl-3">
         <div class="stat-card">
             <div class="d-flex justify-content-between align-items-start">
@@ -68,7 +68,7 @@
             </div>
         </div>
     </div>
-
+ 
     <div class="col-md-6 col-xl-3">
         <div class="stat-card">
             <div class="d-flex justify-content-between align-items-start">
@@ -86,7 +86,7 @@
         </div>
     </div>
 </div>
-
+ 
 {{-- ═══ Room Status by Type ═══ --}}
 <div class="row g-4 mb-4">
     @php
@@ -100,7 +100,7 @@
             'maintenance' => ['label' => 'ซ่อม',    'class' => 'warning'],
         ];
     @endphp
-
+ 
     @foreach($typeConfig as $typeKey => $typeInfo)
     @php
         $stats = $roomTypeStats[$typeKey] ?? ['available' => 0, 'occupied' => 0, 'maintenance' => 0];
@@ -115,7 +115,7 @@
                 </h5>
                 <span class="text-muted">ทั้งหมด {{ number_format($total) }} ห้อง</span>
             </div>
-
+ 
             @foreach($statuses as $statusKey => $meta)
             @php
                 $count = (int) ($stats[$statusKey] ?? 0);
@@ -137,7 +137,7 @@
     </div>
     @endforeach
 </div>
-
+ 
 {{-- ═══ Charts Row ═══ --}}
 <div class="row g-4 mb-4">
     <div class="col-lg-8">
@@ -150,7 +150,7 @@
             </div>
         </div>
     </div>
-
+ 
     <div class="col-lg-4">
         <div class="table-card p-4">
             <h5 class="mb-4">สถานะห้อง</h5>
@@ -160,7 +160,7 @@
                 $availablePercent  = ($availableCount ?? 0) / $totalRooms * 100;
                 $maintenancePct    = ($maintenanceCount ?? 0) / $totalRooms * 100;
             @endphp
-
+ 
             @if(($roomCount ?? 0) > 0)
             <div class="mb-4">
                 <div class="d-flex justify-content-between mb-2">
@@ -171,7 +171,7 @@
                     <div class="progress-bar bg-primary" style="width: {{ min($occupiedPercent, 100) }}%"></div>
                 </div>
             </div>
-
+ 
             <div class="mb-4">
                 <div class="d-flex justify-content-between mb-2">
                     <span>ห้องว่าง</span>
@@ -181,7 +181,7 @@
                     <div class="progress-bar bg-success" style="width: {{ min($availablePercent, 100) }}%"></div>
                 </div>
             </div>
-
+ 
             <div class="mb-4">
                 <div class="d-flex justify-content-between mb-2">
                     <span>ห้องปรับปรุง</span>
@@ -199,7 +199,7 @@
         </div>
     </div>
 </div>
-
+ 
 {{-- ═══ Tables Row ═══ --}}
 <div class="row g-4">
     <div class="col-lg-6">
@@ -222,39 +222,41 @@
                     </thead>
                     <tbody>
                         @forelse($recentBookings ?? [] as $booking)
+                        @php
+                            /** @var \App\Models\Booking $booking */
+                            $room = $booking?->room;
+                            $guest = $booking?->guest;
+                            $checkInDate = $booking?->check_in_date;
+                            $bookingStatus = (string) ($booking?->status ?? '');
+                        @endphp
                         <tr>
                             <td>
-                                @if($booking->room_id)
-                                    <a href="{{ route('rooms.show', $booking->room_id) }}" class="text-decoration-none">
-                                        {{ isset($booking->room) && ($booking->room?->room_number ?? '') !== '' ? $booking->room->room_number : '-' }}
+                                @if($room)
+                                    <a href="{{ route('rooms.show', $room->id) }}" class="text-decoration-none">
+                                        {{ $room->room_number ?? '-' }}
                                     </a>
-                                @else -
+                                @else
+                                    -
                                 @endif
                             </td>
-                            <td>{{ isset($booking->guest) && $booking->guest?->full_name ? $booking->guest->full_name : '-' }}</td>
                             <td>
-                                @php
-                                    $checkIn = $booking->check_in_date ?? null;
-                                    $checkInText = $checkIn ? \Carbon\Carbon::parse($checkIn)->format('d/m/Y') : '-';
-                                @endphp
-                                {{ $checkInText }}
+                                {{ $guest?->full_name ?? '-' }}
                             </td>
-
+                            <td>
+                                {{ $checkInDate?->format('d/m/Y') ?? '-' }}
+                            </td>
                             <td>
                                 @php
-                                    $status = (string) ($booking->status ?? '');
-
-                                    $sc = match($status) {
-                                        'confirmed' => 'success',
-                                        'cancelled' => 'danger',
-                                        default     => 'secondary',
-                                    };
-
-                                    $sl = match($status) {
-                                        'confirmed' => 'ยืนยันแล้ว',
-                                        'cancelled' => 'ยกเลิก',
-                                        default     => ($status !== '' ? $status : '-'),
-                                    };
+                                    if ($bookingStatus === 'confirmed') {
+                                        $sc = 'success';
+                                        $sl = 'ยืนยันแล้ว';
+                                    } elseif ($bookingStatus === 'cancelled') {
+                                        $sc = 'danger';
+                                        $sl = 'ยกเลิก';
+                                    } else {
+                                        $sc = 'secondary';
+                                        $sl = ($bookingStatus !== '' ? $bookingStatus : '-');
+                                    }
                                 @endphp
                                 <span class="badge bg-{{ $sc }} bg-opacity-10 text-{{ $sc }}">
                                     {{ $sl }}
@@ -273,7 +275,7 @@
             </div>
         </div>
     </div>
-
+ 
     <div class="col-lg-6">
         <div class="table-card">
             <div class="p-4 border-bottom d-flex justify-content-between align-items-center">
@@ -294,21 +296,31 @@
                     </thead>
                     <tbody>
                         @forelse($pendingInvoices ?? [] as $invoice)
+                        @php
+                            /** @var \App\Models\Invoice $invoice */
+                            $invoiceId = $invoice?->id;
+                            $invoiceNumber = $invoice?->invoice_number ?? '-';
+                            $invoiceTotal = $invoice?->total ?? 0;
+                            $guest = $invoice?->booking?->guest;
+                            $dueDate = $invoice?->due_date;
+                        @endphp
                         <tr>
                             <td>
-                                <a href="{{ route('invoices.show', $invoice->id) }}" class="text-decoration-none">
-                                    {{ $invoice->invoice_number }}
-                                </a>
+                                @if($invoiceId)
+                                    <a href="{{ route('invoices.show', $invoiceId) }}" class="text-decoration-none">
+                                        {{ $invoiceNumber }}
+                                    </a>
+                                @else
+                                    {{ $invoiceNumber }}
+                                @endif
                             </td>
-                            <td>{{ isset($invoice->booking) && isset($invoice->booking->guest) && ($invoice->booking->guest?->full_name) ? $invoice->booking->guest->full_name : '-' }}</td>
-                            <td>{{ number_format($invoice->total ?? 0, 2) }} ฿</td>
                             <td>
-                                @php
-                                    $due = $invoice->due_date ?? null;
-                                    $dueDate = $due ? \Carbon\Carbon::parse($due) : null;
-                                @endphp
+                                {{ $guest?->full_name ?? '-' }}
+                            </td>
+                            <td>{{ number_format($invoiceTotal, 2) }} ฿</td>
+                            <td>
                                 <span class="{{ $dueDate && $dueDate->isPast() ? 'text-danger fw-bold' : 'text-muted' }}">
-                                    {{ $dueDate ? $dueDate->format('d/m/Y') : '-' }}
+                                    {{ $dueDate?->format('d/m/Y') ?? '-' }}
                                 </span>
                             </td>
                         </tr>
@@ -326,16 +338,16 @@
         </div>
     </div>
 </div>
-
+ 
 @endsection
-
+ 
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     const monthlyData = @json($monthlyBookings ?? []);
     const labels = monthlyData.map(d => d.label);
     const counts = monthlyData.map(d => d.count);
-
+ 
     const ctx = document.getElementById('bookingChart').getContext('2d');
     new Chart(ctx, {
         type: 'bar',
@@ -363,3 +375,4 @@
     });
 </script>
 @endpush
+ 

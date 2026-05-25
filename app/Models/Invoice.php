@@ -22,19 +22,19 @@ use Carbon\Carbon;
  * @property float|null $late_fee
  * @property float|null $paid_amount
  * @property string|null $payment_method
- * @property-read Carbon|null $issue_date (casted)
- * @property-read Carbon|null $due_date (casted)
- * @property-read Carbon|null $payment_date (casted)
+ * @property Carbon|null $issue_date (casted)
+ * @property Carbon|null $due_date (casted)
+ * @property Carbon|null $payment_date (casted)
  * @property string $status (draft, sent, paid, overdue, cancelled)
  * @property string|null $notes
- * @property-read Carbon $created_at
- * @property-read Carbon $updated_at
- * @property-read Carbon|null $deleted_at
+ * @property Carbon $created_at
+ * @property Carbon $updated_at
+ * @property Carbon|null $deleted_at
  * 
  * Relations:
- * @property \App\Models\Booking $booking
- * @property \App\Models\Guest $guest
- * @property \App\Models\Room $room
+ * @property-read Booking|null $booking
+ * @property-read Guest|null $guest
+ * @property-read Room|null $room
  */
 class Invoice extends Model
 {
@@ -82,6 +82,8 @@ class Invoice extends Model
  
     /**
      * Get the booking that owns the invoice.
+     * 
+     * @return BelongsTo<Booking, Invoice>
      */
     public function booking(): BelongsTo
     {
@@ -90,6 +92,8 @@ class Invoice extends Model
  
     /**
      * Get the guest that owns the invoice.
+     * 
+     * @return BelongsTo<Guest, Invoice>
      */
     public function guest(): BelongsTo
     {
@@ -98,6 +102,8 @@ class Invoice extends Model
  
     /**
      * Get the room that owns the invoice.
+     * 
+     * @return BelongsTo<Room, Invoice>
      */
     public function room(): BelongsTo
     {
@@ -110,6 +116,9 @@ class Invoice extends Model
  
     /**
      * Scope to get paid invoices.
+     * 
+     * @param Builder<Invoice> $query
+     * @return Builder<Invoice>
      */
     public function scopePaid(Builder $query): Builder
     {
@@ -118,6 +127,9 @@ class Invoice extends Model
  
     /**
      * Scope to get pending invoices.
+     * 
+     * @param Builder<Invoice> $query
+     * @return Builder<Invoice>
      */
     public function scopePending(Builder $query): Builder
     {
@@ -126,6 +138,9 @@ class Invoice extends Model
  
     /**
      * Scope to get overdue invoices.
+     * 
+     * @param Builder<Invoice> $query
+     * @return Builder<Invoice>
      */
     public function scopeOverdue(Builder $query): Builder
     {
@@ -134,6 +149,9 @@ class Invoice extends Model
  
     /**
      * Scope to get draft invoices.
+     * 
+     * @param Builder<Invoice> $query
+     * @return Builder<Invoice>
      */
     public function scopeDraft(Builder $query): Builder
     {
@@ -142,6 +160,11 @@ class Invoice extends Model
  
     /**
      * Scope to get invoices by month.
+     * 
+     * @param Builder<Invoice> $query
+     * @param int $month
+     * @param int $year
+     * @return Builder<Invoice>
      */
     public function scopeByMonth(Builder $query, int $month, int $year): Builder
     {
