@@ -13,8 +13,10 @@ class FacilityController extends Controller
     // ─────────────────────────────────────────
     public function index(Request $request)
     {
+        $this->authorize('viewAny', Facility::class);
+
         $query = Facility::query();
- 
+
         if ($request->filled('search')) {
             $search = trim($request->search);
             $query->where(function ($q) use ($search) {
@@ -74,15 +76,19 @@ class FacilityController extends Controller
     // ─────────────────────────────────────────
     public function create()
     {
+        $this->authorize('create', Facility::class);
+
         $rooms = Room::orderBy('room_number')->get();
         return view('facilities.create', compact('rooms'));
     }
- 
+
     // ─────────────────────────────────────────
     //  STORE
     // ─────────────────────────────────────────
     public function store(Request $request)
     {
+        $this->authorize('create', Facility::class);
+
         $validated = $request->validate([
             'name'                  => 'required|max:255',
             'type'                  => 'required|in:bed,mattress,wardrobe,dressing_table,tv_stand,clothes_rack',
@@ -105,23 +111,29 @@ class FacilityController extends Controller
     // ─────────────────────────────────────────
     public function show(Facility $facility)
     {
+        $this->authorize('view', $facility);
+
         return view('facilities.show', compact('facility'));
     }
- 
+
     // ─────────────────────────────────────────
     //  EDIT
     // ─────────────────────────────────────────
     public function edit(Facility $facility)
     {
+        $this->authorize('update', $facility);
+
         $rooms = Room::orderBy('room_number')->get();
         return view('facilities.edit', compact('facility', 'rooms'));
     }
- 
+
     // ─────────────────────────────────────────
     //  UPDATE
     // ─────────────────────────────────────────
     public function update(Request $request, Facility $facility)
     {
+        $this->authorize('update', $facility);
+
         $validated = $request->validate([
             'name'                  => 'required|max:255',
             'type'                  => 'required|in:bed,mattress,wardrobe,dressing_table,tv_stand,clothes_rack',
@@ -144,16 +156,20 @@ class FacilityController extends Controller
     // ─────────────────────────────────────────
     public function destroy(Facility $facility)
     {
+        $this->authorize('delete', $facility);
+
         $facility->delete();
         return redirect()->route('facilities.index')
             ->with('success', __('ui.facility.deleted'));
     }
- 
+
     // ─────────────────────────────────────────
     //  EXPORT
     // ─────────────────────────────────────────
     public function export(Request $request)
     {
+        $this->authorize('export', Facility::class);
+
         $facilities = Facility::orderBy('id', 'desc')->get();
         $filename   = 'facilities_export_' . date('Y-m-d') . '.xlsx';
  

@@ -38,8 +38,8 @@ class MeterReadingController extends Controller
     // ─────────────────────────────────────────
     public function index(Meter $meter, Request $request)
     {
-        $meter->load('room');
- 
+        $this->authorize('view', $meter);
+
         $query = MeterReading::with('recordedBy')
             ->where('meter_id', $meter->id);
  
@@ -64,15 +64,19 @@ class MeterReadingController extends Controller
     // ─────────────────────────────────────────
     public function create(Meter $meter)
     {
+        $this->authorize('update', $meter);
+
         $meter->load('room');
         return view('meter_readings.create', compact('meter'));
     }
- 
+
     // ─────────────────────────────────────────
     //  STORE (บันทึกทั่วไป — ไม่สร้าง invoice)
     // ─────────────────────────────────────────
     public function store(Request $request, Meter $meter)
     {
+        $this->authorize('update', $meter);
+
         $validated = $request->validate([
             'reading_date' => [
                 'required',
@@ -101,6 +105,8 @@ class MeterReadingController extends Controller
     // ─────────────────────────────────────────
     public function storeMonthlyAndGenerateInvoice(Request $request, Meter $meter)
     {
+        $this->authorize('update', $meter);
+
         // ✅ 1. Validate input (keep here)
         $validated = $request->validate([
             'period_month' => ['required', 'integer', 'min:1', 'max:12'],
@@ -148,18 +154,22 @@ class MeterReadingController extends Controller
     // ─────────────────────────────────────────
     public function edit(Meter $meter, MeterReading $reading)
     {
+        $this->authorize('update', $meter);
+
         abort_unless($reading->meter_id === $meter->id, 404);
         $meter->load('room');
         return view('meter_readings.edit', compact('meter', 'reading'));
     }
- 
+
     // ─────────────────────────────────────────
     //  UPDATE
     // ─────────────────────────────────────────
     public function update(Request $request, Meter $meter, MeterReading $reading)
     {
+        $this->authorize('update', $meter);
+
         abort_unless($reading->meter_id === $meter->id, 404);
- 
+
         $validated = $request->validate([
             'reading_date' => [
                 'required',
@@ -185,19 +195,23 @@ class MeterReadingController extends Controller
     // ─────────────────────────────────────────
     public function destroy(Meter $meter, MeterReading $reading)
     {
+        $this->authorize('update', $meter);
+
         abort_unless($reading->meter_id === $meter->id, 404);
         $reading->delete();
- 
+
         return redirect()
             ->route('meters.readings.index', $meter)
             ->with('success', __('ui.meter_reading.deleted'));
     }
- 
+
     // ─────────────────────────────────────────
     //  EXPORT
     // ─────────────────────────────────────────
     public function export(Meter $meter, Request $request)
     {
+        $this->authorize('export', $meter);
+
         $query = MeterReading::with('recordedBy')
             ->where('meter_id', $meter->id);
  

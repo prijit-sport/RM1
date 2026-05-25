@@ -105,53 +105,71 @@ class MeterBillingService
      */
     public function calculateMonthlyTotals(Booking $booking, int $month, int $year): array
     {
+        $breakdown = $this->calculateMonthlyBreakdown($booking, $month, $year);
+
+        return [
+            'electric' => round($breakdown['electric']['total'], 2),
+            'water' => round($breakdown['water']['total'], 2),
+        ];
+    }
+
+    /**
+     * Calculate base, tax, and total for each meter in the selected month.
+     */
+    private function calculateMonthlyBreakdown(Booking $booking, int $month, int $year): array
+    {
         $periodStart = Carbon::create($year, $month, 1)->startOfDay();
-        $totals = ['electric' => 0.0, 'water' => 0.0];
- 
+        $breakdown = [
+            'electric' => ['base' => 0.0, 'tax' => 0.0, 'total' => 0.0],
+            'water' => ['base' => 0.0, 'tax' => 0.0, 'total' => 0.0],
+        ];
+
         foreach (['electric', 'water'] as $type) {
             /** @var Meter|null $meter */
             $meter = Meter::where('room_id', $booking->room_id)
                 ->where('type', $type)
                 ->first();
- 
+
             if (!$meter) {
                 continue;
             }
- 
+
             /** @var MeterReading|null $reading */
             $reading = MeterReading::where('meter_id', $meter->id)
                 ->where('booking_id', $booking->id)
                 ->where('period_month', $month)
                 ->where('period_year', $year)
                 ->first();
- 
+
             if (!$reading) {
                 continue;
             }
- 
-            // ค่าก่อนหน้า: reading ล่าสุดก่อนเดือนนี้ หรือ initial จากการจอง
+
             $initValue = $type === 'electric'
                 ? (float) ($booking->electric_meter_start ?? 0)
                 : (float) ($booking->water_meter_start ?? 0);
- 
-            // ลดจำนวน query: ดึง previous reading ด้วย query เดียวที่จำเป็น
+
             /** @var MeterReading|null $prev */
             $prev = MeterReading::where('meter_id', $meter->id)
                 ->whereDate('reading_date', '<', $periodStart->toDateString())
                 ->orderByDesc('reading_date')
                 ->first();
- 
+
             $prevValue = (float) ($prev?->reading_value ?? $initValue);
             $usage = max(0, (float) $reading->reading_value - $prevValue);
             $base = round($usage * (float) ($meter->rate_per_unit ?? 0), 2);
             $tax = round($base * ((float) ($meter->tax_rate ?? 0) / 100), 2);
- 
-            $totals[$type] = round($base + $tax, 2);
+
+            $breakdown[$type] = [
+                'base' => $base,
+                'tax' => $tax,
+                'total' => round($base + $tax, 2),
+            ];
         }
- 
-        return $totals;
+
+        return $breakdown;
     }
- 
+
     /**
      * GENERATE INVOICE NUMBER
      */
@@ -207,23 +225,34 @@ class MeterBillingService
             );
  
             // ✅ Step 3: Calculate totals (existing method)
-            $totals = $this->calculateMonthlyTotals($booking, $month, $year);
-            $grandTotal = round($totals['electric'] + $totals['water'], 2);
- 
+            $breakdown = $this->calculateMonthlyBreakdown($booking, $month, $year);
+            $amount = round($breakdown['electric']['base'] + $breakdown['water']['base'], 2);
+            $tax = round($breakdown['electric']['tax'] + $breakdown['water']['tax'], 2);
+            $grandTotal = round($amount + $tax, 2);
+
+            if ($grandTotal <= 0) {
+                throw new \InvalidArgumentException('No billable usage found for selected period.');
+            }
+
             // ✅ Step 4: Sync invoice
             $invoice = $this->syncMonthlyInvoice(
                 $booking,
                 $month,
                 $year,
                 $periodStart,
+                $amount,
+                $tax,
                 $grandTotal
             );
- 
+
             return [
                 'success' => true,
                 'reading' => $reading,
                 'invoice' => $invoice,
-                'totals' => $totals,
+                'totals' => [
+                    'electric' => round($breakdown['electric']['total'], 2),
+                    'water' => round($breakdown['water']['total'], 2),
+                ],
             ];
  
         } catch (\Exception $e) {
@@ -273,24 +302,26 @@ class MeterBillingService
         float $readingValue,
         ?string $notes
     ): MeterReading {
-        $model = MeterReading::firstOrNew([
-            'meter_id' => $meter->id,
-            'booking_id' => $booking->id,
-            'period_month' => $month,
-            'period_year' => $year,
-        ]);
- 
+        $model = MeterReading::updateOrCreate(
+            [
+                'meter_id' => $meter->id,
+                'booking_id' => $booking->id,
+                'period_month' => $month,
+                'period_year' => $year,
+            ],
+            [
+                'reading_date' => $readingDate,
+                'reading_value' => $readingValue,
+                'recorded_by' => Auth::id(),
+                'notes' => $notes,
+            ]
+        );
+
         assert($model instanceof MeterReading);
- 
-        $model->reading_date = $readingDate;
-        $model->reading_value = $readingValue;
-        $model->recorded_by = Auth::id();
-        $model->notes = $notes;
-        $model->save();
- 
+
         return $model;
     }
- 
+
     /**
      * ✅ NEW: Create or update monthly invoice
      */
@@ -299,6 +330,8 @@ class MeterBillingService
         int $month,
         int $year,
         Carbon $periodStart,
+        float $amount,
+        float $tax,
         float $grandTotal
     ): Invoice {
         $existing = Invoice::query()
@@ -312,8 +345,8 @@ class MeterBillingService
         // ✅ Update existing invoice
         if ($existing instanceof Invoice) {
             $existing->update([
-                'amount' => $grandTotal,
-                'tax' => 0,
+                'amount' => $amount,
+                'tax' => $tax,
                 'total' => $grandTotal,
             ]);
             return $existing;
@@ -331,8 +364,8 @@ class MeterBillingService
                 $month,
                 $year
             ),
-            'amount' => $grandTotal,
-            'tax' => 0,
+            'amount' => $amount,
+            'tax' => $tax,
             'total' => $grandTotal,
             'issue_date' => $periodStart->toDateString(),
             'due_date' => $dueDate->toDateString(),

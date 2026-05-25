@@ -2,17 +2,17 @@
 
 namespace App\Policies;
 
-use App\Models\Role;
+use App\Models\Facility;
 use App\Models\User;
 
-class RolePolicy
+class FacilityPolicy
 {
     public function viewAny(User $user): bool
     {
         return $user->hasRole('Admin');
     }
 
-    public function view(User $user, Role $role): bool
+    public function view(User $user, Facility $facility): bool
     {
         return $user->hasRole('Admin');
     }
@@ -22,12 +22,12 @@ class RolePolicy
         return $user->hasRole('Admin');
     }
 
-    public function update(User $user, Role $role): bool
+    public function update(User $user, Facility $facility): bool
     {
         return $user->hasRole('Admin');
     }
 
-    public function delete(User $user, Role $role): bool
+    public function delete(User $user, Facility $facility): bool
     {
         return $user->hasRole('Admin');
     }
@@ -37,4 +37,3 @@ class RolePolicy
         return $user->hasRole('Admin');
     }
 }
-

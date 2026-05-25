@@ -2,17 +2,17 @@
 
 namespace App\Policies;
 
-use App\Models\Role;
+use App\Models\Meter;
 use App\Models\User;
 
-class RolePolicy
+class MeterPolicy
 {
     public function viewAny(User $user): bool
     {
         return $user->hasRole('Admin');
     }
 
-    public function view(User $user, Role $role): bool
+    public function view(User $user, Meter $meter): bool
     {
         return $user->hasRole('Admin');
     }
@@ -22,12 +22,12 @@ class RolePolicy
         return $user->hasRole('Admin');
     }
 
-    public function update(User $user, Role $role): bool
+    public function update(User $user, Meter $meter): bool
     {
         return $user->hasRole('Admin');
     }
 
-    public function delete(User $user, Role $role): bool
+    public function delete(User $user, Meter $meter): bool
     {
         return $user->hasRole('Admin');
     }
@@ -37,4 +37,3 @@ class RolePolicy
         return $user->hasRole('Admin');
     }
 }
-

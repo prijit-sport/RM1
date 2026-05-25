@@ -99,10 +99,8 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('maintenances', MaintenanceController::class);
     });
  
-    // --- Admin only ---
-    Route::middleware(['auth', 'admin_only'])->group(function () {
-        // ลบ Route::resource('items', ...) ออกไปแล้ว
-        
+    // --- Admin only resources (policy-driven) ---
+    Route::middleware(['auth'])->group(function () {
         // --- Facilities ---
         Route::get('facilities/export', [FacilityController::class, 'export'])->name('facilities.export');
         Route::resource('facilities', FacilityController::class);

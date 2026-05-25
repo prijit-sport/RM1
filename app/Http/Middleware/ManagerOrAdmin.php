@@ -27,15 +27,27 @@ class ManagerOrAdmin
         // If user has no role, deny access
         $role = $user->role;
         if (!$role) {
+            Log::warning('Authorization denied', [
+                'route' => $request->route()?->getName() ?? $request->path(),
+                'user_id' => $user->id,
+                'role' => 'none',
+                'reason' => 'missing_role',
+            ]);
+
             abort(403, 'คุณไม่มีสิทธิ์เข้าถึงหน้านี้');
         }
 
         // Check if user has Admin role only
         if (!in_array($role->name, ['Admin'], true)) {
+            Log::warning('Authorization denied', [
+                'route' => $request->route()?->getName() ?? $request->path(),
+                'user_id' => $user->id,
+                'role' => $role->name,
+                'reason' => 'not_manager_or_admin',
+            ]);
+
             abort(403);
         }
-
-
 
         return $next($request);
     }

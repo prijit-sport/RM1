@@ -247,8 +247,7 @@ class InvoiceController extends Controller
         }
  
         try {
-            $invoice->update(['status' => 'paid']);
-            AuditLogger::log('invoice.marked_paid', $invoice);
+            $this->invoiceService->markAsPaid($invoice, 'cash');
  
             return redirect()->route('invoices.show', $invoice)
                 ->with('success', __('ui.invoice.marked_paid'));

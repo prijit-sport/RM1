@@ -11,8 +11,10 @@ use Carbon\Carbon;
  * 
  * @property int $id
  * @property int $meter_id (FK)
+ * @property int|null $booking_id
+ * @property int|null $period_month
+ * @property int|null $period_year
  * @property Carbon $reading_date
-
  * @property float $reading_value (kWh หรือ m3)
  * @property int|null $recorded_by (FK users)
  * @property string|null $notes
@@ -28,6 +30,9 @@ class MeterReading extends Model
 {
     protected $fillable = [
         'meter_id',
+        'booking_id',
+        'period_month',
+        'period_year',
         'reading_date',
         'reading_value',
         'recorded_by',

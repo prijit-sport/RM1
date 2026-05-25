@@ -1,6 +1,7 @@
+ 
 <?php $__env->startSection('title', 'แดชบอร์ด'); ?>
 <?php $__env->startSection('page-title', 'แดชบอร์ด'); ?>
-
+ 
 <?php $__env->startPush('styles'); ?>
 <style>
     .stat-card { border: none; overflow: hidden; }
@@ -10,9 +11,9 @@
     .progress-card:hover { transform: translateY(-3px); }
 </style>
 <?php $__env->stopPush(); ?>
-
+ 
 <?php $__env->startSection('content'); ?>
-
+ 
 
 <div class="row g-4 mb-4">
     <div class="col-md-6 col-xl-3">
@@ -32,7 +33,7 @@
             </div>
         </div>
     </div>
-
+ 
     <div class="col-md-6 col-xl-3">
         <div class="stat-card">
             <div class="d-flex justify-content-between align-items-start">
@@ -49,7 +50,7 @@
             </div>
         </div>
     </div>
-
+ 
     <div class="col-md-6 col-xl-3">
         <div class="stat-card">
             <div class="d-flex justify-content-between align-items-start">
@@ -66,7 +67,7 @@
             </div>
         </div>
     </div>
-
+ 
     <div class="col-md-6 col-xl-3">
         <div class="stat-card">
             <div class="d-flex justify-content-between align-items-start">
@@ -84,7 +85,7 @@
         </div>
     </div>
 </div>
-
+ 
 
 <div class="row g-4 mb-4">
     <?php
@@ -98,7 +99,7 @@
             'maintenance' => ['label' => 'ซ่อม',    'class' => 'warning'],
         ];
     ?>
-
+ 
     <?php $__currentLoopData = $typeConfig; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $typeKey => $typeInfo): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
     <?php
         $stats = $roomTypeStats[$typeKey] ?? ['available' => 0, 'occupied' => 0, 'maintenance' => 0];
@@ -114,7 +115,7 @@
                 </h5>
                 <span class="text-muted">ทั้งหมด <?php echo e(number_format($total)); ?> ห้อง</span>
             </div>
-
+ 
             <?php $__currentLoopData = $statuses; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $statusKey => $meta): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
             <?php
                 $count = (int) ($stats[$statusKey] ?? 0);
@@ -136,7 +137,7 @@
     </div>
     <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
 </div>
-
+ 
 
 <div class="row g-4 mb-4">
     <div class="col-lg-8">
@@ -149,7 +150,7 @@
             </div>
         </div>
     </div>
-
+ 
     <div class="col-lg-4">
         <div class="table-card p-4">
             <h5 class="mb-4">สถานะห้อง</h5>
@@ -159,7 +160,7 @@
                 $availablePercent  = ($availableCount ?? 0) / $totalRooms * 100;
                 $maintenancePct    = ($maintenanceCount ?? 0) / $totalRooms * 100;
             ?>
-
+ 
             <?php if(($roomCount ?? 0) > 0): ?>
             <div class="mb-4">
                 <div class="d-flex justify-content-between mb-2">
@@ -170,7 +171,7 @@
                     <div class="progress-bar bg-primary" style="width: <?php echo e(min($occupiedPercent, 100)); ?>%"></div>
                 </div>
             </div>
-
+ 
             <div class="mb-4">
                 <div class="d-flex justify-content-between mb-2">
                     <span>ห้องว่าง</span>
@@ -180,7 +181,7 @@
                     <div class="progress-bar bg-success" style="width: <?php echo e(min($availablePercent, 100)); ?>%"></div>
                 </div>
             </div>
-
+ 
             <div class="mb-4">
                 <div class="d-flex justify-content-between mb-2">
                     <span>ห้องปรับปรุง</span>
@@ -198,7 +199,7 @@
         </div>
     </div>
 </div>
-
+ 
 
 <div class="row g-4">
     <div class="col-lg-6">
@@ -221,41 +222,44 @@
                     </thead>
                     <tbody>
                         <?php $__empty_1 = true; $__currentLoopData = $recentBookings ?? []; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $booking): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                        <?php
+                            /** @var \App\Models\Booking $booking */
+                            $room = $booking?->room;
+                            $guest = $booking?->guest;
+                            $checkInDate = $booking?->check_in_date;
+                            $bookingStatus = (string) ($booking?->status ?? '');
+                        ?>
                         <tr>
                             <td>
-                                <?php if($booking->room_id): ?>
-                                    <a href="<?php echo e(route('rooms.show', $booking->room_id)); ?>" class="text-decoration-none">
-                                        <?php echo e(isset($booking->room) && ($booking->room?->room_number ?? '') !== '' ? $booking->room->room_number : '-'); ?>
+                                <?php if($room): ?>
+                                    <a href="<?php echo e(route('rooms.show', $room->id)); ?>" class="text-decoration-none">
+                                        <?php echo e($room->room_number ?? '-'); ?>
 
                                     </a>
-                                <?php else: ?> -
+                                <?php else: ?>
+                                    -
                                 <?php endif; ?>
                             </td>
-                            <td><?php echo e(isset($booking->guest) && $booking->guest?->full_name ? $booking->guest->full_name : '-'); ?></td>
                             <td>
-                                <?php
-                                    $checkIn = $booking->check_in_date ?? null;
-                                    $checkInText = $checkIn ? \Carbon\Carbon::parse($checkIn)->format('d/m/Y') : '-';
-                                ?>
-                                <?php echo e($checkInText); ?>
+                                <?php echo e($guest?->full_name ?? '-'); ?>
 
                             </td>
+                            <td>
+                                <?php echo e($checkInDate?->format('d/m/Y') ?? '-'); ?>
 
+                            </td>
                             <td>
                                 <?php
-                                    $status = (string) ($booking->status ?? '');
-
-                                    $sc = match($status) {
-                                        'confirmed' => 'success',
-                                        'cancelled' => 'danger',
-                                        default     => 'secondary',
-                                    };
-
-                                    $sl = match($status) {
-                                        'confirmed' => 'ยืนยันแล้ว',
-                                        'cancelled' => 'ยกเลิก',
-                                        default     => ($status !== '' ? $status : '-'),
-                                    };
+                                    if ($bookingStatus === 'confirmed') {
+                                        $sc = 'success';
+                                        $sl = 'ยืนยันแล้ว';
+                                    } elseif ($bookingStatus === 'cancelled') {
+                                        $sc = 'danger';
+                                        $sl = 'ยกเลิก';
+                                    } else {
+                                        $sc = 'secondary';
+                                        $sl = ($bookingStatus !== '' ? $bookingStatus : '-');
+                                    }
                                 ?>
                                 <span class="badge bg-<?php echo e($sc); ?> bg-opacity-10 text-<?php echo e($sc); ?>">
                                     <?php echo e($sl); ?>
@@ -275,7 +279,7 @@
             </div>
         </div>
     </div>
-
+ 
     <div class="col-lg-6">
         <div class="table-card">
             <div class="p-4 border-bottom d-flex justify-content-between align-items-center">
@@ -296,22 +300,34 @@
                     </thead>
                     <tbody>
                         <?php $__empty_1 = true; $__currentLoopData = $pendingInvoices ?? []; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $invoice): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                        <?php
+                            /** @var \App\Models\Invoice $invoice */
+                            $invoiceId = $invoice?->id;
+                            $invoiceNumber = $invoice?->invoice_number ?? '-';
+                            $invoiceTotal = $invoice?->total ?? 0;
+                            $guest = $invoice?->booking?->guest;
+                            $dueDate = $invoice?->due_date;
+                        ?>
                         <tr>
                             <td>
-                                <a href="<?php echo e(route('invoices.show', $invoice->id)); ?>" class="text-decoration-none">
-                                    <?php echo e($invoice->invoice_number); ?>
+                                <?php if($invoiceId): ?>
+                                    <a href="<?php echo e(route('invoices.show', $invoiceId)); ?>" class="text-decoration-none">
+                                        <?php echo e($invoiceNumber); ?>
 
-                                </a>
+                                    </a>
+                                <?php else: ?>
+                                    <?php echo e($invoiceNumber); ?>
+
+                                <?php endif; ?>
                             </td>
-                            <td><?php echo e(isset($invoice->booking) && isset($invoice->booking->guest) && ($invoice->booking->guest?->full_name) ? $invoice->booking->guest->full_name : '-'); ?></td>
-                            <td><?php echo e(number_format($invoice->total ?? 0, 2)); ?> ฿</td>
                             <td>
-                                <?php
-                                    $due = $invoice->due_date ?? null;
-                                    $dueDate = $due ? \Carbon\Carbon::parse($due) : null;
-                                ?>
+                                <?php echo e($guest?->full_name ?? '-'); ?>
+
+                            </td>
+                            <td><?php echo e(number_format($invoiceTotal, 2)); ?> ฿</td>
+                            <td>
                                 <span class="<?php echo e($dueDate && $dueDate->isPast() ? 'text-danger fw-bold' : 'text-muted'); ?>">
-                                    <?php echo e($dueDate ? $dueDate->format('d/m/Y') : '-'); ?>
+                                    <?php echo e($dueDate?->format('d/m/Y') ?? '-'); ?>
 
                                 </span>
                             </td>
@@ -330,16 +346,16 @@
         </div>
     </div>
 </div>
-
+ 
 <?php $__env->stopSection(); ?>
-
+ 
 <?php $__env->startPush('scripts'); ?>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     const monthlyData = <?php echo json_encode($monthlyBookings ?? [], 15, 512) ?>;
     const labels = monthlyData.map(d => d.label);
     const counts = monthlyData.map(d => d.count);
-
+ 
     const ctx = document.getElementById('bookingChart').getContext('2d');
     new Chart(ctx, {
         type: 'bar',
@@ -367,4 +383,5 @@
     });
 </script>
 <?php $__env->stopPush(); ?>
+ 
 <?php echo $__env->make('layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\xampp\htdocs\Rm1\resources\views/dashboard/index.blade.php ENDPATH**/ ?>

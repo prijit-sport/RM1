@@ -4,9 +4,13 @@ namespace App\Providers;
 
 use App\Models\Booking;
 use App\Models\Contract;
+use App\Models\Facility;
 use App\Models\Invoice;
 use App\Models\Maintenance;
+use App\Models\Meter;
 use App\Policies\BookingPolicy;
+use App\Policies\FacilityPolicy;
+use App\Policies\MeterPolicy;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\ServiceProvider;
@@ -38,6 +42,8 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(\App\Models\Guest::class, \App\Policies\GuestPolicy::class);
         Gate::policy(\App\Models\Role::class, \App\Policies\RolePolicy::class);
         Gate::policy(Contract::class, \App\Policies\ContractPolicy::class);
+        Gate::policy(Facility::class, FacilityPolicy::class);
+        Gate::policy(Meter::class, MeterPolicy::class);
 
 
         // Register @role directive for Blade - improved with null safety

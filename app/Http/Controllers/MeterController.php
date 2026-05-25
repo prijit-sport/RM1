@@ -28,6 +28,8 @@ class MeterController extends Controller
      */
     public function index(Request $request): View
     {
+        $this->authorize('viewAny', Meter::class);
+
         // ดึง rooms ที่มีมิเตอร์ พร้อม eager load
         $query = Room::with([
             'meters.latestReading.recordedBy',
@@ -79,10 +81,12 @@ class MeterController extends Controller
      */
     public function create(): View
     {
+        $this->authorize('create', Meter::class);
+
         $rooms = Room::orderBy('zone')->orderBy('room_number')->get();
         return view('meters.create', compact('rooms'));
     }
- 
+
     // ─────────────────────────────────────────
     //  STORE
     // ─────────────────────────────────────────
@@ -91,6 +95,8 @@ class MeterController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        $this->authorize('create', Meter::class);
+
         $validated = $request->validate([
             'room_id'      => ['required', 'exists:rooms,id'],
             'type'         => [
@@ -123,6 +129,8 @@ class MeterController extends Controller
      */
     public function show(Meter $meter): View
     {
+        $this->authorize('view', $meter);
+
         $meter->load(['room', 'readings' => fn ($q) =>
             $q->latest('reading_date')->limit(10)->with('recordedBy')
         ]);
@@ -138,10 +146,12 @@ class MeterController extends Controller
      */
     public function edit(Meter $meter): View
     {
+        $this->authorize('update', $meter);
+
         $rooms = Room::orderBy('zone')->orderBy('room_number')->get();
         return view('meters.edit', compact('meter', 'rooms'));
     }
- 
+
     // ─────────────────────────────────────────
     //  UPDATE
     // ─────────────────────────────────────────
@@ -150,6 +160,8 @@ class MeterController extends Controller
      */
     public function update(Request $request, Meter $meter): RedirectResponse
     {
+        $this->authorize('update', $meter);
+
         $validated = $request->validate([
             'room_id'      => ['required', 'exists:rooms,id'],
             'type'         => [
@@ -184,10 +196,12 @@ class MeterController extends Controller
      */
     public function destroy(Meter $meter): RedirectResponse
     {
+        $this->authorize('delete', $meter);
+
         $meter->delete();
         return redirect()->route('meters.index')->with('success', __('ui.meter.deleted'));
     }
- 
+
     // ─────────────────────────────────────────
     //  EXPORT
     // ─────────────────────────────────────────
@@ -196,8 +210,10 @@ class MeterController extends Controller
      */
     public function export(Request $request)
     {
+        $this->authorize('export', Meter::class);
+
         $query = Meter::with('room');
- 
+
         if ($request->filled('search')) {
             $query->where('meter_number', 'like', '%' . $request->string('search') . '%');
         }
