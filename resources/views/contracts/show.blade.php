@@ -1,9 +1,9 @@
 @extends('layouts.app')
-
+ 
 @section('title', 'รายละเอียดสัญญาเช่า')
-
+ 
 @section('page-title', 'จัดการสัญญาเช่า')
-
+ 
 @section('content')
 <div class="row">
     <div class="col-12">
@@ -19,19 +19,17 @@
                 <li class="breadcrumb-item active" aria-current="page">รายละเอียด</li>
             </ol>
         </nav>
-
+ 
         <!-- Page Header -->
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h4 class="mb-0">
                 <i class="bi bi-file-earmark-text me-2"></i>รายละเอียดสัญญาเช่า
             </h4>
             <div class="d-flex gap-2">
-                <a href="{{ route('contracts.pdf', $contract) }}" class="btn btn-outline-danger" target="_blank">
-                    <i class="bi bi-file-pdf me-1"></i>PDF
-                </a>
                 <a href="{{ route('contracts.edit', $contract) }}" class="btn btn-warning">
                     <i class="bi bi-pencil me-1"></i>แก้ไข
                 </a>
+ 
                 <form method="POST" action="{{ route('contracts.destroy', $contract) }}" style="display:inline;" onsubmit="return confirm('คุณแน่ใจหรือไม่ที่จะลบสัญญานี้?');">
                     @csrf
                     @method('DELETE')
@@ -41,7 +39,7 @@
                 </form>
             </div>
         </div>
-
+ 
         <div class="row">
             <!-- Contract Details -->
             <div class="col-lg-8">
@@ -122,7 +120,7 @@
                     </div>
                 </div>
             </div>
-
+ 
             <!-- Payment Info -->
             <div class="col-lg-4">
                 <div class="card shadow-sm">
@@ -137,7 +135,7 @@
                             <p class="fs-4 fw-bold text-success">฿{{ number_format($contract->monthly_rent, 2) }}</p>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label text-muted">ค่ามัดจำ</label>
+                            <label class="form-label text-muted">เงินประกัน</label>
                             <p class="fs-5">฿{{ number_format($contract->deposit ?? 0, 2) }}</p>
                         </div>
                         <div class="mb-3">
@@ -153,7 +151,7 @@
                         </div>
                     </div>
                 </div>
-
+ 
                 <!-- Back Button -->
                 <div class="mt-3">
                     <a href="{{ route('contracts.index') }}" class="btn btn-secondary w-100">
@@ -165,4 +163,4 @@
     </div>
 </div>
 @endsection
-
+ 

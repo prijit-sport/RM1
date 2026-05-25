@@ -1,0 +1,9 @@
+- [x] ลบปุ่มลิงก์ PDF ออกจากหน้า contracts/index.blade.php และ contracts/show.blade.php
+- [x] ลบ route ที่เกี่ยวกับ contracts/{contract}/pdf ออกจาก routes/web.php
+- [x] ปรับ ContractController: เอา method generatePdf ออก
+- [x] ถ้าไม่ใช้ไฟล์ view สำหรับ pdf: ลบ resources/views/contracts/pdf.blade.php (หรือเก็บไว้แต่ไม่เรียก)
+
+- [x] รันทดสอบ: php artisan route:list และ phpunit (ถ้ามี)
+
+
+

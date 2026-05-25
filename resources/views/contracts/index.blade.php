@@ -1,14 +1,14 @@
 @extends('layouts.app')
-
+ 
 @section('page-title', 'จัดการสัญญาเช่า')
-
+ 
 @section('content')
 <div class="container-fluid py-4">
     <!-- Page Header -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h4 class="fw-bold mb-0 text-dark">จัดการสัญญาเช่า</h4>
     </div>
-
+ 
     <!-- Main Card -->
     <div class="card border-0 shadow-sm rounded-3">
         <!-- Card Header & Actions -->
@@ -28,7 +28,7 @@
                 </a>
             </div>
         </div>
-
+ 
         <div class="card-body p-4">
             <!-- Search & Filter Form -->
             <form action="{{ route('contracts.index') }}" method="GET" class="mb-4">
@@ -51,7 +51,7 @@
                     </div>
                 </div>
             </form>
-
+ 
             <!-- Data Table or Empty State -->
             <div class="border rounded-3 overflow-hidden">
                 @if(isset($contracts) && $contracts->count() > 0)
@@ -107,9 +107,6 @@
                                             <a href="{{ route('contracts.edit', $contract->id) }}" class="btn btn-sm btn-outline-primary" data-bs-toggle="tooltip" title="แก้ไข">
                                                 <i class="bi bi-pencil-square"></i>
                                             </a>
-                                            <a href="{{ route('contracts.pdf', $contract->id) }}" class="btn btn-sm btn-outline-danger" target="_blank" data-bs-toggle="tooltip" title="พิมพ์ PDF">
-                                                <i class="bi bi-file-earmark-pdf"></i>
-                                            </a>
                                         </div>
                                     </td>
                                 </tr>
@@ -129,7 +126,7 @@
                         </div>
                     </div>
                     @endif
-
+ 
                 @else
                     <!-- Empty State -->
                     <div class="text-center py-5">
@@ -147,7 +144,7 @@
         </div>
     </div>
 </div>
-
+ 
 <!-- Script สำหรับ Tooltip -->
 @push('scripts')
 <script>
@@ -160,3 +157,4 @@
 </script>
 @endpush
 @endsection
+ 

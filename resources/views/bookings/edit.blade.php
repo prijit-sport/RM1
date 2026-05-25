@@ -255,8 +255,8 @@
         const selected = this.options[this.selectedIndex];
         if (!this.value) { resetPrices(); return; }
  
-        const price   = parseFloat(selected.dataset.price) || 0;
-        const deposit = price * 1;  // ✅ แก้: ค่ามันจำ = 1 เดือน (เดิมคือ × 2)
+const price   = parseFloat(selected.dataset.price) || 0;
+        const deposit = price * 1;
         const total   = price + deposit;
  
         roomTypeInput.value        = selected.dataset.type || '';

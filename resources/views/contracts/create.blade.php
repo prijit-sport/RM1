@@ -121,7 +121,7 @@
                         <div class="row mb-4">
                             <div class="col-md-4">
                                 <label class="form-label">จ่ายล่วงหน้า (เดือน)</label>
-                                <input type="number" name="advance_payment_months" class="form-control" min="0" value="1">
+<input type="number" name="advance_payment_months" class="form-control" min="0" value="1" step="1" data-force-advance-1="1">
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label">ค่าไฟฟ้าต่อหน่วย</label>

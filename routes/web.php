@@ -81,8 +81,8 @@ Route::middleware(['auth'])->group(function () {
         // ── สัญญาเช่า ──
         Route::get('contracts/export', [ContractController::class, 'export'])->name('contracts.export');
         Route::get('contracts/expiring', [ContractController::class, 'expiring'])->name('contracts.expiring');
-        Route::get('contracts/{contract}/pdf', [ContractController::class, 'generatePdf'])->name('contracts.pdf');
         Route::resource('contracts', ContractController::class);
+
  
         // ใบแจ้งหนี้
         Route::get('invoices/export', [InvoiceController::class, 'export'])->name('invoices.export');

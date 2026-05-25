@@ -21,7 +21,7 @@ return new class extends Migration
             
             // ค่าเช่าและมัดจำ
             $table->decimal('rent_amount', 10, 2)->nullable()->comment('ค่าเช่าเดือนแรก');
-            $table->decimal('deposit_amount', 10, 2)->nullable()->comment('เงินมัดจำ (2 เดือน)');
+$table->decimal('deposit_amount', 10, 2)->nullable()->comment('เงินมัดจำ (1 เดือน)');
             
             // วันที่เช็ค อิน/เช็ค เอาท์
             $table->date('check_in_date');
