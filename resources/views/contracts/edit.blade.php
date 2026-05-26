@@ -143,8 +143,8 @@
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label">จ่ายล่วงหน้า (เดือน)</label>
-                                <input type="number" name="advance_payment_months" class="form-control @error('advance_payment_months') is-invalid @enderror" min="0" step="1" value="{{ old('advance_payment_months', $contract->advance_payment_months ?? 1) }}">
-                                <small class="text-muted">ระบุเป็นจำนวนเดือน (คำนวณอัตโนมัติ)</small>
+                                <input type="number" name="advance_payment_months" class="form-control @error('advance_payment_months') is-invalid @enderror" min="1" step="1" value="1" readonly>
+                                <small class="text-muted">💡 คิดแค่ 1 เดือนเท่านั้น (ระบบตั้งอัตโนมัติ)</small>
                                 @error('advance_payment_months')
                                     <div class="invalid-feedback d-block">{{ $message }}</div>
                                 @enderror

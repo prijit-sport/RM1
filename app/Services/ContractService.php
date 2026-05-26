@@ -13,14 +13,13 @@ use Illuminate\Validation\ValidationException;
  
 /**
  * ═══════════════════════════════════════════════════════════════════════════
- * ContractService - FINAL COMPLETE VERSION
+ * ContractService - FIXED VERSION
  * 
  * ✅ FIXES APPLIED:
- * 1. ✓ advance_payment คำนวณจาก advance_payment_months × monthly_rent
+ * 1. ✓ advance_payment คำนวณจาก monthly_rent × 1 เดือน เท่านั้น (ไม่คูณด้วย months)
  * 2. ✓ deposit auto default เป็น monthly_rent ถ้าว่าง
  * 3. ✓ Allow override deposit manually
- * 4. ✓ Remove "force" code ที่ไม่ยืดหยุ่น
- * 5. ✓ ทำให้ advance_payment_months ไม่ถูก override
+ * 4. ✓ advance_payment_months เก็บค่าได้ แต่ไม่ใช้ในการคำนวณ advance_payment
  * 
  * ═══════════════════════════════════════════════════════════════════════════
  */
@@ -34,7 +33,7 @@ class ContractService
      * LOGIC:
      * 1. Generate contract number (auto)
      * 2. Validate dates (end > start)
-     * 3. Calculate advance_payment = monthly_rent × advance_payment_months
+     * 3. Calculate advance_payment = monthly_rent × 1 เดือน เท่านั้น
      * 4. Default deposit = monthly_rent (if empty)
      * 5. Save to database
      * 6. Update room status (if active)
@@ -70,19 +69,18 @@ class ContractService
         }
  
         // ─── Step 3: Calculate advance_payment ───────────────────────────
-        // ✅ KEY FIX: Calculate from months × monthly_rent
-        if (isset($validated['monthly_rent']) && isset($validated['advance_payment_months'])) {
+        // ✅ KEY FIX: advance_payment = monthly_rent × 1 เดือน เท่านั้น
+        if (isset($validated['monthly_rent'])) {
             $monthly_rent = (float)$validated['monthly_rent'];
-            $months = (int)($validated['advance_payment_months'] ?? 1);
-            $calculated_advance = $monthly_rent * max(1, $months);
+            $calculated_advance = $monthly_rent * 1;  // ← คิดแค่ 1 เดือนเสมอ
             
             $validated['advance_payment'] = $calculated_advance;
             
             \Log::info('💰 Calculated advance_payment', [
                 'monthly_rent' => $monthly_rent,
-                'months' => $months,
+                'months' => 1,
                 'result' => $calculated_advance,
-                'formula' => "{$monthly_rent} × {$months} = {$calculated_advance}",
+                'formula' => "{$monthly_rent} × 1 = {$calculated_advance}",
             ]);
         } else {
             // If no data, set to 0
@@ -90,7 +88,7 @@ class ContractService
         }
  
         // ─── Step 4: Default deposit to monthly_rent ──────────────────────
-        // ✅ KEY FIX: If deposit is empty, auto = monthly_rent
+        // ✅ KEY FIX: If deposit is empty, auto = monthly_rent (1 เดือน)
         $original_deposit = $validated['deposit'] ?? null;
         
         if (!isset($validated['deposit']) || $validated['deposit'] === null || $validated['deposit'] === '') {
@@ -180,16 +178,16 @@ class ContractService
         }
  
         // ─── Calculate advance_payment ───────────────────────────────────
-        if (isset($validated['monthly_rent']) && isset($validated['advance_payment_months'])) {
+        // ✅ KEY FIX: advance_payment = monthly_rent × 1 เดือน เท่านั้น
+        if (isset($validated['monthly_rent'])) {
             $monthly_rent = (float)$validated['monthly_rent'];
-            $months = (int)($validated['advance_payment_months'] ?? 1);
-            $calculated_advance = $monthly_rent * max(1, $months);
+            $calculated_advance = $monthly_rent * 1;  // ← คิดแค่ 1 เดือนเสมอ
             
             $validated['advance_payment'] = $calculated_advance;
             
             \Log::info('💰 Recalculated advance_payment', [
                 'monthly_rent' => $monthly_rent,
-                'months' => $months,
+                'months' => 1,
                 'result' => $calculated_advance,
             ]);
         }
@@ -445,4 +443,3 @@ class ContractService
         return $rows;
     }
 }
- 

@@ -14,9 +14,9 @@ class FacilityController extends Controller
     public function index(Request $request)
     {
         $this->authorize('viewAny', Facility::class);
-
+ 
         $query = Facility::query();
-
+ 
         if ($request->filled('search')) {
             $search = trim($request->search);
             $query->where(function ($q) use ($search) {
@@ -74,22 +74,28 @@ class FacilityController extends Controller
     // ─────────────────────────────────────────
     //  CREATE
     // ─────────────────────────────────────────
-    public function create()
+    public function create(Request $request)
     {
         $this->authorize('create', Facility::class);
-
+ 
         $rooms = Room::orderBy('room_number')->get();
-        return view('facilities.create', compact('rooms'));
+        
+        // ✅ รับ room_id จาก query parameter เพื่อ auto-select
+        // เช่น /facilities/create?room_id=5
+        $selectedRoomId = $request->input('room_id');
+ 
+        return view('facilities.create', compact('rooms', 'selectedRoomId'));
     }
-
+ 
     // ─────────────────────────────────────────
     //  STORE
     // ─────────────────────────────────────────
     public function store(Request $request)
     {
         $this->authorize('create', Facility::class);
-
+ 
         $validated = $request->validate([
+            'room_id'               => 'nullable|exists:rooms,id',
             'name'                  => 'required|max:255',
             'type'                  => 'required|in:bed,mattress,wardrobe,dressing_table,tv_stand,clothes_rack',
             'location'              => 'required|max:255',
@@ -112,29 +118,31 @@ class FacilityController extends Controller
     public function show(Facility $facility)
     {
         $this->authorize('view', $facility);
-
+ 
+        $facility->load('room');
         return view('facilities.show', compact('facility'));
     }
-
+ 
     // ─────────────────────────────────────────
     //  EDIT
     // ─────────────────────────────────────────
     public function edit(Facility $facility)
     {
         $this->authorize('update', $facility);
-
+ 
         $rooms = Room::orderBy('room_number')->get();
         return view('facilities.edit', compact('facility', 'rooms'));
     }
-
+ 
     // ─────────────────────────────────────────
     //  UPDATE
     // ─────────────────────────────────────────
     public function update(Request $request, Facility $facility)
     {
         $this->authorize('update', $facility);
-
+ 
         $validated = $request->validate([
+            'room_id'               => 'nullable|exists:rooms,id',
             'name'                  => 'required|max:255',
             'type'                  => 'required|in:bed,mattress,wardrobe,dressing_table,tv_stand,clothes_rack',
             'location'              => 'required|max:255',
@@ -157,19 +165,19 @@ class FacilityController extends Controller
     public function destroy(Facility $facility)
     {
         $this->authorize('delete', $facility);
-
+ 
         $facility->delete();
         return redirect()->route('facilities.index')
             ->with('success', __('ui.facility.deleted'));
     }
-
+ 
     // ─────────────────────────────────────────
     //  EXPORT
     // ─────────────────────────────────────────
     public function export(Request $request)
     {
         $this->authorize('export', Facility::class);
-
+ 
         $facilities = Facility::orderBy('id', 'desc')->get();
         $filename   = 'facilities_export_' . date('Y-m-d') . '.xlsx';
  
@@ -193,13 +201,14 @@ class FacilityController extends Controller
         ];
  
         $rows   = [];
-        $rows[] = ['ชื่อ', 'ประเภท', 'ที่ตั้ง', 'คำอธิบาย', 'สถานะ', 'ตารางซ่อม', 'ซ่อมล่าสุด', 'ซ่อมครั้งต่อไป'];
+        $rows[] = ['ชื่อ', 'ประเภท', 'ที่ตั้ง', 'ห้องพัก', 'คำอธิบาย', 'สถานะ', 'ตารางซ่อม', 'ซ่อมล่าสุด', 'ซ่อมครั้งต่อไป'];
  
         foreach ($facilities as $f) {
             $rows[] = [
                 $f->name,
                 $typeLabels[$f->type]     ?? $f->type,
                 $f->location,
+                $f->room?->room_number ?? '-',
                 $f->description           ?? '-',
                 $statusLabels[$f->status] ?? $f->status,
                 $f->maintenance_schedule  ?? '-',
@@ -209,6 +218,19 @@ class FacilityController extends Controller
         }
  
         return xlsx_download($filename, $rows);
+    }
+ 
+    /**
+     * API: ดึง facilities ของห้องที่เลือก
+     * ใช้สำหรับ dependent dropdown ใน Maintenance form
+     */
+    public function byRoom(int $roomId)
+    {
+        $facilities = Facility::where('room_id', $roomId)
+            ->select('id', 'name', 'type', 'status')
+            ->get();
+        
+        return response()->json($facilities);
     }
 }
  
