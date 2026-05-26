@@ -73,6 +73,22 @@ class RouteTest extends TestCase
         $response->assertRedirect('/login');
     }
 
+    public function test_authenticated_user_can_access_dashboard(): void
+    {
+        $role = Role::firstOrCreate(['name' => 'Admin'], ['label' => 'Administrator']);
+
+        $user = User::factory()->create([
+            'role_id' => $role->id,
+            'is_active' => true,
+        ]);
+
+        $response = $this->actingAs($user)->get('/dashboard');
+
+        $response->assertStatus(200);
+        $response->assertViewIs('dashboard.index');
+        $response->assertSee('แดชบอร์ด');
+    }
+
     public function test_fallback_route_for_unauthenticated(): void
     {
         $response = $this->get('/some-unknown-path');

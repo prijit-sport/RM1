@@ -110,7 +110,7 @@ return [
             'prefix' => '',
             'prefix_indexes' => true,
             'encrypt' => 'no',
-	    'trust_server_certificate' => true,
+            'trust_server_certificate' => true,
         ],
 
     ],
@@ -148,7 +148,7 @@ return [
 
         'options' => [
             'cluster' => env('REDIS_CLUSTER', 'redis'),
-            'prefix' => env('REDIS_PREFIX', Str::slug((string) env('APP_NAME', 'laravel')).'-database-'),
+            'prefix' => env('REDIS_PREFIX', Str::slug((string) env('APP_NAME', 'laravel')) . '-database-'),
             'persistent' => env('REDIS_PERSISTENT', false),
         ],
 
