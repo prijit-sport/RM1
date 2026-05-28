@@ -13,9 +13,7 @@ use Illuminate\Http\Request;
 
 class BookingController extends Controller
 {
-    public function __construct(private readonly BookingService $bookingService)
-    {
-    }
+    public function __construct(private readonly BookingService $bookingService) {}
 
     // ─────────────────────────────────────────
     //  LIST
@@ -78,8 +76,9 @@ class BookingController extends Controller
     {
         $this->authorize('create', Booking::class);
 
-        // ✅ แก้: ดึงทุกห้อง (ไม่กรอง available) + เพิ่ม 'zone'
-        $rooms = Room::orderBy('zone')
+        // ✅ แก้: ดึงเฉพาะห้องที่ available (ว่างอยู่)
+        $rooms = Room::where('status', 'available')
+            ->orderBy('zone')
             ->orderBy('room_number')
             ->get(['id', 'room_number', 'room_type', 'price_per_month', 'status', 'zone']);
 
@@ -121,7 +120,7 @@ class BookingController extends Controller
     {
         $this->authorize('update', $booking);
 
-        // ✅ แก้: ดึงทุกห้อง + เพิ่ม 'zone'
+        // ✅ แก้: ดึงทุกห้อง + เพิ่ม 'zone' (สำหรับการแก้ไข อนุญาตให้เลือกห้องใดก็ได้)
         $rooms = Room::orderBy('zone')
             ->orderBy('room_number')
             ->get(['id', 'room_number', 'room_type', 'price_per_month', 'status', 'zone']);
