@@ -76,7 +76,7 @@ class BookingController extends Controller
     {
         $this->authorize('create', Booking::class);
 
-        // ✅ แก้: ดึงเฉพาะห้องที่ available (ว่างอยู่)
+        // ✅ ดึงเฉพาะห้องที่ available (ว่างอยู่)
         $rooms = Room::where('status', 'available')
             ->orderBy('zone')
             ->orderBy('room_number')
@@ -102,7 +102,7 @@ class BookingController extends Controller
     }
 
     // ─────────────────────────────────────────
-    //  SHOW
+    //  SHOW (ดูรายละเอียด)
     // ─────────────────────────────────────────
     public function show(Booking $booking)
     {
@@ -114,75 +114,7 @@ class BookingController extends Controller
     }
 
     // ─────────────────────────────────────────
-    //  EDIT FORM
-    // ─────────────────────────────────────────
-    public function edit(Booking $booking)
-    {
-        $this->authorize('update', $booking);
-
-        // ✅ แก้: ดึงทุกห้อง + เพิ่ม 'zone' (สำหรับการแก้ไข อนุญาตให้เลือกห้องใดก็ได้)
-        $rooms = Room::orderBy('zone')
-            ->orderBy('room_number')
-            ->get(['id', 'room_number', 'room_type', 'price_per_month', 'status', 'zone']);
-
-        $guests = Guest::orderBy('first_name')->get(['id', 'first_name', 'last_name']);
-
-        return view('bookings.edit', compact('booking', 'rooms', 'guests'));
-    }
-
-    // ─────────────────────────────────────────
-    //  UPDATE
-    // ─────────────────────────────────────────
-    public function update(UpdateBookingRequest $request, Booking $booking)
-    {
-        $this->authorize('update', $booking);
-
-        $this->bookingService->update($booking, $request->validated());
-
-        return redirect()
-            ->route('bookings.show', $booking)
-            ->with('success', __('ui.booking.updated'));
-    }
-
-    // ─────────────────────────────────────────
-    //  DELETE
-    // ─────────────────────────────────────────
-    public function destroy(Booking $booking)
-    {
-        $this->authorize('delete', $booking);
-
-        // 1. จำ ID ของห้องไว้ก่อนลบข้อมูลการจอง
-        $roomId = $booking->room_id;
-
-        // 2. ลบข้อมูลการจองผ่าน Service
-        $this->bookingService->destroy($booking);
-
-        // 3. บังคับอัปเดตตารางห้องพักให้เป็นว่างทันที
-        if ($roomId) {
-            Room::where('id', $roomId)->update(['status' => 'available']);
-        }
-
-        return redirect()
-            ->route('bookings.index')
-            ->with('success', 'ลบการจอง และคืนสถานะห้องกลับเป็นว่างเรียบร้อยแล้ว');
-    }
-
-    // ─────────────────────────────────────────
-    //  CONFIRM
-    // ─────────────────────────────────────────
-    public function confirm(Booking $booking)
-    {
-        $this->authorize('confirm', $booking);
-
-        $this->bookingService->confirm($booking);
-
-        return redirect()
-            ->route('bookings.show', $booking)
-            ->with('success', __('ui.booking.confirmed'));
-    }
-
-    // ─────────────────────────────────────────
-    //  CANCEL
+    //  CANCEL (ยกเลิกการจอง)
     // ─────────────────────────────────────────
     public function cancel(Booking $booking)
     {
@@ -200,8 +132,22 @@ class BookingController extends Controller
         }
 
         return redirect()
-            ->route('bookings.show', $booking)
+            ->route('bookings.index')
             ->with('success', 'ยกเลิกการจอง และคืนสถานะห้องกลับเป็นว่างเรียบร้อยแล้ว');
+    }
+
+    // ─────────────────────────────────────────
+    //  CONFIRM
+    // ─────────────────────────────────────────
+    public function confirm(Booking $booking)
+    {
+        $this->authorize('confirm', $booking);
+
+        $this->bookingService->confirm($booking);
+
+        return redirect()
+            ->route('bookings.show', $booking)
+            ->with('success', __('ui.booking.confirmed'));
     }
 
     // ─────────────────────────────────────────
