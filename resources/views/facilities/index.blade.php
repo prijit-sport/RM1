@@ -343,14 +343,6 @@
                             </td>
                             <td class="text-end pe-3">
                                 <div class="btn-group">
-                                    {{-- ✅ Link "เพิ่มในห้องนี้" ที่ pass room_id --}}
-                                    @if ($facility->room)
-                                        <a href="{{ route('facilities.create', ['room_id' => $facility->room_id]) }}"
-                                            class="btn btn-sm btn-success" title="เพิ่มสิ่งอำนวยความสะดวกในห้องนี้">
-                                            <i class="bi bi-plus-circle"></i>
-                                        </a>
-                                    @endif
-
                                     <a href="{{ route('facilities.edit', $facility->id) }}"
                                         class="btn btn-sm btn-outline-primary" title="แก้ไข">
                                         <i class="bi bi-pencil"></i>
