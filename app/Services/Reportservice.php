@@ -66,9 +66,17 @@ class ReportService
         $total_revenue = Booking::where('status', '!=', 'cancelled')->sum('total_price');
 
         return compact(
-            'total_rooms', 'occupied_rooms', 'available_rooms', 'maintenance_rooms',
-            'occupancy_rate', 'total_bookings', 'pending_bookings', 'confirmed_bookings',
-            'cancelled', 'bookings_this_month', 'total_revenue'
+            'total_rooms',
+            'occupied_rooms',
+            'available_rooms',
+            'maintenance_rooms',
+            'occupancy_rate',
+            'total_bookings',
+            'pending_bookings',
+            'confirmed_bookings',
+            'cancelled',
+            'bookings_this_month',
+            'total_revenue'
         );
     }
 
@@ -123,8 +131,11 @@ class ReportService
         }
 
         return compact(
-            'monthly_revenue', 'revenue_by_room_type',
-            'invoices_paid_amount', 'invoices_pending_amount', 'invoices_overdue_amount',
+            'monthly_revenue',
+            'revenue_by_room_type',
+            'invoices_paid_amount',
+            'invoices_pending_amount',
+            'invoices_overdue_amount',
             'top_overdue_guests'
         );
     }
@@ -141,8 +152,12 @@ class ReportService
             ->pluck('count', 'room_type')
             ->toArray();
 
-        // ตัดการดึงข้อมูลจากคอลัมน์ zone ออก เพื่อแก้ปัญหา Error Column not found
-        $rooms_by_zone = [];
+        // ✅ FIX: ดึงข้อมูลห้องตามโซน (แก้ไขจากเดิมที่เป็น $rooms_by_zone = [])
+        $rooms_by_zone = Room::selectRaw('zone, COUNT(*) as count')
+            ->whereNotNull('zone')
+            ->groupBy('zone')
+            ->pluck('count', 'zone')
+            ->toArray();
 
         // Top 5 ห้องทำรายได้สูงสุด
         $top_revenue_rooms = Room::withSum([
@@ -240,8 +255,12 @@ class ReportService
         }
 
         return compact(
-            'contracts_active', 'contracts_expired', 'contracts_pending',
-            'contracts_expiring_30', 'contracts_expiring_60', 'contracts_expiring_90'
+            'contracts_active',
+            'contracts_expired',
+            'contracts_pending',
+            'contracts_expiring_30',
+            'contracts_expiring_60',
+            'contracts_expiring_90'
         );
     }
 
@@ -340,8 +359,12 @@ class ReportService
         }
 
         return compact(
-            'maint_pending', 'maint_in_progress', 'maint_completed', 'maint_cancelled',
-            'maint_types', 'maint_cost_this_month'
+            'maint_pending',
+            'maint_in_progress',
+            'maint_completed',
+            'maint_cancelled',
+            'maint_types',
+            'maint_cost_this_month'
         );
     }
 
