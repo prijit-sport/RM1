@@ -734,7 +734,7 @@
     </div>
 
     <?php $__env->startPush('scripts'); ?>
-        <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+        <script src="<?php echo e(asset('js/chart.umd.min.js')); ?>"></script>
         <script>
             // ───── Data จาก Controller ─────
             const monthlyRevenue = <?php echo json_encode($monthly_revenue, 15, 512) ?>;

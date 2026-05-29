@@ -12,8 +12,6 @@ class ManagerOrAdmin
 {
     /**
      * Handle an incoming request.
-     *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
     public function handle(Request $request, Closure $next): Response
     {
@@ -25,8 +23,8 @@ class ManagerOrAdmin
         $user = Auth::user();
 
         // If user has no role, deny access
-        $role = $user->role;
-        if (!$role) {
+        $role = $user?->role;
+        if (! $role) {
             Log::warning('Authorization denied', [
                 'route' => $request->route()?->getName() ?? $request->path(),
                 'user_id' => $user->id,
