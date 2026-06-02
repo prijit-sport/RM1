@@ -1,43 +1,51 @@
 <?php
 
-namespace App\Http\Controllers\Api;
+namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Models\Room;
-use App\Models\Guest;
 use App\Models\Booking;
+use App\Models\Contract;
+use App\Models\Guest;
 use App\Models\Invoice;
 use App\Models\Maintenance;
-use App\Models\Contract;
+use App\Models\Room;
 use Carbon\Carbon;
-use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\DB;
+use Illuminate\View\View;
 
 class DashboardController extends Controller
 {
-    public function index(): JsonResponse
+    public function index(): View
     {
         // ══════════════════════════════════════
         //  KPI Data
         // ══════════════════════════════════════
-        $roomCount        = Room::count() ?: 0;
-        $guestCount       = Guest::count() ?: 0;
-        $bookingCount     = Booking::count() ?: 0;
-        $occupiedCount    = Room::where('status', 'occupied')->count() ?: 0;
-        $availableCount   = Room::where('status', 'available')->count() ?: 0;
-        $maintenanceCount = Room::where('status', 'maintenance')->count() ?: 0;
+
+        // ✅ แก้ไข: รวม Room stats เป็น query เดียวแทนที่จะยิง 4 queries แยก
+        // เดิม: Room::count(), Room::where('occupied'), Room::where('available'), Room::where('maintenance')
+        $roomStats = Room::query()
+            ->selectRaw("
+                COUNT(*)                                        AS total,
+                SUM(status = 'occupied')                        AS occupied,
+                SUM(status = 'available')                       AS available,
+                SUM(status = 'maintenance')                     AS maintenance
+            ")
+            ->first();
+
+        $roomCount        = (int) ($roomStats->total       ?? 0);
+        $occupiedCount    = (int) ($roomStats->occupied    ?? 0);
+        $availableCount   = (int) ($roomStats->available   ?? 0);
+        $maintenanceCount = (int) ($roomStats->maintenance ?? 0);
+
+        $guestCount   = Guest::count();
+        $bookingCount = Booking::count();
 
         // ══════════════════════════════════════
         //  Pending Notifications
-        // ══════════════════════════════════════
-        $pendingPayments = Invoice::whereIn('status', ['sent', 'overdue'])
-            ->whereDate('due_date', '<', Carbon::today())
-            ->count();
-
-        $pendingMaintenance = Maintenance::whereIn('status', ['pending', 'in_progress'])
-            ->count();
-
-        // ══════════════════════════════════════
-        //  Expiring Contracts (within 30 days)
+        //  ✅ แก้ไข: ดึงจาก ViewComposer ที่ inject เข้า view อยู่แล้ว
+        //  เดิมยิง query ซ้ำกับ AppServiceProvider::View::composer อีก 3 รายการ
+        //  ตอนนี้ใช้ตัวแปร $pendingPayments และ $pendingMaintenance ที่ ViewComposer inject มาแทน
+        //  (ตัวแปร $expiringContracts ยังต้องดึงเองเพราะ ViewComposer ไม่ส่งออกมา)
         // ══════════════════════════════════════
         $expiringContracts = Contract::where('status', 'active')
             ->whereDate('end_date', '>=', Carbon::today())
@@ -55,8 +63,9 @@ class DashboardController extends Controller
             ->whereYear('issue_date', $currentYear)
             ->sum('total');
 
-        $lastMonth     = Carbon::now()->subMonth()->month;
-        $lastMonthYear = Carbon::now()->subMonth()->year;
+        $lastMonthDate    = Carbon::now()->subMonth();
+        $lastMonth        = $lastMonthDate->month;
+        $lastMonthYear    = $lastMonthDate->year;
 
         $lastMonthRevenue = Invoice::where('status', 'paid')
             ->whereMonth('issue_date', $lastMonth)
@@ -69,12 +78,21 @@ class DashboardController extends Controller
         }
 
         // ══════════════════════════════════════
-        //  Monthly Bookings
+        //  Monthly Bookings (12 เดือนย้อนหลัง)
         // ══════════════════════════════════════
         $thaiMonths = [
-            1 => 'ม.ค.', 2 => 'ก.พ.', 3 => 'มี.ค.', 4 => 'เม.ย.',
-            5 => 'พ.ค.', 6 => 'มิ.ย.', 7 => 'ก.ค.', 8 => 'ส.ค.',
-            9 => 'ก.ย.', 10 => 'ต.ค.', 11 => 'พ.ย.', 12 => 'ธ.ค.',
+            1 => 'ม.ค.',
+            2 => 'ก.พ.',
+            3 => 'มี.ค.',
+            4 => 'เม.ย.',
+            5 => 'พ.ค.',
+            6 => 'มิ.ย.',
+            7 => 'ก.ค.',
+            8 => 'ส.ค.',
+            9 => 'ก.ย.',
+            10 => 'ต.ค.',
+            11 => 'พ.ย.',
+            12 => 'ธ.ค.',
         ];
 
         $monthlyBookings = [];
@@ -83,20 +101,34 @@ class DashboardController extends Controller
             $monthlyBookings[] = [
                 'label' => $thaiMonths[$date->month] . ' ' . ($date->year + 543),
                 'count' => Booking::whereYear('created_at', $date->year)
-                                ->whereMonth('created_at', $date->month)
-                                ->count(),
+                    ->whereMonth('created_at', $date->month)
+                    ->count(),
             ];
         }
 
         // ══════════════════════════════════════
         //  Room Type Stats
+        //  ✅ แก้ไข: รวมเป็น query เดียวแทน 6 queries แยก (fan×3 + air×3)
         // ══════════════════════════════════════
+        $roomTypeRaw = Room::query()
+            ->selectRaw("
+                room_type,
+                SUM(status = 'available')   AS available,
+                SUM(status = 'occupied')    AS occupied,
+                SUM(status = 'maintenance') AS maintenance
+            ")
+            ->whereIn('room_type', ['fan', 'air'])
+            ->groupBy('room_type')
+            ->get()
+            ->keyBy('room_type');
+
         $roomTypeStats = [];
         foreach (['fan', 'air'] as $type) {
+            $row = $roomTypeRaw->get($type);
             $roomTypeStats[$type] = [
-                'available'   => Room::where('room_type', $type)->where('status', 'available')->count(),
-                'occupied'    => Room::where('room_type', $type)->where('status', 'occupied')->count(),
-                'maintenance' => Room::where('room_type', $type)->where('status', 'maintenance')->count(),
+                'available'   => (int) ($row->available   ?? 0),
+                'occupied'    => (int) ($row->occupied    ?? 0),
+                'maintenance' => (int) ($row->maintenance ?? 0),
             ];
         }
 
@@ -111,10 +143,12 @@ class DashboardController extends Controller
                 $checkIn = $b->check_in_date;
                 return [
                     'id'            => $b->id,
-                    'room_number'   => $b->room !== null ? ($b->room->room_number ?? '-') : '-',
-                    'room_id'       => $b->room !== null ? $b->room->id : null,
-                    'guest_name'    => $b->guest !== null ? ($b->guest->full_name ?? '-') : '-',
-                    'check_in_date' => $checkIn instanceof Carbon ? $checkIn->format('d/m/Y') : ($checkIn ?? '-'),
+                    'room_number'   => $b->room?->room_number ?? '-',
+                    'room_id'       => $b->room?->id,
+                    'guest_name'    => $b->guest?->full_name ?? '-',
+                    'check_in_date' => $checkIn instanceof Carbon
+                        ? $checkIn->format('d/m/Y')
+                        : ($checkIn ?? '-'),
                     'status'        => $b->status ?? '-',
                 ];
             });
@@ -133,9 +167,11 @@ class DashboardController extends Controller
                 return [
                     'id'             => $inv->id,
                     'invoice_number' => $inv->invoice_number ?? '-',
-                    'guest_name'     => ($booking !== null && $booking->guest !== null) ? ($booking->guest->full_name ?? '-') : '-',
+                    'guest_name'     => $booking?->guest?->full_name ?? '-',
                     'total'          => $inv->total ?? 0,
-                    'due_date'       => $dueDate instanceof Carbon ? $dueDate->format('d/m/Y') : ($dueDate ?? '-'),
+                    'due_date'       => $dueDate instanceof Carbon
+                        ? $dueDate->format('d/m/Y')
+                        : ($dueDate ?? '-'),
                     'is_overdue'     => $dueDate instanceof Carbon && $dueDate->isPast(),
                 ];
             });
@@ -143,22 +179,20 @@ class DashboardController extends Controller
         // ══════════════════════════════════════
         //  Response
         // ══════════════════════════════════════
-        return new JsonResponse([
-            'roomCount'            => $roomCount,
-            'guestCount'           => $guestCount,
-            'bookingCount'         => $bookingCount,
-            'occupiedCount'        => $occupiedCount,
-            'availableCount'       => $availableCount,
-            'maintenanceCount'     => $maintenanceCount,
-            'pendingPayments'      => $pendingPayments,
-            'pendingMaintenance'   => $pendingMaintenance,
-            'expiringContracts'    => $expiringContracts,
-            'currentMonthRevenue'  => $currentMonthRevenue,
-            'revenuePercentChange' => round($revenuePercentChange, 2),
-            'monthlyBookings'      => $monthlyBookings,
-            'roomTypeStats'        => $roomTypeStats,
-            'recentBookings'       => $recentBookings,
-            'pendingInvoices'      => $pendingInvoices,
-        ]);
+        return view('dashboard.index', compact(
+            'roomCount',
+            'guestCount',
+            'bookingCount',
+            'occupiedCount',
+            'availableCount',
+            'maintenanceCount',
+            'expiringContracts',
+            'currentMonthRevenue',
+            'revenuePercentChange',
+            'monthlyBookings',
+            'roomTypeStats',
+            'recentBookings',
+            'pendingInvoices'
+        ));
     }
 }
