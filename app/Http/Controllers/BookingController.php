@@ -151,10 +151,25 @@ class BookingController extends Controller
     }
 
     // ─────────────────────────────────────────
+    //  UPDATE
+    // ─────────────────────────────────────────
+    public function update(UpdateBookingRequest $request, Booking $booking)
+    {
+        $this->authorize('update', $booking);
+
+        $this->bookingService->update($booking, $request->validated());
+
+        return redirect()
+            ->route('bookings.show', $booking)
+            ->with('success', __('ui.booking.updated'));
+    }
+
+    // ─────────────────────────────────────────
     //  EXPORT
     // ─────────────────────────────────────────
     public function export(Request $request)
     {
+
         $this->authorize('export', Booking::class);
 
         $filename = 'bookings_export_' . date('Y-m-d') . '.xlsx';

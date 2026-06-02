@@ -35,8 +35,9 @@ class ManagerOrAdmin
             abort(403, 'คุณไม่มีสิทธิ์เข้าถึงหน้านี้');
         }
 
-        // Check if user has Admin role only
-        if (!in_array($role->name, ['Admin'], true)) {
+        // Check if user has Admin or Manager role
+        if (!in_array($role->name, ['Admin', 'Manager'], true)) {
+
             Log::warning('Authorization denied', [
                 'route' => $request->route()?->getName() ?? $request->path(),
                 'user_id' => $user->id,
