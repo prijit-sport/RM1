@@ -6,20 +6,30 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Collection;
+use Carbon\Carbon;
 
 /**
  * Room Model
  *
  * @property int         $id
  * @property string      $room_number
- * @property string|null $room_type   fan | air
- * @property string|null $zone        A | B
- * @property int|null    $floor       1–5
+ * @property string|null $room_type
+ * @property string|null $zone
+ * @property int|null    $floor
  * @property float|null  $price_per_month
  * @property int|null    $capacity
  * @property string|null $description
- * @property string      $status      available | occupied | maintenance
+ * @property string      $status
  * @property string|null $notes
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property Carbon|null $deleted_at
+ *
+ * @property-read Collection<int, Booking> $bookings
+ * @property-read Collection<int, Meter> $meters
+ * @property-read Booking|null $currentBooking
+ * @property-read float|null $rent_amount
  */
 class Room extends Model
 {
@@ -29,7 +39,7 @@ class Room extends Model
         'room_number',
         'room_type',
         'zone',
-        'floor',           // ✅ แก้ไข: เพิ่ม floor เข้า fillable
+        'floor',
         'price_per_month',
         'capacity',
         'description',
@@ -40,7 +50,7 @@ class Room extends Model
     protected $casts = [
         'price_per_month' => 'decimal:2',
         'capacity'        => 'integer',
-        'floor'           => 'integer',  // ✅ แก้ไข: cast floor เป็น integer
+        'floor'           => 'integer',
     ];
 
     // ─────────────────────────────────────────
@@ -57,9 +67,6 @@ class Room extends Model
         return $this->hasMany(Meter::class);
     }
 
-    /**
-     * ดึงการจองปัจจุบันที่ยังไม่เช็คเอาต์
-     */
     public function currentBooking(): HasOne
     {
         return $this->hasOne(Booking::class)
@@ -67,14 +74,11 @@ class Room extends Model
             ->whereNull('deleted_at')
             ->latest('check_in_date');
     }
- 
+
     // ─────────────────────────────────────────
     //  ACCESSORS
     // ─────────────────────────────────────────
 
-    /**
-     * Alias สำหรับ price_per_month
-     */
     public function getRentAmountAttribute(): ?float
     {
         return $this->price_per_month;

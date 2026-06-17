@@ -8,6 +8,11 @@ use App\Models\Room;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
+/**
+ * หมายเหตุ: โค้ดนี้เป็น Laravel (access model fields เป็น property)
+ * ปัญหา "Call to unknown function: status/zone/room_number/..." ที่ VSCode พบ
+ * มักเป็น false-positive จาก PHP Language Server/IDE helper ไม่เกี่ยวกับ runtime
+ */
 class MaintenanceController extends Controller
 {
     /**
