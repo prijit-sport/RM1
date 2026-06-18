@@ -8,7 +8,7 @@
             <a href="{{ route('bookings.index') }}" class="btn btn-sm btn-outline-secondary">
                 <i class="bi bi-arrow-left"></i>
             </a>
-            <h5 class="mb-0"><i class="bi bi-calendar-check text-success me-2"></i>รายละเอียดการจอง #{{ $booking->id }}
+            <h5 class="mb-0"><i class="bi bi-calendar-check text-success me-2"></i>รายละเอียดการเข้าพัก #{{ $booking->id }}
             </h5>
         </div>
 
@@ -26,10 +26,32 @@
                     </div>
                     <div class="card-body">
                         <div class="mb-3">
-                            <label class="form-label fw-semibold text-muted">ชื่อ-สกุล</label>
+                            <label class="form-label fw-semibold text-muted">ผู้เช่าคนที่ 1</label>
                             <p class="fs-5 fw-bold mb-0">
                                 @if ($booking->guest)
                                     {{ $booking->guest->first_name }} {{ $booking->guest->last_name }}
+                                @else
+                                    <span class="text-muted fst-italic">ไม่ระบุผู้เช่า</span>
+                                @endif
+                            </p>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold text-muted">ผู้เช่าคนที่ 2</label>
+                            <p class="fs-5 fw-bold mb-0">
+                                @if ($booking->guest2)
+                                    {{ $booking->guest2->first_name }} {{ $booking->guest2->last_name }}
+                                @else
+                                    <span class="text-muted fst-italic">ไม่ระบุผู้เช่า</span>
+                                @endif
+                            </p>
+                        </div>
+
+                        <div class="mb-0">
+                            <label class="form-label fw-semibold text-muted">ผู้เช่าคนที่ 3</label>
+                            <p class="fs-5 fw-bold mb-0">
+                                @if ($booking->guest3)
+                                    {{ $booking->guest3->first_name }} {{ $booking->guest3->last_name }}
                                 @else
                                     <span class="text-muted fst-italic">ไม่ระบุผู้เช่า</span>
                                 @endif
@@ -235,11 +257,17 @@
             </a>
 
             <div class="d-flex gap-2">
+                {{-- Edit Button --}}
+                <a href="{{ route('bookings.edit', $booking) }}" class="btn btn-outline-primary px-4">
+                    <i class="bi bi-pencil me-1"></i> Edit
+                </a>
+
                 {{-- Confirm Button (pending only) --}}
                 @if ($booking->status == 'pending')
                     <form action="{{ route('bookings.confirm', $booking) }}" method="POST" class="d-inline">
                         @csrf
-                        <button type="submit" class="btn btn-success px-4" onclick="return confirm('ยืนยันการจองนี้?')">
+                        <button type="submit" class="btn btn-success px-4"
+                            onclick="return confirm('ยืนยันการเข้าพักนี้?')">
                             <i class="bi bi-check-circle me-1"></i> ยืนยัน
                         </button>
                     </form>
@@ -249,7 +277,8 @@
                 @if ($booking->status != 'cancelled' && $booking->status != 'checked_out')
                     <form action="{{ route('bookings.cancel', $booking) }}" method="POST" class="d-inline">
                         @csrf
-                        <button type="submit" class="btn btn-danger px-4" onclick="return confirm('ยกเลิกการจองนี้?')">
+                        <button type="submit" class="btn btn-danger px-4"
+                            onclick="return confirm('ยกเลิกการเข้าพักนี้?')">
                             <i class="bi bi-x-circle me-1"></i> ยกเลิก
                         </button>
                     </form>

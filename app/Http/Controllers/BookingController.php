@@ -108,7 +108,7 @@ class BookingController extends Controller
     {
         $this->authorize('view', $booking);
 
-        $booking->load(['room', 'guest']);
+        $booking->load(['room', 'guest', 'guest2', 'guest3']);
 
         return view('bookings.show', compact('booking'));
     }
@@ -148,6 +148,19 @@ class BookingController extends Controller
         return redirect()
             ->route('bookings.show', $booking)
             ->with('success', __('ui.booking.confirmed'));
+    }
+
+    // ─────────────────────────────────────────
+    //  EDIT FORM
+    // ─────────────────────────────────────────
+    public function edit(Booking $booking)
+    {
+        $this->authorize('update', $booking);
+
+        $booking->load(['room', 'guest', 'guest2', 'guest3']);
+        $guests = Guest::orderBy('first_name')->get(['id', 'first_name', 'last_name']);
+
+        return view('bookings.edit', compact('booking', 'guests'));
     }
 
     // ─────────────────────────────────────────

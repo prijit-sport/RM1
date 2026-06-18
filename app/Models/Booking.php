@@ -1,13 +1,13 @@
 <?php
- 
+
 namespace App\Models;
- 
+
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Carbon\Carbon;
- 
+
 /**
  * Booking Model
  *
@@ -35,13 +35,15 @@ use Carbon\Carbon;
 class Booking extends Model
 {
     use SoftDeletes;
- 
+
     // Status constants
     const STATUS_CONFIRMED = 'confirmed';
     const STATUS_CANCELLED = 'cancelled';
- 
+
     protected $fillable = [
         'guest_id',
+        'guest_id_2',
+        'guest_id_3',
         'room_id',
         'check_in_date',
         'check_out_date',
@@ -53,7 +55,7 @@ class Booking extends Model
         'status',
         'notes',
     ];
- 
+
     protected $casts = [
         'check_in_date'        => 'date',
         'check_out_date'       => 'date',
@@ -67,7 +69,7 @@ class Booking extends Model
     // ═══════════════════════════════════════════════════════════════
     //  RELATIONSHIPS
     // ═══════════════════════════════════════════════════════════════
- 
+
     /**
      * Get the guest that owns the booking.
      *
@@ -77,7 +79,23 @@ class Booking extends Model
     {
         return $this->belongsTo(Guest::class);
     }
- 
+
+    /**
+     * Get the second guest for this booking.
+     */
+    public function guest2(): BelongsTo
+    {
+        return $this->belongsTo(Guest::class, 'guest_id_2');
+    }
+
+    /**
+     * Get the third guest for this booking.
+     */
+    public function guest3(): BelongsTo
+    {
+        return $this->belongsTo(Guest::class, 'guest_id_3');
+    }
+
     /**
      * Get the room that owns the booking.
      *
@@ -87,7 +105,7 @@ class Booking extends Model
     {
         return $this->belongsTo(Room::class);
     }
- 
+
     /**
      * Get invoices for this booking.
      *
@@ -101,7 +119,7 @@ class Booking extends Model
     // ═══════════════════════════════════════════════════════════════
     //  ACCESSORS / MUTATORS
     // ═══════════════════════════════════════════════════════════════
- 
+
     /**
      * Get status label in Thai
      *
@@ -115,7 +133,7 @@ class Booking extends Model
             default                => 'ยืนยันแล้ว',
         };
     }
- 
+
     /**
      * Get status badge color for Bootstrap
      *
@@ -133,7 +151,7 @@ class Booking extends Model
     // ═══════════════════════════════════════════════════════════════
     //  HELPER METHODS
     // ═══════════════════════════════════════════════════════════════
- 
+
     /**
      * Check if booking is active (confirmed and not cancelled)
      *
@@ -143,7 +161,7 @@ class Booking extends Model
     {
         return $this->status === self::STATUS_CONFIRMED;
     }
- 
+
     /**
      * Check if booking is cancelled
      *
@@ -153,7 +171,7 @@ class Booking extends Model
     {
         return $this->status === self::STATUS_CANCELLED;
     }
- 
+
     /**
      * Get booking duration in days
      *

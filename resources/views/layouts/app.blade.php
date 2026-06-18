@@ -352,7 +352,7 @@
             <a href="{{ route('bookings.index') }}"
                 class="sidebar-menu-item {{ request()->routeIs('bookings.*') ? 'active' : '' }}">
                 <i class="bi bi-calendar-check"></i>
-                <span>การจอง</span>
+                <span>เข้าพัก</span>
             </a>
 
             @if (auth()->check() && auth()->user() && auth()->user()->hasRole('Admin'))

@@ -1,12 +1,13 @@
 
 
-<?php $__env->startSection('title', 'จัดการการจอง'); ?>
+<?php $__env->startSection('title', 'เข้าพัก'); ?>
 
-<?php $__env->startSection('page-title', 'จัดการการจอง'); ?>
+<?php $__env->startSection('page-title', 'เข้าพัก'); ?>
+
 
 <?php $__env->startSection('content'); ?>
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="mb-0">รายการการจอง</h4>
+        <h4 class="mb-0">รายการเข้าพัก</h4>
         <div class="d-flex gap-2">
             <a href="<?php echo e(route('bookings.export')); ?>" class="btn btn-success">
                 <i class="bi bi-download me-1"></i><?php echo e(__('ui.export')); ?>
@@ -233,7 +234,7 @@
                         <th>ประเภท</th>
                         <th>แขก</th>
                         <th>ราคา</th>
-                        <th>สถานะการจอง</th>
+                        <th>สถานะการเข้าพัก</th>
                         <th>การกระทำ</th>
                     </tr>
                 </thead>
@@ -303,7 +304,7 @@
                                             class="d-inline">
                                             <?php echo csrf_field(); ?>
                                             <button type="submit" class="btn btn-sm btn-outline-success"
-                                                onclick="return confirm('ยืนยันการจองนี้?')" title="ยืนยันการจอง">
+                                                onclick="return confirm('ยืนยันการเข้าพักนี้?')" title="ยืนยันการเข้าพัก"
                                                 <i class="bi bi-check-lg"></i> ยืนยัน
                                             </button>
                                         </form>
@@ -315,7 +316,7 @@
                                             class="d-inline">
                                             <?php echo csrf_field(); ?>
                                             <button type="submit" class="btn btn-sm btn-outline-danger"
-                                                onclick="return confirm('ยกเลิกการจองนี้?')" title="ยกเลิกการจอง">
+                                                onclick="return confirm('ยกเลิกการเข้าพักนี้?')" title="ยกเลิกการเข้าพัก"
                                                 <i class="bi bi-x-lg"></i> ยกเลิก
                                             </button>
                                         </form>
@@ -327,7 +328,7 @@
                         <tr>
                             <td colspan="6" class="text-center py-4">
                                 <i class="bi bi-inbox fs-1 text-muted"></i>
-                                <p class="text-muted mt-2">ไม่มีข้อมูลการจอง</p>
+                                <p class="text-muted mt-2">ไม่มีข้อมูลการเข้าพัก</p>
                                 <a href="<?php echo e(route('bookings.create')); ?>"
                                     class="btn btn-primary-custom mt-2">เพิ่มการจองใหม่</a>
                             </td>

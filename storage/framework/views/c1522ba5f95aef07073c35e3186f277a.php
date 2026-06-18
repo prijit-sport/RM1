@@ -352,7 +352,7 @@
             <a href="<?php echo e(route('bookings.index')); ?>"
                 class="sidebar-menu-item <?php echo e(request()->routeIs('bookings.*') ? 'active' : ''); ?>">
                 <i class="bi bi-calendar-check"></i>
-                <span>การจอง</span>
+                <span>เข้าพัก</span>
             </a>
 
             <?php if(auth()->check() && auth()->user() && auth()->user()->hasRole('Admin')): ?>

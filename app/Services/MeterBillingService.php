@@ -115,7 +115,7 @@ class MeterBillingService
                 : (float) ($booking->water_meter_start ?? 0);
 
             /** @var MeterReading|null $prev */
-            $prev      = MeterReading::where('meter_id', $meter->id)
+            $prev = MeterReading::where('meter_id', $meter->id)
                 ->whereDate('reading_date', '<', $periodStart->toDateString())
                 ->orderByDesc('reading_date')
                 ->first();
@@ -158,8 +158,10 @@ class MeterBillingService
             $periodStart = Carbon::create($year, $month, 1)->startOfDay();
             $periodEnd   = $periodStart->copy()->endOfMonth();
 
+            // ✅ Step 1: หา active booking
             $booking = $this->findActiveBooking($meter);
 
+            // ✅ Step 2: บันทึก/อัปเดต reading ของมิเตอร์นี้
             $reading = $this->upsertReading(
                 $meter,
                 $booking,
@@ -170,17 +172,16 @@ class MeterBillingService
                 $notes
             );
 
+            // ✅ Step 3: คำนวณยอดรวมจากทุก meter ที่มีข้อมูลเดือนนี้
+            //    (ไม่บังคับให้ครบทั้งไฟ+น้ำ — บางห้องอาจบันทึกทีละมิเตอร์)
             $breakdown  = $this->calculateMonthlyBreakdown($booking, $month, $year);
             $amount     = round($breakdown['electric']['base'] + $breakdown['water']['base'], 2);
             $tax        = round($breakdown['electric']['tax'] + $breakdown['water']['tax'], 2);
             $grandTotal = round($amount + $tax, 2);
 
-            if ($grandTotal <= 0) {
-                throw new \InvalidArgumentException(
-                    'ไม่พบข้อมูลการใช้งานสำหรับเดือนที่เลือก กรุณาตรวจสอบว่าบันทึกมิเตอร์ทั้งไฟและน้ำครบแล้ว'
-                );
-            }
-
+            // ✅ Step 4: สร้าง/อัปเดต invoice
+            //    ถ้า grandTotal = 0 ยังสร้าง draft invoice ได้
+            //    (admin จะเห็นแล้วเพิ่มข้อมูลมิเตอร์อีกตัวทีหลัง)
             $invoice = $this->syncMonthlyInvoice(
                 $booking,
                 $month,
@@ -270,6 +271,7 @@ class MeterBillingService
         float $tax,
         float $grandTotal
     ): Invoice {
+        // ✅ ถ้ามี invoice เดือนนี้อยู่แล้ว → อัปเดตยอด
         /** @var Invoice|null $existing */
         $existing = Invoice::query()
             ->where('booking_id', $booking->id)
@@ -288,7 +290,24 @@ class MeterBillingService
             return $existing;
         }
 
+        // ✅ ยังไม่มี → สร้าง invoice draft ใหม่
         $dueDate = $periodStart->copy()->addDays(15);
+
+        $thaiMonths = [
+            1 => 'มกราคม',
+            2 => 'กุมภาพันธ์',
+            3 => 'มีนาคม',
+            4 => 'เมษายน',
+            5 => 'พฤษภาคม',
+            6 => 'มิถุนายน',
+            7 => 'กรกฎาคม',
+            8 => 'สิงหาคม',
+            9 => 'กันยายน',
+            10 => 'ตุลาคม',
+            11 => 'พฤศจิกายน',
+            12 => 'ธันวาคม',
+        ];
+        $monthName = $thaiMonths[$month] ?? $month;
 
         /** @var Invoice $invoice */
         $invoice = Invoice::create([
@@ -305,8 +324,8 @@ class MeterBillingService
             'total'      => $grandTotal,
             'issue_date' => $periodStart->toDateString(),
             'due_date'   => $dueDate->toDateString(),
-            'status'     => 'sent',
-            'notes'      => 'ค่าน้ำ/ไฟ ประจำเดือน ' . $month . '/' . $year,
+            'status'     => 'draft',
+            'notes'      => 'ค่าน้ำ/ไฟ ประจำเดือน ' . $monthName . ' ' . ($year + 543),
         ]);
 
         return $invoice;
