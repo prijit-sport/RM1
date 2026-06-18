@@ -1,173 +1,274 @@
 <?php
- 
+
 namespace App\Http\Controllers;
- 
+
 use App\Http\Requests\StoreInvoiceRequest;
 use App\Http\Requests\UpdateInvoiceRequest;
 use App\Models\Booking;
 use App\Models\Invoice;
+use App\Models\Meter;
+use App\Models\MeterReading;
 use App\Services\InvoiceService;
-use App\Support\AuditLogger;
+use App\Services\MeterBillingService;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
- 
+use Illuminate\View\View;
+
 /**
- * InvoiceController - REFACTORED
- * 
- * ✅ BEFORE: 220 lines
- * ✅ AFTER: 200 lines (9% reduction)
- * 
- * ✅ CHANGED:
- * - store() now delegates total calculation to service
- * - update() now delegates total calculation to service
- * - bulkStore() uses transaction properly
- * - export() uses service formatter
+ * InvoiceController
+ *
+ * ✅ UPDATED create():
+ * - รับ query param ?from_meter=1&invoice_id=X
+ * - ถ้ามาจาก meter: โหลด invoice draft + meter readings ของห้อง
+ * - ส่ง $meterData (ค่าไฟ+ค่าน้ำ) ไปให้ view pre-fill
  */
 class InvoiceController extends Controller
 {
     private const STATUSES = ['draft', 'sent', 'paid', 'overdue', 'cancelled'];
- 
-    public function __construct(protected readonly InvoiceService $invoiceService)
-    {
-    }
- 
-    public function index(Request $request)
+
+    public function __construct(
+        protected readonly InvoiceService $invoiceService,
+        protected readonly MeterBillingService $billingService,
+    ) {}
+
+    public function index(Request $request): View
     {
         $this->authorize('viewAny', Invoice::class);
- 
-        // ✅ IMPROVED: Added eager loading to prevent N+1
-        $query = Invoice::query()
-            ->with(['booking.room', 'booking.guest']);
- 
+
+        /** @var Builder<Invoice> $query */
+        $query = Invoice::query()->with(['booking.room', 'booking.guest']);
+
         if ($request->filled('search')) {
-            $search = trim((string)$request->input('search'));
-            $query->where(function ($q) use ($search): void {
+            $search = trim((string) $request->input('search'));
+            $query->where(function (Builder $q) use ($search): void {
                 $q->where('invoice_number', 'like', '%' . $search . '%')
                     ->orWhere('booking_id', $search);
             });
         }
- 
-        if ($request->filled('status') && in_array($request->input('status'), self::STATUSES, true)) {
-            $query->where('status', $request->input('status'));
+
+        $status = (string) $request->input('status', '');
+        if ($request->filled('status') && in_array($status, self::STATUSES, true)) {
+            $query->where('status', $status);
         }
- 
+
+        /** @var LengthAwarePaginator $invoices */
         $invoices = $query->orderByDesc('id')->paginate(10)->withQueryString();
- 
+
         return view('invoices.index', compact('invoices'));
     }
- 
-    public function create()
+
+    /**
+     * ✅ UPDATED: รองรับ 2 โหมด
+     *
+     * โหมด 1 (ปกติ):  /invoices/create
+     * โหมด 2 (จาก meter): /invoices/create?from_meter=1&invoice_id=X
+     */
+    public function create(Request $request): View
     {
         $this->authorize('create', Invoice::class);
- 
-        // ✅ IMPROVED: Eager load relations
-        $bookings = Booking::with(['room', 'guest'])->orderByDesc('id')->get();
+
+        /** @var Collection<int, Booking> $bookings */
+        $bookings      = Booking::with(['room', 'guest'])->orderByDesc('id')->get();
         $invoiceNumber = $this->invoiceService->generateInvoiceNumber();
+
+        // ─── โหมดปกติ ───────────────────────────────
+        if (!$request->boolean('from_meter') || !$request->filled('invoice_id')) {
+            return view('invoices.create', compact('bookings', 'invoiceNumber'));
+        }
  
-        return view('invoices.create', compact('bookings', 'invoiceNumber'));
+        // ─── โหมด from_meter ─────────────────────────
+        /** @var Invoice|null $draftInvoice */
+        $draftInvoice = Invoice::with(['booking.room', 'booking.guest'])
+            ->find((int) $request->input('invoice_id'));
+
+        if (!$draftInvoice) {
+            return view('invoices.create', compact('bookings', 'invoiceNumber'))
+                ->with('warning', 'ไม่พบใบแจ้งหนี้ที่บันทึกจากมิเตอร์ — กรุณากรอกข้อมูลด้วยตนเอง');
+        }
+
+        $meterData = $this->buildMeterDataForInvoice($draftInvoice);
+
+        if (empty($draftInvoice->invoice_number)) {
+            $draftInvoice->invoice_number = $invoiceNumber;
+        }
+
+        return view('invoices.create', compact(
+            'bookings',
+            'invoiceNumber',
+            'draftInvoice',
+            'meterData',
+        ));
     }
- 
+
+    /**
+     * ดึงข้อมูล meter readings ของห้องจาก invoice draft
+     *
+     * @return array<string, mixed>
+     */
+    private function buildMeterDataForInvoice(Invoice $invoice): array
+    {
+        $booking = $invoice->booking;
+
+        if (!$booking) {
+            return [];
+        }
+
+        /** @var Collection<int, Meter> $meters */
+        $meters = Meter::where('room_id', (int) $booking->room_id)
+            ->with(['readings' => function ($q): void {
+                $q->latest('reading_date')->limit(2);
+            }])
+            ->get();
+
+        /** @var array<string, mixed> $result */
+        $result = [
+            'electric' => null,
+            'water'    => null,
+            'room'     => $booking->room?->room_number ?? '-',
+            'tenant'   => trim(($booking->guest?->first_name ?? '') . ' ' . ($booking->guest?->last_name ?? '')),
+            'period'   => null,
+        ];
+
+        foreach ($meters as $meter) {
+            /** @var Collection<int, MeterReading> $readings */
+            $readings = $meter->readings;
+
+            if ($readings->count() < 1) {
+                continue;
+            }
+
+            /** @var MeterReading $current */
+            $current  = $readings->first();
+            /** @var MeterReading|null $previous */
+            $previous = $readings->skip(1)->first();
+
+            $currentVal  = (float) $current->reading_value;
+            $previousVal = $previous ? (float) $previous->reading_value : null;
+            $usage       = $previousVal !== null ? max(0, $currentVal - $previousVal) : 0;
+            $rate        = (float) ($meter->rate_per_unit ?? 0);
+            $cost        = round($usage * $rate, 2);
+
+            /** @var array<string, mixed> $entry */
+            $entry = [
+                'meter_number'   => (string) ($meter->meter_number ?? '-'),
+                'current_value'  => $currentVal,
+                'previous_value' => $previousVal,
+                'usage'          => $usage,
+                'rate'           => $rate,
+                'cost'           => $cost,
+                'reading_date'   => $current->reading_date,
+            ];
+
+            if (!$result['period'] && $current->reading_date) {
+                $result['period'] = \Carbon\Carbon::parse($current->reading_date)
+                    ->locale('th')
+                    ->isoFormat('MMMM YYYY');
+            }
+
+            $type = (string) ($meter->type ?? '');
+            if ($type === 'electric') {
+                $result['electric'] = $entry;
+            } elseif ($type === 'water') {
+                $result['water'] = $entry;
+            }
+        }
+
+        return $result;
+    }
+
     /**
      * Store new invoice
-     * 
-     * ✅ CHANGED: Delegate calculation to service
      */
-    public function store(StoreInvoiceRequest $request)
+    public function store(StoreInvoiceRequest $request): RedirectResponse
     {
         $this->authorize('create', Invoice::class);
- 
+
         $validated = $request->validated();
- 
-        // ✅ CHANGED: Use service to prepare data (includes total calculation)
+
+        // ✅ ถ้ามาจาก meter และมี draft invoice อยู่แล้ว → update แทน create ใหม่
+        if ($request->filled('draft_invoice_id')) {
+            /** @var Invoice|null $draft */
+            $draft = Invoice::find((int) $request->input('draft_invoice_id'));
+            if ($draft) {
+                $prepared = $this->invoiceService->prepareForUpdate($validated);
+                $draft->update($prepared);
+
+                return redirect()->route('invoices.show', $draft)
+                    ->with('success', 'ยืนยันใบแจ้งหนี้ค่าน้ำ/ค่าไฟเรียบร้อยแล้ว');
+            }
+        }
+
+        // โหมดปกติ: สร้าง invoice ใหม่
         $prepared = $this->invoiceService->prepareForCreate($validated);
- 
         Invoice::create($prepared);
- 
+
         return redirect()->route('invoices.index')->with('success', __('ui.invoice.created'));
     }
- 
-    public function show(Invoice $invoice)
+
+    public function show(Invoice $invoice): View
     {
         $this->authorize('view', $invoice);
- 
         $invoice->loadMissing(['booking.room', 'booking.guest']);
- 
         return view('invoices.show', compact('invoice'));
     }
- 
-    public function edit(Invoice $invoice)
+
+    public function edit(Invoice $invoice): View
     {
         $this->authorize('update', $invoice);
- 
-        // ✅ IMPROVED: Eager load relations
+
+        /** @var Collection<int, Booking> $bookings */
         $bookings = Booking::with(['room', 'guest'])->orderByDesc('id')->get();
- 
         return view('invoices.edit', compact('invoice', 'bookings'));
     }
- 
-    /**
-     * Update invoice
-     * 
-     * ✅ CHANGED: Delegate calculation to service
-     */
-    public function update(UpdateInvoiceRequest $request, Invoice $invoice)
+
+    public function update(UpdateInvoiceRequest $request, Invoice $invoice): RedirectResponse
     {
         $this->authorize('update', $invoice);
- 
         $validated = $request->validated();
- 
-        // ✅ CHANGED: Use service to prepare data (includes total calculation)
-        $prepared = $this->invoiceService->prepareForUpdate($validated);
- 
+        $prepared  = $this->invoiceService->prepareForUpdate($validated);
         $invoice->update($prepared);
- 
         return redirect()->route('invoices.show', $invoice)->with('success', __('ui.invoice.updated'));
     }
- 
-    public function destroy(Invoice $invoice)
+
+    public function destroy(Invoice $invoice): RedirectResponse
     {
         $this->authorize('delete', $invoice);
- 
         $invoice->delete();
- 
         return redirect()->route('invoices.index')->with('success', __('ui.invoice.deleted'));
     }
- 
-    public function bulkCreate()
+
+    public function bulkCreate(): View
     {
         $this->authorize('create', Invoice::class);
- 
-        // ✅ IMPROVED: Eager load relations
+
+        /** @var Collection<int, Booking> $bookings */
         $bookings = Booking::with(['room', 'guest'])->orderByDesc('id')->get();
- 
         return view('invoices.bulk-create', compact('bookings'));
     }
- 
-    /**
-     * Create multiple invoices in transaction
-     * 
-     * ✅ IMPROVED: Better error handling + logging
-     */
-    public function bulkStore(Request $request)
+
+    public function bulkStore(Request $request): RedirectResponse
     {
         $this->authorize('create', Invoice::class);
- 
+
         $validated = $request->validate([
-            'invoices' => ['required', 'array', 'min:1'],
-            'invoices.*.booking_id' => ['required', 'exists:bookings,id'],
-            'invoices.*.invoice_number' => ['required', 'string', 'max:50', 'distinct', 'unique:invoices,invoice_number'],
-            'invoices.*.amount' => ['required', 'numeric', 'min:0'],
-            'invoices.*.tax' => ['required', 'numeric', 'min:0'],
-            'invoices.*.total' => ['required', 'numeric', 'min:0'],
-            'invoices.*.issue_date' => ['required', 'date'],
-            'invoices.*.due_date' => ['required', 'date'],
-            'invoices.*.status' => ['required', 'in:' . implode(',', self::STATUSES)],
-            'invoices.*.payment_method' => ['nullable', 'in:cash,bank_transfer,credit_card,e_wallet,other'],
-            'invoices.*.notes' => ['nullable', 'string', 'max:500'],
+            'invoices'                   => ['required', 'array', 'min:1'],
+            'invoices.*.booking_id'      => ['required', 'exists:bookings,id'],
+            'invoices.*.invoice_number'  => ['required', 'string', 'max:50', 'distinct', 'unique:invoices,invoice_number'],
+            'invoices.*.amount'          => ['required', 'numeric', 'min:0'],
+            'invoices.*.tax'             => ['required', 'numeric', 'min:0'],
+            'invoices.*.total'           => ['required', 'numeric', 'min:0'],
+            'invoices.*.issue_date'      => ['required', 'date'],
+            'invoices.*.due_date'        => ['required', 'date'],
+            'invoices.*.status'          => ['required', 'in:' . implode(',', self::STATUSES)],
+            'invoices.*.payment_method'  => ['nullable', 'in:cash,bank_transfer,credit_card,e_wallet,other'],
+            'invoices.*.notes'           => ['nullable', 'string', 'max:500'],
         ]);
- 
-        // ✅ IMPROVED: Validate date logic before transaction
+
         foreach ($validated['invoices'] as $index => $invoiceData) {
             if ($invoiceData['due_date'] <= $invoiceData['issue_date']) {
                 throw ValidationException::withMessages([
@@ -175,26 +276,25 @@ class InvoiceController extends Controller
                 ]);
             }
         }
- 
-        // ✅ IMPROVED: Transaction with better error handling
+
         try {
             DB::transaction(function () use ($validated): void {
                 foreach ($validated['invoices'] as $invoiceData) {
-                    $booking = Booking::findOrFail($invoiceData['booking_id']);
- 
+                    $booking = Booking::findOrFail((int) $invoiceData['booking_id']);
+
                     Invoice::create([
-                        'booking_id' => $invoiceData['booking_id'],
-                        'guest_id' => $booking->guest_id ?? null,
-                        'room_id' => $booking->room_id ?? null,
+                        'booking_id'     => $invoiceData['booking_id'],
+                        'guest_id'       => $booking->guest_id ?? null,
+                        'room_id'        => $booking->room_id ?? null,
                         'invoice_number' => $invoiceData['invoice_number'],
-                        'amount' => $invoiceData['amount'],
-                        'tax' => $invoiceData['tax'],
-                        'total' => $invoiceData['total'],
-                        'issue_date' => $invoiceData['issue_date'],
-                        'due_date' => $invoiceData['due_date'],
-                        'status' => $invoiceData['status'],
+                        'amount'         => $invoiceData['amount'],
+                        'tax'            => $invoiceData['tax'],
+                        'total'          => $invoiceData['total'],
+                        'issue_date'     => $invoiceData['issue_date'],
+                        'due_date'       => $invoiceData['due_date'],
+                        'status'         => $invoiceData['status'],
                         'payment_method' => $invoiceData['payment_method'] ?? null,
-                        'notes' => $invoiceData['notes'] ?? null,
+                        'notes'          => $invoiceData['notes'] ?? null,
                     ]);
                 }
             });
@@ -205,95 +305,68 @@ class InvoiceController extends Controller
             ]);
             throw $e;
         }
- 
+
         return redirect()->route('invoices.index')
             ->with('success', __('ui.invoice.bulk_created', ['count' => count($validated['invoices'])]));
     }
- 
-    /**
-     * Export invoices to Excel
-     * 
-     * ✅ CHANGED: Use service to format data
-     */
-    public function export(Request $request)
+
+    public function export(Request $request): mixed
     {
         $this->authorize('export', Invoice::class);
- 
         $filename = 'invoices_export_' . date('Y-m-d') . '.xlsx';
- 
-        $invoices = Invoice::query()
-            ->with(['booking', 'guest'])
-            ->orderBy('id')
-            ->get();
- 
-        // ✅ CHANGED: Use service to format rows
+
+        /** @var Collection<int, Invoice> $invoices */
+        $invoices = Invoice::query()->with(['booking', 'guest'])->orderBy('id')->get();
         $rows = $this->invoiceService->formatForExport($invoices);
- 
         return xlsx_download($filename, $rows);
     }
- 
-    /**
-     * Mark invoice as paid
-     * 
-     * ✅ IMPROVED: Better error message + logging
-     */
-    public function markAsPaid(Invoice $invoice)
+
+    public function markAsPaid(Invoice $invoice): RedirectResponse
     {
         $this->authorize('update', $invoice);
- 
-        if (!in_array($invoice->status, ['sent', 'overdue'], true)) {
+
+        $status = (string) $invoice->status;
+        if (!in_array($status, ['sent', 'overdue'], true)) {
             return redirect()->route('invoices.show', $invoice)
                 ->with('warning', __('ui.invoice.mark_paid_only_sent_overdue'));
         }
- 
+
         try {
             $this->invoiceService->markAsPaid($invoice, 'cash');
- 
             return redirect()->route('invoices.show', $invoice)
                 ->with('success', __('ui.invoice.marked_paid'));
         } catch (\Exception $e) {
             \Log::error('InvoiceController markAsPaid failed', [
-                'invoice_id' => $invoice->id,
-                'error' => $e->getMessage(),
+                'invoice_id' => (int) $invoice->id,
+                'error'      => $e->getMessage(),
             ]);
- 
             return redirect()->back()->withError('Failed to mark invoice as paid');
         }
     }
- 
-    public function generatePdf(Invoice $invoice)
+
+    public function generatePdf(Invoice $invoice): RedirectResponse
     {
         $this->authorize('view', $invoice);
- 
         return redirect()->route('invoices.show', $invoice)->with('info', __('ui.common.pdf_coming_soon'));
     }
- 
-    /**
-     * Send reminders for overdue invoices
-     * 
-     * ✅ IMPROVED: Better logic + logging
-     */
-    public function remindAll()
+
+    public function remindAll(): RedirectResponse
     {
         $this->authorize('export', Invoice::class);
- 
+
         try {
+            /** @var Collection<int, Invoice> $dueInvoices */
             $dueInvoices = Invoice::whereIn('status', ['sent', 'overdue'])
                 ->whereDate('due_date', '<', now())
                 ->get();
- 
-            // TODO: Implement actual notification sending (email/SMS)
-            // For now, this just shows the count of invoices that would be reminded
- 
+
             \Log::info('Invoice reminders sent', ['count' => $dueInvoices->count()]);
- 
+
             return redirect()->route('invoices.index')
                 ->with('success', __('ui.invoice.reminders_sent', ['count' => $dueInvoices->count()]));
         } catch (\Exception $e) {
             \Log::error('InvoiceController remindAll failed', ['error' => $e->getMessage()]);
- 
             return redirect()->back()->withError('Failed to send reminders');
         }
     }
 }
- 

@@ -88,6 +88,8 @@ class MeterReadingController extends Controller
 
     // ─────────────────────────────────────────
     //  STORE MONTHLY + GENERATE INVOICE
+    //  ✅ UPDATED: redirect ไปหน้า invoice/create
+    //  พร้อม query string ?from_meter=1&invoice_id=X
     // ─────────────────────────────────────────
     public function storeMonthlyAndGenerateInvoice(Request $request, Meter $meter)
     {
@@ -116,9 +118,25 @@ class MeterReadingController extends Controller
                     ->with('error', $result['error'] ?? 'เกิดข้อผิดพลาด');
             }
 
+            // ✅ ดึง invoice ที่เพิ่งสร้าง/อัปเดตจาก result
+            $invoice = $result['invoice'] ?? null;
+
+            if ($invoice) {
+                // ✅ redirect ไปหน้า invoice/create พร้อมข้อมูล
+                // from_meter=1 = บอก InvoiceController ว่ามาจาก meter reading
+                // invoice_id   = invoice ที่ service สร้างไว้แล้ว (draft)
+                return redirect()
+                    ->route('invoices.create', [
+                        'from_meter' => 1,
+                        'invoice_id' => $invoice->id,
+                    ])
+                    ->with('success', 'บันทึกมิเตอร์เรียบร้อยแล้ว — กรุณาตรวจสอบและยืนยันใบแจ้งหนี้');
+            }
+
+            // fallback กรณี invoice เป็น null (ไม่ควรเกิดขึ้น)
             return redirect()
                 ->route('meters.readings.index', $meter)
-                ->with('success', 'บันทึกการอ่านมิเตอร์และสร้างใบแจ้งหนี้เรียบร้อยแล้ว');
+                ->with('success', 'บันทึกการอ่านมิเตอร์เรียบร้อยแล้ว');
         } catch (\Exception $e) {
             \Log::error('MeterReading storeMonthlyAndGenerateInvoice failed', [
                 'meter_id' => $meter->id,
