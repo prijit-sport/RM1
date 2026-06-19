@@ -324,8 +324,9 @@ class MeterBillingService
             'total'      => $grandTotal,
             'issue_date' => $periodStart->toDateString(),
             'due_date'   => $dueDate->toDateString(),
-            'status'     => 'draft',
-            'notes'      => 'ค่าน้ำ/ไฟ ประจำเดือน ' . $monthName . ' ' . ($year + 543),
+            'status'       => 'draft',
+            'invoice_type' => 'utility',
+            'notes'        => 'ค่าน้ำ/ไฟ ประจำเดือน ' . $monthName . ' ' . ($year + 543),
         ]);
 
         return $invoice;

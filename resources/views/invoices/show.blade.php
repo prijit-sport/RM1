@@ -721,39 +721,125 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr>
-                                <td>
-                                    <div style="font-weight: 500;">ค่าเช่ารายเดือน</div>
-                                    <div class="doc-num-sub">
-                                        Booking #{{ $invoice->booking_id }}
-                                        @if ($room)
-                                            — ห้อง {{ $room->room_number }}
-                                        @endif
-                                    </div>
-                                </td>
-                                <td>฿ {{ number_format($invoice->amount, 2) }}</td>
-                            </tr>
-                            @if ($invoice->tax > 0)
+                            @if (($invoice->invoice_type ?? 'rent') === 'utility')
+                                {{-- ✅ utility: แสดงค่าไฟและค่าน้ำแยกรายการ --}}
+                                @if (isset($meterBreakdown['electric']) && $meterBreakdown['electric']['cost'] > 0)
+                                    @php $e = $meterBreakdown['electric']; @endphp
+                                    <tr>
+                                        <td>
+                                            <div style="font-weight:500;">⚡ ค่าไฟฟ้า</div>
+                                            <div class="doc-num-sub">
+                                                มิเตอร์ {{ $e['meter_number'] }} ·
+                                                {{ number_format($e['usage'], 2) }} หน่วย ×
+                                                ฿{{ number_format($e['rate'], 2) }}
+                                                @if ($room)
+                                                    — ห้อง {{ $room->room_number }}
+                                                @endif
+                                            </div>
+                                        </td>
+                                        <td>฿ {{ number_format($e['cost'], 2) }}</td>
+                                    </tr>
+                                @endif
+
+                                @if (isset($meterBreakdown['water']) && $meterBreakdown['water']['cost'] > 0)
+                                    @php $w = $meterBreakdown['water']; @endphp
+                                    <tr>
+                                        <td>
+                                            <div style="font-weight:500;">💧 ค่าน้ำประปา</div>
+                                            <div class="doc-num-sub">
+                                                มิเตอร์ {{ $w['meter_number'] }} ·
+                                                {{ number_format($w['usage'], 2) }} หน่วย ×
+                                                ฿{{ number_format($w['rate'], 2) }}
+                                                @if ($room)
+                                                    — ห้อง {{ $room->room_number }}
+                                                @endif
+                                            </div>
+                                        </td>
+                                        <td>฿ {{ number_format($w['cost'], 2) }}</td>
+                                    </tr>
+                                @endif
+
+                                {{-- fallback ถ้าไม่มี breakdown --}}
+                                @if (empty($meterBreakdown))
+                                    <tr>
+                                        <td>
+                                            <div style="font-weight:500;">⚡💧 ค่าน้ำ/ค่าไฟ</div>
+                                            <div class="doc-num-sub">
+                                                @if ($room)
+                                                    ห้อง {{ $room->room_number }}
+                                                @endif
+                                            </div>
+                                        </td>
+                                        <td>฿ {{ number_format($invoice->amount, 2) }}</td>
+                                    </tr>
+                                @endif
+
+                                @if ($invoice->tax > 0)
+                                    <tr>
+                                        <td>
+                                            <div style="font-weight:500;">ภาษี</div>
+                                            <div class="doc-num-sub">VAT</div>
+                                        </td>
+                                        <td>฿ {{ number_format($invoice->tax, 2) }}</td>
+                                    </tr>
+                                @endif
+                            @else
+                                {{-- ✅ rent: ค่าเช่ารายเดือนปกติ --}}
                                 <tr>
                                     <td>
-                                        <div style="font-weight: 500;">ภาษี</div>
-                                        <div class="doc-num-sub">VAT</div>
+                                        <div style="font-weight:500;">ค่าเช่ารายเดือน</div>
+                                        <div class="doc-num-sub">
+                                            Booking #{{ $invoice->booking_id }}
+                                            @if ($room)
+                                                — ห้อง {{ $room->room_number }}
+                                            @endif
+                                        </div>
                                     </td>
-                                    <td>฿ {{ number_format($invoice->tax, 2) }}</td>
+                                    <td>฿ {{ number_format($invoice->amount, 2) }}</td>
                                 </tr>
+                                @if ($invoice->tax > 0)
+                                    <tr>
+                                        <td>
+                                            <div style="font-weight:500;">ภาษี</div>
+                                            <div class="doc-num-sub">VAT</div>
+                                        </td>
+                                        <td>฿ {{ number_format($invoice->tax, 2) }}</td>
+                                    </tr>
+                                @endif
                             @endif
                         </tbody>
                     </table>
                     <div class="total-summary">
-                        <div class="total-row">
-                            <span>ยอดก่อนภาษี</span>
-                            <span>฿ {{ number_format($invoice->amount, 2) }}</span>
-                        </div>
-                        @if ($invoice->tax > 0)
+                        @if (($invoice->invoice_type ?? 'rent') === 'utility' && !empty($meterBreakdown))
+                            @if (isset($meterBreakdown['electric']) && $meterBreakdown['electric']['cost'] > 0)
+                                <div class="total-row">
+                                    <span>⚡ รวมค่าไฟฟ้า</span>
+                                    <span>฿ {{ number_format($meterBreakdown['electric']['cost'], 2) }}</span>
+                                </div>
+                            @endif
+                            @if (isset($meterBreakdown['water']) && $meterBreakdown['water']['cost'] > 0)
+                                <div class="total-row">
+                                    <span>💧 รวมค่าน้ำประปา</span>
+                                    <span>฿ {{ number_format($meterBreakdown['water']['cost'], 2) }}</span>
+                                </div>
+                            @endif
+                            @if ($invoice->tax > 0)
+                                <div class="total-row">
+                                    <span>ภาษี (VAT)</span>
+                                    <span>฿ {{ number_format($invoice->tax, 2) }}</span>
+                                </div>
+                            @endif
+                        @else
                             <div class="total-row">
-                                <span>ภาษี</span>
-                                <span>฿ {{ number_format($invoice->tax, 2) }}</span>
+                                <span>ยอดก่อนภาษี</span>
+                                <span>฿ {{ number_format($invoice->amount, 2) }}</span>
                             </div>
+                            @if ($invoice->tax > 0)
+                                <div class="total-row">
+                                    <span>ภาษี</span>
+                                    <span>฿ {{ number_format($invoice->tax, 2) }}</span>
+                                </div>
+                            @endif
                         @endif
                         <div class="total-row grand">
                             <span>ยอดรวมทั้งสิ้น</span>

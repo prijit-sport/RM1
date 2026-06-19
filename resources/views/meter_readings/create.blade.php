@@ -1,593 +1,723 @@
-<!DOCTYPE html>
-<html lang="th">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>บันทึกเลขมิเตอร์</title>
+@extends('layouts.app')
+
+@section('title', 'บันทึกเลขมิเตอร์')
+@section('page-title', 'บันทึกเลขมิเตอร์')
+
+@push('styles')
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; }
- 
-        .container { max-width: 680px; margin: 40px auto; padding: 20px; }
- 
-        /* ── Header ── */
-        .page-header {
-            display: flex;
-            align-items: center;
+        /* ─── Meter Type Selector ─── */
+        .meter-type-selector {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
             gap: 12px;
             margin-bottom: 24px;
         }
-        .back-btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 36px; height: 36px;
-            border-radius: 8px;
-            background: white;
-            border: 1px solid #ddd;
-            color: #555;
-            text-decoration: none;
-            font-size: 1.1em;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-            transition: background 0.2s;
-        }
-        .back-btn:hover { background: #f8f9fa; }
-        .page-title { font-size: 1.3em; font-weight: 700; color: #222; }
-        .page-subtitle { font-size: 0.85em; color: #888; margin-top: 2px; }
- 
-        /* ── Type Selector Card ── */
-        .type-selector-card {
-            background: white;
-            border-radius: 14px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-            padding: 20px;
-            margin-bottom: 20px;
-        }
- 
-        .type-selector-title {
-            font-weight: 600;
-            margin-bottom: 14px;
-            color: #444;
-            font-size: 0.95em;
+
+        .meter-type-btn {
             display: flex;
             align-items: center;
-            gap: 6px;
-        }
- 
-        .type-buttons {
-            display: flex;
-            gap: 12px;
-        }
- 
-        .type-btn {
-            flex: 1;
-            padding: 16px;
+            gap: 14px;
+            padding: 16px 20px;
+            border-radius: 12px;
             border: 2px solid #e2e8f0;
-            border-radius: 10px;
-            text-align: center;
-            text-decoration: none;
             background: white;
-            cursor: pointer;
+            text-decoration: none;
+            color: #64748b;
+            font-weight: 600;
             transition: all 0.2s;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .meter-type-btn:hover {
+            border-color: #4f46e5;
+            background: #f8faff;
+            color: #4f46e5;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.12);
+        }
+
+        .meter-type-btn.active-electric {
+            border-color: #f59e0b;
+            background: #fffbeb;
+            color: #92400e;
+            box-shadow: 0 2px 8px rgba(245, 158, 11, 0.2);
+        }
+
+        .meter-type-btn.active-water {
+            border-color: #0ea5e9;
+            background: #f0f9ff;
+            color: #0369a1;
+            box-shadow: 0 2px 8px rgba(14, 165, 233, 0.2);
+        }
+
+        .meter-type-btn.disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .meter-type-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
             display: flex;
-            flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 8px;
+            font-size: 1.4rem;
+            flex-shrink: 0;
         }
- 
-        .type-btn:hover {
-            border-color: #667eea;
-            background: #f8faff;
-            transform: translateY(-2px);
+
+        .meter-type-icon.electric {
+            background: #fef3c7;
         }
- 
-        .type-btn.active {
-            border-color: #667eea;
-            background: #f0f4ff;
-            box-shadow: 0 2px 8px rgba(102,126,234,0.15);
+
+        .meter-type-icon.water {
+            background: #e0f2fe;
         }
- 
-        .type-btn.disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            background: #f5f5f5;
+
+        .meter-type-info {
+            flex: 1;
         }
- 
-        .type-btn.disabled:hover {
-            border-color: #e2e8f0;
-            transform: none;
-            background: #f5f5f5;
+
+        .meter-type-name {
+            font-size: 1rem;
+            font-weight: 700;
+            line-height: 1.2;
         }
- 
-        .type-icon {
-            font-size: 1.8em;
-        }
- 
-        .type-label {
-            font-weight: 600;
-            color: #333;
-            font-size: 0.95em;
-        }
- 
-        .type-meter {
-            font-size: 0.75em;
-            color: #999;
+
+        .meter-type-code {
+            font-size: 0.78rem;
+            color: #94a3b8;
+            font-weight: 400;
             margin-top: 2px;
         }
- 
-        .type-btn.disabled .type-label {
-            color: #999;
-        }
- 
-        .type-btn.disabled .type-meter {
-            color: #ccc;
-        }
- 
-        /* ── Card ── */
-        .card {
-            background: white;
+
+        /* ─── Info Banner ─── */
+        .meter-info-banner {
             border-radius: 14px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-            overflow: hidden;
-        }
- 
-        /* ── Meter Info Banner ── */
-        .meter-banner {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 18px 24px;
+            padding: 20px 24px;
+            margin-bottom: 20px;
             display: flex;
-            gap: 24px;
+            gap: 32px;
             flex-wrap: wrap;
+            align-items: center;
         }
-        .meter-info-item { color: white; }
-        .meter-info-item .label { font-size: 0.75em; opacity: 0.8; margin-bottom: 2px; }
-        .meter-info-item .value { font-size: 1em; font-weight: 700; }
-        .badge-type {
+
+        .meter-info-banner.electric {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        }
+
+        .meter-info-banner.water {
+            background: linear-gradient(135deg, #0ea5e9 0%, #0369a1 100%);
+        }
+
+        .banner-item {
+            color: white;
+        }
+
+        .banner-label {
+            font-size: 0.72rem;
+            opacity: 0.8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 3px;
+        }
+
+        .banner-value {
+            font-size: 1.05rem;
+            font-weight: 700;
+        }
+
+        .banner-badge {
             display: inline-block;
-            padding: 2px 10px;
+            padding: 3px 12px;
             border-radius: 20px;
-            font-size: 0.8em;
-            font-weight: 600;
+            font-size: 0.82rem;
+            font-weight: 700;
+            background: rgba(255, 255, 255, 0.25);
+            color: white;
         }
-        .badge-electric { background: rgba(255,200,0,0.3); color: #fff5b0; }
-        .badge-water    { background: rgba(100,200,255,0.3); color: #c0eeff; }
- 
-        /* ── Tabs ── */
-        .tabs {
+
+        /* ─── Tab Navigation ─── */
+        .meter-tabs {
             display: flex;
-            border-bottom: 2px solid #f0f0f0;
-            background: #fafafa;
+            border-bottom: 2px solid #e2e8f0;
+            margin-bottom: 0;
+            background: #f8fafc;
+            border-radius: 0;
         }
-        .tab-btn {
+
+        .meter-tab-btn {
             flex: 1;
-            padding: 14px 16px;
+            padding: 14px 20px;
             border: none;
             background: none;
             cursor: pointer;
-            font-size: 0.9em;
+            font-size: 0.9rem;
             font-weight: 600;
-            color: #999;
+            color: #94a3b8;
             border-bottom: 3px solid transparent;
             margin-bottom: -2px;
             transition: all 0.2s;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 6px;
-        }
-        .tab-btn:hover { color: #667eea; background: #f5f5ff; }
-        .tab-btn.active { color: #667eea; border-bottom-color: #667eea; background: white; }
- 
-        /* ── Tab Content ── */
-        .tab-content { display: none; padding: 24px; }
-        .tab-content.active { display: block; }
- 
-        /* ── Form ── */
-        .form-group { margin-bottom: 18px; }
-        .form-label {
-            display: block;
-            margin-bottom: 7px;
-            font-weight: 600;
-            font-size: 0.9em;
-            color: #444;
-        }
-        .form-label span { color: #e53e3e; }
-        .form-control {
-            width: 100%;
-            padding: 11px 14px;
-            border: 1.5px solid #e2e8f0;
-            border-radius: 8px;
-            font-size: 0.95em;
+            gap: 8px;
             font-family: inherit;
-            color: #333;
-            transition: border-color 0.2s, box-shadow 0.2s;
-            background: #fafafa;
         }
-        .form-control:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102,126,234,0.12);
+
+        .meter-tab-btn:hover {
+            color: #4f46e5;
+            background: #f0f4ff;
+        }
+
+        .meter-tab-btn.active {
+            color: #4f46e5;
+            border-bottom-color: #4f46e5;
             background: white;
         }
-        textarea.form-control { resize: vertical; }
- 
-        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
- 
-        /* ── Invoice Preview ── */
-        .invoice-preview {
-            background: #f8f9ff;
-            border: 1.5px dashed #c3caf5;
-            border-radius: 10px;
-            padding: 16px 18px;
-            margin-bottom: 18px;
+
+        /* ─── Tab Content ─── */
+        .meter-tab-content {
+            display: none;
+            padding: 28px;
         }
-        .invoice-preview-title {
-            font-size: 0.8em;
+
+        .meter-tab-content.active {
+            display: block;
+        }
+
+        /* ─── Form Fields ─── */
+        .field-label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 7px;
+        }
+
+        .field-label .required {
+            color: #ef4444;
+        }
+
+        .field-hint {
+            font-size: 0.78rem;
+            color: #94a3b8;
+            margin-top: 5px;
+        }
+
+        /* ─── Preview Card ─── */
+        .invoice-preview-card {
+            background: linear-gradient(135deg, #f8faff 0%, #f0f4ff 100%);
+            border: 1.5px dashed #a5b4fc;
+            border-radius: 12px;
+            padding: 18px 20px;
+            margin-bottom: 20px;
+        }
+
+        .preview-title {
+            font-size: 0.78rem;
             font-weight: 700;
-            color: #667eea;
+            color: #4f46e5;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 10px;
+            letter-spacing: 0.8px;
+            margin-bottom: 12px;
             display: flex;
             align-items: center;
             gap: 6px;
         }
-        .invoice-preview-row {
+
+        .preview-row {
             display: flex;
             justify-content: space-between;
-            font-size: 0.88em;
-            color: #666;
-            padding: 3px 0;
+            align-items: center;
+            padding: 6px 0;
+            font-size: 0.88rem;
+            color: #64748b;
+            border-bottom: 1px solid #e0e7ff;
         }
-        .invoice-preview-row.total {
-            border-top: 1px solid #dde0f5;
+
+        .preview-row:last-child {
+            border-bottom: none;
+        }
+
+        .preview-row.total {
             margin-top: 8px;
-            padding-top: 8px;
+            padding-top: 10px;
+            border-top: 2px solid #c7d2fe;
+            border-bottom: none;
             font-weight: 700;
-            font-size: 0.95em;
-            color: #333;
+            font-size: 1rem;
+            color: #312e81;
         }
- 
-        /* ── Alert ── */
-        .alert {
-            padding: 12px 15px;
-            border-radius: 8px;
-            margin-bottom: 18px;
-            font-size: 0.88em;
+
+        .preview-value {
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        /* ─── Alert Boxes ─── */
+        .info-box {
             display: flex;
             align-items: flex-start;
-            gap: 8px;
-        }
-        .alert-warning { background: #fffbeb; border: 1px solid #fcd34d; color: #92400e; }
-        .alert-info    { background: #eff6ff; border: 1px solid #93c5fd; color: #1e40af; }
-        .alert-error   { color: #c53030; font-size: 0.85em; margin-top: 5px; }
- 
-        /* ── Buttons ── */
-        .btn-group { display: flex; gap: 10px; margin-top: 6px; }
-        .btn {
-            flex: 1;
+            gap: 10px;
             padding: 12px 16px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 0.88rem;
+        }
+
+        .info-box.info {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            color: #1e40af;
+        }
+
+        .info-box.warning {
+            background: #fffbeb;
+            border: 1px solid #fde68a;
+            color: #92400e;
+        }
+
+        .info-box i {
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        /* ─── Action Buttons ─── */
+        .action-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 8px;
+            padding-top: 20px;
+            border-top: 1px solid #f1f5f9;
+        }
+
+        .btn-meter-save {
+            flex: 1;
+            padding: 12px 20px;
             border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 0.95em;
+            border-radius: 10px;
+            font-size: 0.95rem;
             font-weight: 600;
+            cursor: pointer;
             font-family: inherit;
-            transition: all 0.2s;
-            text-decoration: none;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 6px;
+            gap: 8px;
+            transition: all 0.2s;
         }
-        .btn-primary { background: #667eea; color: white; }
-        .btn-primary:hover { background: #5a6fd6; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(102,126,234,0.35); }
-        .btn-success { background: #38a169; color: white; }
-        .btn-success:hover { background: #2f855a; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(56,161,105,0.35); }
-        .btn-secondary { background: #f1f5f9; color: #555; border: 1px solid #e2e8f0; }
-        .btn-secondary:hover { background: #e2e8f0; }
-        .btn-sm { flex: 0; padding: 10px 18px; }
+
+        .btn-meter-save.primary {
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            color: white;
+        }
+
+        .btn-meter-save.success {
+            background: linear-gradient(135deg, #059669, #047857);
+            color: white;
+        }
+
+        .btn-meter-save:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-meter-cancel {
+            padding: 12px 20px;
+            border-radius: 10px;
+            border: 1.5px solid #e2e8f0;
+            background: white;
+            color: #64748b;
+            font-weight: 600;
+            font-size: 0.95rem;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+
+        .btn-meter-cancel:hover {
+            background: #f8fafc;
+            color: #374151;
+        }
     </style>
-</head>
-<body>
-<div class="container">
- 
-    {{-- Header --}}
-    <div class="page-header">
-        <a href="{{ route('meters.readings.index', $meter) }}" class="back-btn">←</a>
-        <div>
-            <div class="page-title">บันทึกเลขมิเตอร์</div>
-            <div class="page-subtitle">ห้อง {{ $meter->room->room_number ?? '-' }}</div>
-        </div>
-    </div>
- 
-    {{-- ✅ Type Selector Card --}}
-    <div class="type-selector-card">
-        <div class="type-selector-title">
-            🔀 เลือกประเภทมิเตอร์
-        </div>
-        <div class="type-buttons">
+@endpush
+
+@section('content')
+    <div class="row justify-content-center">
+        <div class="col-lg-7 col-xl-6">
+
+            {{-- Page Header --}}
+            <div class="d-flex align-items-center gap-3 mb-4">
+                <a href="{{ route('meters.readings.index', $meter) }}" class="btn btn-light border rounded-3 px-3 py-2">
+                    <i class="bi bi-arrow-left"></i>
+                </a>
+                <div>
+                    <h5 class="mb-0 fw-bold">บันทึกเลขมิเตอร์</h5>
+                    <div class="text-muted small">ห้อง {{ $meter->room->room_number ?? '-' }} · {{ $meter->meter_number }}
+                    </div>
+                </div>
+            </div>
+
+            {{-- ✅ Meter Type Selector --}}
             @php
                 $room = $meter->room;
                 $electricMeter = $room->meters->where('type', 'electric')->first();
                 $waterMeter = $room->meters->where('type', 'water')->first();
             @endphp
-            
-            {{-- ⚡ ไฟฟ้า --}}
-            @if($electricMeter)
-                <a href="{{ route('meters.readings.create', $electricMeter) }}" 
-                   class="type-btn {{ $meter->type === 'electric' ? 'active' : '' }}">
-                    <div class="type-icon">⚡</div>
-                    <div class="type-label">ไฟฟ้า</div>
-                    <div class="type-meter">{{ $electricMeter->meter_number }}</div>
-                </a>
-            @else
-                <div class="type-btn disabled">
-                    <div class="type-icon">⚡</div>
-                    <div class="type-label">ไฟฟ้า</div>
-                    <div class="type-meter">ไม่มีมิเตอร์</div>
+            <div class="meter-type-selector">
+                {{-- ไฟฟ้า --}}
+                @if ($electricMeter)
+                    <a href="{{ route('meters.readings.create', $electricMeter) }}"
+                        class="meter-type-btn {{ $meter->type === 'electric' ? 'active-electric' : '' }}">
+                        <div class="meter-type-icon electric">⚡</div>
+                        <div class="meter-type-info">
+                            <div class="meter-type-name">ไฟฟ้า</div>
+                            <div class="meter-type-code">{{ $electricMeter->meter_number }}</div>
+                        </div>
+                        @if ($meter->type === 'electric')
+                            <i class="bi bi-check-circle-fill text-warning ms-auto"></i>
+                        @endif
+                    </a>
+                @else
+                    <div class="meter-type-btn disabled">
+                        <div class="meter-type-icon electric">⚡</div>
+                        <div class="meter-type-info">
+                            <div class="meter-type-name">ไฟฟ้า</div>
+                            <div class="meter-type-code">ไม่มีมิเตอร์</div>
+                        </div>
+                    </div>
+                @endif
+
+                {{-- น้ำประปา --}}
+                @if ($waterMeter)
+                    <a href="{{ route('meters.readings.create', $waterMeter) }}"
+                        class="meter-type-btn {{ $meter->type === 'water' ? 'active-water' : '' }}">
+                        <div class="meter-type-icon water">💧</div>
+                        <div class="meter-type-info">
+                            <div class="meter-type-name">น้ำประปา</div>
+                            <div class="meter-type-code">{{ $waterMeter->meter_number }}</div>
+                        </div>
+                        @if ($meter->type === 'water')
+                            <i class="bi bi-check-circle-fill text-info ms-auto"></i>
+                        @endif
+                    </a>
+                @else
+                    <div class="meter-type-btn disabled">
+                        <div class="meter-type-icon water">💧</div>
+                        <div class="meter-type-info">
+                            <div class="meter-type-name">น้ำประปา</div>
+                            <div class="meter-type-code">ไม่มีมิเตอร์</div>
+                        </div>
+                    </div>
+                @endif
+            </div>
+
+            @if ($errors->any())
+                <div class="alert alert-danger rounded-3 mb-3">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    กรุณาตรวจสอบข้อมูลที่กรอก
                 </div>
             @endif
- 
-            {{-- 💧 น้ำประปา --}}
-            @if($waterMeter)
-                <a href="{{ route('meters.readings.create', $waterMeter) }}" 
-                   class="type-btn {{ $meter->type === 'water' ? 'active' : '' }}">
-                    <div class="type-icon">💧</div>
-                    <div class="type-label">น้ำประปา</div>
-                    <div class="type-meter">{{ $waterMeter->meter_number }}</div>
-                </a>
-            @else
-                <div class="type-btn disabled">
-                    <div class="type-icon">💧</div>
-                    <div class="type-label">น้ำประปา</div>
-                    <div class="type-meter">ไม่มีมิเตอร์</div>
+
+            {{-- ✅ Main Card --}}
+            <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
+
+                {{-- Info Banner --}}
+                <div class="meter-info-banner {{ $meter->type === 'electric' ? 'electric' : 'water' }}">
+                    <div class="banner-item">
+                        <div class="banner-label">ห้องพัก</div>
+                        <div class="banner-value">{{ $meter->room->room_number ?? '-' }}</div>
+                    </div>
+                    <div class="banner-item">
+                        <div class="banner-label">หมายเลขมิเตอร์</div>
+                        <div class="banner-value">{{ $meter->meter_number }}</div>
+                    </div>
+                    <div class="banner-item">
+                        <div class="banner-label">ประเภท</div>
+                        <div class="banner-value">
+                            <span class="banner-badge">
+                                {{ $meter->type === 'electric' ? '⚡ ไฟฟ้า' : '💧 น้ำประปา' }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="banner-item">
+                        <div class="banner-label">อัตราค่าบริการ</div>
+                        <div class="banner-value">{{ number_format($meter->rate_per_unit ?? 0, 2) }} ฿/หน่วย</div>
+                    </div>
+                    @if ($meter->tax_rate > 0)
+                        <div class="banner-item">
+                            <div class="banner-label">ภาษี</div>
+                            <div class="banner-value">{{ number_format($meter->tax_rate, 0) }}%</div>
+                        </div>
+                    @endif
                 </div>
-            @endif
+
+                {{-- Tabs --}}
+                <div class="meter-tabs">
+                    <button class="meter-tab-btn active" onclick="switchTab('general', this)">
+                        <i class="bi bi-pencil-square"></i>
+                        บันทึกทั่วไป
+                    </button>
+                    <button class="meter-tab-btn" onclick="switchTab('monthly', this)">
+                        <i class="bi bi-receipt"></i>
+                        รายเดือน + ใบแจ้งหนี้
+                    </button>
+                </div>
+
+                {{-- ════ TAB 1: บันทึกทั่วไป ════ --}}
+                <div id="tab-general" class="meter-tab-content active">
+                    <div class="info-box info">
+                        <i class="bi bi-info-circle-fill"></i>
+                        <span>บันทึกเลขมิเตอร์ทั่วไป — <strong>ไม่สร้างใบแจ้งหนี้อัตโนมัติ</strong></span>
+                    </div>
+
+                    <form action="{{ route('meters.readings.store', $meter) }}" method="POST">
+                        @csrf
+
+                        <div class="mb-3">
+                            <label class="field-label" for="reading_date">
+                                วันที่อ่านมิเตอร์ <span class="required">*</span>
+                            </label>
+                            <input class="form-control @error('reading_date') is-invalid @enderror" id="reading_date"
+                                name="reading_date" type="date"
+                                value="{{ old('reading_date', now()->format('Y-m-d')) }}" required>
+                            @error('reading_date')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="field-label" for="reading_value">
+                                เลขมิเตอร์ที่อ่านได้ <span class="required">*</span>
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white">
+                                    {{ $meter->type === 'electric' ? '⚡' : '💧' }}
+                                </span>
+                                <input class="form-control @error('reading_value') is-invalid @enderror" id="reading_value"
+                                    name="reading_value" type="number" step="0.01" min="0"
+                                    value="{{ old('reading_value') }}" placeholder="เช่น 1234.00" required>
+                                <span class="input-group-text bg-white text-muted">
+                                    {{ $meter->type === 'electric' ? 'kWh' : 'Unit' }}
+                                </span>
+                                @error('reading_value')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            @if ($meter->latestReading)
+                                <div class="field-hint">
+                                    <i class="bi bi-clock-history me-1"></i>
+                                    เลขล่าสุด:
+                                    <strong>{{ number_format($meter->latestReading->reading_value, 2) }}</strong>
+                                    เมื่อ {{ \Carbon\Carbon::parse($meter->latestReading->reading_date)->diffForHumans() }}
+                                </div>
+                            @endif
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="field-label" for="notes">หมายเหตุ</label>
+                            <textarea class="form-control" id="notes" name="notes" rows="3" placeholder="รายละเอียดเพิ่มเติม (ถ้ามี)">{{ old('notes') }}</textarea>
+                        </div>
+
+                        <div class="action-row">
+                            <a href="{{ route('meters.readings.index', $meter) }}" class="btn-meter-cancel">
+                                <i class="bi bi-x"></i> ยกเลิก
+                            </a>
+                            <button type="submit" class="btn-meter-save primary">
+                                <i class="bi bi-save"></i> บันทึกข้อมูล
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                {{-- ════ TAB 2: รายเดือน + Invoice ════ --}}
+                <div id="tab-monthly" class="meter-tab-content">
+                    <div class="info-box warning">
+                        <i class="bi bi-lightning-charge-fill"></i>
+                        <span>บันทึกเลขมิเตอร์ประจำเดือน และ
+                            <strong>สร้างใบแจ้งหนี้ค่าน้ำ/ไฟอัตโนมัติ</strong>
+                        </span>
+                    </div>
+
+                    <form action="{{ route('meters.readings.monthly', $meter) }}" method="POST" id="monthly-form">
+                        @csrf
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-6">
+                                <label class="field-label" for="period_month">
+                                    เดือน <span class="required">*</span>
+                                </label>
+                                <select class="form-select @error('period_month') is-invalid @enderror" id="period_month"
+                                    name="period_month" onchange="updatePreview()" required>
+                                    @foreach (range(1, 12) as $m)
+                                        <option value="{{ $m }}"
+                                            {{ old('period_month', now()->month) == $m ? 'selected' : '' }}>
+                                            {{ \Carbon\Carbon::create()->month($m)->locale('th')->monthName }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('period_month')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <div class="col-6">
+                                <label class="field-label" for="period_year">
+                                    ปี (พ.ศ.) <span class="required">*</span>
+                                </label>
+                                <select class="form-select @error('period_year') is-invalid @enderror" id="period_year"
+                                    name="period_year" onchange="updatePreview()" required>
+                                    @for ($y = now()->year; $y >= now()->year - 3; $y--)
+                                        <option value="{{ $y }}"
+                                            {{ old('period_year', now()->year) == $y ? 'selected' : '' }}>
+                                            {{ $y + 543 }} ({{ $y }})
+                                        </option>
+                                    @endfor
+                                </select>
+                                @error('period_year')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="field-label" for="m_reading_value">
+                                เลขมิเตอร์ที่อ่านได้ <span class="required">*</span>
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white">
+                                    {{ $meter->type === 'electric' ? '⚡' : '💧' }}
+                                </span>
+                                <input class="form-control @error('reading_value') is-invalid @enderror"
+                                    id="m_reading_value" name="reading_value" type="number" step="0.01"
+                                    min="0" value="{{ old('reading_value') }}" placeholder="เช่น 1234.00"
+                                    oninput="updatePreview()" required>
+                                <span class="input-group-text bg-white text-muted">
+                                    {{ $meter->type === 'electric' ? 'kWh' : 'Unit' }}
+                                </span>
+                                @error('reading_value')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            @if ($meter->latestReading)
+                                <div class="field-hint">
+                                    <i class="bi bi-clock-history me-1"></i>
+                                    เลขล่าสุด:
+                                    <strong>{{ number_format($meter->latestReading->reading_value, 2) }}</strong>
+                                </div>
+                            @endif
+                        </div>
+
+                        {{-- Invoice Preview --}}
+                        <div class="invoice-preview-card" id="invoice-preview" style="display:none;">
+                            <div class="preview-title">
+                                <i class="bi bi-receipt"></i>
+                                ตัวอย่างใบแจ้งหนี้ (ประมาณการ)
+                            </div>
+                            <div class="preview-row">
+                                <span>เลขมิเตอร์ก่อนหน้า</span>
+                                <span class="preview-value" id="prev-val">—</span>
+                            </div>
+                            <div class="preview-row">
+                                <span>เลขมิเตอร์ปัจจุบัน</span>
+                                <span class="preview-value" id="curr-val">—</span>
+                            </div>
+                            <div class="preview-row">
+                                <span>จำนวนหน่วยที่ใช้</span>
+                                <span class="preview-value" id="usage-val">—</span>
+                            </div>
+                            <div class="preview-row">
+                                <span>อัตราค่าบริการ</span>
+                                <span class="preview-value">{{ number_format($meter->rate_per_unit ?? 0, 2) }}
+                                    ฿/หน่วย</span>
+                            </div>
+                            @if (($meter->tax_rate ?? 0) > 0)
+                                <div class="preview-row">
+                                    <span>ยอดก่อนภาษี</span>
+                                    <span class="preview-value" id="base-val">—</span>
+                                </div>
+                                <div class="preview-row">
+                                    <span>ภาษี {{ number_format($meter->tax_rate, 0) }}%</span>
+                                    <span class="preview-value" id="tax-val">—</span>
+                                </div>
+                            @endif
+                            <div class="preview-row total">
+                                <span>ยอดรวมประมาณการ</span>
+                                <span id="total-val">—</span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="field-label" for="m_notes">หมายเหตุ</label>
+                            <textarea class="form-control" id="m_notes" name="notes" rows="2"
+                                placeholder="หมายเหตุเพิ่มเติม (ถ้ามี)">{{ old('notes') }}</textarea>
+                        </div>
+
+                        <div class="action-row">
+                            <a href="{{ route('meters.readings.index', $meter) }}" class="btn-meter-cancel">
+                                <i class="bi bi-x"></i> ยกเลิก
+                            </a>
+                            <button type="submit" class="btn-meter-save success">
+                                <i class="bi bi-receipt"></i>
+                                บันทึก + สร้างใบแจ้งหนี้
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+            </div>{{-- end card --}}
         </div>
     </div>
- 
-    {{-- Validation Errors (global) --}}
-    @if($errors->any())
-        <div class="alert alert-warning" style="margin-bottom:16px;">
-            ⚠️ กรุณาตรวจสอบข้อมูลที่กรอก
-        </div>
-    @endif
- 
-    <div class="card">
- 
-        {{-- Meter Banner --}}
-        <div class="meter-banner">
-            <div class="meter-info-item">
-                <div class="label">ห้องพัก</div>
-                <div class="value">{{ $meter->room->room_number ?? '-' }}</div>
-            </div>
-            <div class="meter-info-item">
-                <div class="label">หมายเลขมิเตอร์</div>
-                <div class="value">{{ $meter->meter_number }}</div>
-            </div>
-            <div class="meter-info-item">
-                <div class="label">ประเภท</div>
-                <div class="value">
-                    <span class="badge-type {{ $meter->type === 'electric' ? 'badge-electric' : 'badge-water' }}">
-                        {{ $meter->type === 'electric' ? '⚡ ไฟฟ้า' : '💧 น้ำประปา' }}
-                    </span>
-                </div>
-            </div>
-            <div class="meter-info-item">
-                <div class="label">อัตราค่าบริการ</div>
-                <div class="value">{{ number_format($meter->rate_per_unit ?? 0, 2) }} ฿/หน่วย</div>
-            </div>
-        </div>
- 
-        {{-- Tabs --}}
-        <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab('general', this)">
-                📝 บันทึกทั่วไป
-            </button>
-            <button class="tab-btn" onclick="switchTab('monthly', this)">
-                📋 รายเดือน + ใบแจ้งหนี้
-            </button>
-        </div>
- 
-        {{-- ════ TAB 1: บันทึกทั่วไป ════ --}}
-        <div id="tab-general" class="tab-content active">
- 
-            <div class="alert alert-info">
-                ℹ️ บันทึกเลขมิเตอร์ทั่วไป — ไม่สร้างใบแจ้งหนี้อัตโนมัติ
-            </div>
- 
-            <form action="{{ route('meters.readings.store', $meter) }}" method="POST">
-                @csrf
- 
-                <div class="form-group">
-                    <label class="form-label" for="reading_date">วันที่ <span>*</span></label>
-                    <input class="form-control" id="reading_date" name="reading_date"
-                        type="date" value="{{ old('reading_date') }}" required>
-                    @error('reading_date')
-                        <div class="alert-error">{{ $message }}</div>
-                    @enderror
-                </div>
- 
-                <div class="form-group">
-                    <label class="form-label" for="reading_value">เลขมิเตอร์ <span>*</span></label>
-                    <input class="form-control" id="reading_value" name="reading_value"
-                        type="number" step="0.01" min="0"
-                        value="{{ old('reading_value') }}"
-                        placeholder="เช่น 1234.00" required>
-                    @error('reading_value')
-                        <div class="alert-error">{{ $message }}</div>
-                    @enderror
-                </div>
- 
-                <div class="form-group">
-                    <label class="form-label" for="notes">หมายเหตุ</label>
-                    <textarea class="form-control" id="notes" name="notes"
-                        rows="3" placeholder="รายละเอียดเพิ่มเติม...">{{ old('notes') }}</textarea>
-                    @error('notes')
-                        <div class="alert-error">{{ $message }}</div>
-                    @enderror
-                </div>
- 
-                <div class="btn-group">
-                    <button type="submit" class="btn btn-primary">✓ บันทึก</button>
-                    <a href="{{ route('meters.readings.index', $meter) }}" class="btn btn-secondary btn-sm">ยกเลิก</a>
-                </div>
-            </form>
-        </div>
- 
-        {{-- ════ TAB 2: บันทึกรายเดือน + Invoice ════ --}}
-        <div id="tab-monthly" class="tab-content">
- 
-            <div class="alert alert-warning">
-                💡 บันทึกเลขมิเตอร์ประจำเดือน และ<strong>สร้างใบแจ้งหนี้ค่าน้ำ/ไฟอัตโนมัติ</strong>
-            </div>
- 
-            <form action="{{ route('meters.readings.monthly', $meter) }}" method="POST"
-                  id="monthly-form">
-                @csrf
- 
-                {{-- ช่วงเดือน --}}
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label" for="period_month">เดือน <span>*</span></label>
-                        <select class="form-control" id="period_month" name="period_month"
-                                onchange="updatePreview()" required>
-                            @foreach(range(1,12) as $m)
-                                <option value="{{ $m }}"
-                                    {{ (old('period_month', now()->month) == $m) ? 'selected' : '' }}>
-                                    {{ \Carbon\Carbon::create()->month($m)->locale('th')->monthName }}
-                                </option>
-                            @endforeach
-                        </select>
-                        @error('period_month')
-                            <div class="alert-error">{{ $message }}</div>
-                        @enderror
-                    </div>
- 
-                    <div class="form-group">
-                        <label class="form-label" for="period_year">ปี (พ.ศ.) <span>*</span></label>
-                        <select class="form-control" id="period_year" name="period_year"
-                                onchange="updatePreview()" required>
-                            @for($y = now()->year; $y >= now()->year - 3; $y--)
-                                <option value="{{ $y }}"
-                                    {{ (old('period_year', now()->year) == $y) ? 'selected' : '' }}>
-                                    {{ $y + 543 }} ({{ $y }})
-                                </option>
-                            @endfor
-                        </select>
-                        @error('period_year')
-                            <div class="alert-error">{{ $message }}</div>
-                        @enderror
-                    </div>
-                </div>
- 
-                {{-- เลขมิเตอร์ --}}
-                <div class="form-group">
-                    <label class="form-label" for="m_reading_value">เลขมิเตอร์ที่อ่านได้ <span>*</span></label>
-                    <input class="form-control" id="m_reading_value" name="reading_value"
-                        type="number" step="0.01" min="0"
-                        value="{{ old('reading_value') }}"
-                        placeholder="เช่น 1234.00"
-                        oninput="updatePreview()" required>
-                    @error('reading_value')
-                        <div class="alert-error">{{ $message }}</div>
-                    @enderror
-                </div>
- 
-                {{-- Invoice Preview --}}
-                <div class="invoice-preview" id="invoice-preview" style="display:none;">
-                    <div class="invoice-preview-title">📄 ตัวอย่างใบแจ้งหนี้</div>
-                    <div class="invoice-preview-row">
-                        <span>เลขมิเตอร์ก่อนหน้า</span>
-                        <span id="prev-val">—</span>
-                    </div>
-                    <div class="invoice-preview-row">
-                        <span>เลขมิเตอร์ปัจจุบัน</span>
-                        <span id="curr-val">—</span>
-                    </div>
-                    <div class="invoice-preview-row">
-                        <span>จำนวนหน่วยที่ใช้</span>
-                        <span id="usage-val">—</span>
-                    </div>
-                    <div class="invoice-preview-row">
-                        <span>อัตรา</span>
-                        <span>{{ number_format($meter->rate_per_unit ?? 0, 2) }} ฿/หน่วย</span>
-                    </div>
-                    <div class="invoice-preview-row total">
-                        <span>ยอดประมาณ (มิเตอร์นี้)</span>
-                        <span id="total-val">—</span>
-                    </div>
-                </div>
- 
-                {{-- หมายเหตุ --}}
-                <div class="form-group">
-                    <label class="form-label" for="m_notes">หมายเหตุ</label>
-                    <textarea class="form-control" id="m_notes" name="notes"
-                        rows="3" placeholder="หมายเหตุเพิ่มเติม...">{{ old('notes') }}</textarea>
-                    @error('notes')
-                        <div class="alert-error">{{ $message }}</div>
-                    @enderror
-                </div>
- 
-                <div class="btn-group">
-                    <button type="submit" class="btn btn-success">
-                        📋 บันทึก + สร้างใบแจ้งหนี้
-                    </button>
-                    <a href="{{ route('meters.readings.index', $meter) }}" class="btn btn-secondary btn-sm">ยกเลิก</a>
-                </div>
- 
-            </form>
-        </div>
- 
-    </div>{{-- end card --}}
-</div>
- 
-<script>
-    // ── ข้อมูลจาก Controller ──
-    const rate        = {{ (float) ($meter->rate_per_unit ?? 0) }};
-    const taxRate     = {{ (float) ($meter->tax_rate ?? 0) }};
-    const latestReading = {{ $meter->latestReading?->reading_value ?? 'null' }};
- 
-    // ── Switch Tab ──
-    function switchTab(name, btn) {
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-        btn.classList.add('active');
-        document.getElementById('tab-' + name).classList.add('active');
-    }
- 
-    // ── Invoice Preview ──
-    function updatePreview() {
-        const currVal = parseFloat(document.getElementById('m_reading_value').value);
-        if (isNaN(currVal)) {
-            document.getElementById('invoice-preview').style.display = 'none';
-            return;
+
+    <script>
+        const rate = {{ (float) ($meter->rate_per_unit ?? 0) }};
+        const taxRate = {{ (float) ($meter->tax_rate ?? 0) }};
+        const latestReading = {{ $meter->latestReading?->reading_value ?? 'null' }};
+
+        function switchTab(name, btn) {
+            document.querySelectorAll('.meter-tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.meter-tab-content').forEach(c => c.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById('tab-' + name).classList.add('active');
         }
- 
-        const prevVal  = latestReading !== null ? parseFloat(latestReading) : 0;
-        const usage    = Math.max(0, currVal - prevVal);
-        const base     = usage * rate;
-        const tax      = base * (taxRate / 100);
-        const total    = base + tax;
- 
-        document.getElementById('prev-val').textContent   = prevVal.toLocaleString('th-TH', {minimumFractionDigits: 2}) + ' หน่วย';
-        document.getElementById('curr-val').textContent   = currVal.toLocaleString('th-TH', {minimumFractionDigits: 2}) + ' หน่วย';
-        document.getElementById('usage-val').textContent  = usage.toLocaleString('th-TH', {minimumFractionDigits: 2}) + ' หน่วย';
-        document.getElementById('total-val').textContent  = total.toLocaleString('th-TH', {minimumFractionDigits: 2}) + ' ฿';
- 
-        document.getElementById('invoice-preview').style.display = 'block';
-    }
- 
-    // ── เปิด tab monthly ถ้า validation error จาก monthly form ──
-    @if(old('period_month') || old('period_year'))
-        document.addEventListener('DOMContentLoaded', () => {
-            switchTab('monthly', document.querySelectorAll('.tab-btn')[1]);
-        });
-    @endif
-</script>
- 
-</body>
-</html>
- 
+
+        function updatePreview() {
+            const currVal = parseFloat(document.getElementById('m_reading_value').value);
+            if (isNaN(currVal)) {
+                document.getElementById('invoice-preview').style.display = 'none';
+                return;
+            }
+
+            const prevVal = latestReading !== null ? parseFloat(latestReading) : 0;
+            const usage = Math.max(0, currVal - prevVal);
+            const base = usage * rate;
+            const tax = base * (taxRate / 100);
+            const total = base + tax;
+
+            const fmt = (n) => n.toLocaleString('th-TH', {
+                minimumFractionDigits: 2
+            });
+
+            document.getElementById('prev-val').textContent = fmt(prevVal) + ' หน่วย';
+            document.getElementById('curr-val').textContent = fmt(currVal) + ' หน่วย';
+            document.getElementById('usage-val').textContent = fmt(usage) + ' หน่วย';
+            document.getElementById('total-val').textContent = '฿ ' + fmt(total);
+
+            const baseEl = document.getElementById('base-val');
+            const taxEl = document.getElementById('tax-val');
+            if (baseEl) baseEl.textContent = '฿ ' + fmt(base);
+            if (taxEl) taxEl.textContent = '฿ ' + fmt(tax);
+
+            document.getElementById('invoice-preview').style.display = 'block';
+        }
+
+        @if (old('period_month') || old('period_year'))
+            document.addEventListener('DOMContentLoaded', () => {
+                switchTab('monthly', document.querySelectorAll('.meter-tab-btn')[1]);
+            });
+        @endif
+    </script>
+@endsection
