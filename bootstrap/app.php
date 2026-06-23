@@ -24,5 +24,28 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        $exceptions->render(function (\Illuminate\Http\Exception\HttpResponseException $e, $request) {
+            // Let Laravel handle ValidationException automatically
+            return null;
+        });
+
+        $exceptions->render(function (\Symfony\Component\HttpKernel\Exception\NotFoundHttpException $e, $request) {
+            return response()->view('errors.404', [], 404);
+        });
+
+        $exceptions->render(function (\Illuminate\Contracts\Auth\Access\AuthorizationException $e, $request) {
+            return response()->view('errors.403', ['message' => $e->getMessage()], 403);
+        });
+
+        $exceptions->render(function (\Throwable $e, $request) {
+            // 500 handler (log)
+            if (app()->environment('production')) {
+                report($e);
+            } else {
+                report($e);
+            }
+
+            return response()->view('errors.500', [], 500);
+        });
     })->create();
+

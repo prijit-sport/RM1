@@ -20,7 +20,10 @@ class MaintenanceController extends Controller
      */
     public function index(Request $request)
     {
+        $this->authorize('viewAny', Maintenance::class);
+
         $pendingCount    = Maintenance::where('status', 'pending')->count();
+
         $inProgressCount = Maintenance::where('status', 'in_progress')->count();
 
         $completedThisMonth = Maintenance::where('status', 'completed')
@@ -69,7 +72,10 @@ class MaintenanceController extends Controller
      */
     public function create(Request $request)
     {
+        $this->authorize('create', Maintenance::class);
+
         $rooms      = Room::orderBy('floor')->orderBy('zone')->orderBy('room_number')->get();
+
 
         // ✅ แก้ไข: ส่ง facilities เฉพาะที่ต้องใช้ตอน Lock mode (มาจาก facility_id)
         $facilities = Facility::all();
@@ -103,7 +109,10 @@ class MaintenanceController extends Controller
      */
     public function store(Request $request)
     {
+        $this->authorize('create', Maintenance::class);
+
         $validated = $request->validate([
+
             'room_id'          => 'required|exists:rooms,id',
             'facility_id'      => 'nullable|exists:facilities,id',
             'facility_type'    => 'nullable|in:bed,mattress,wardrobe,dressing_table,tv_stand,clothes_rack',
@@ -144,7 +153,10 @@ class MaintenanceController extends Controller
      */
     public function show(Maintenance $maintenance)
     {
+        $this->authorize('view', $maintenance);
+
         $maintenance->load(['room', 'facility']);
+
         return view('maintenances.show', compact('maintenance'));
     }
 
@@ -153,7 +165,10 @@ class MaintenanceController extends Controller
      */
     public function edit(Maintenance $maintenance)
     {
+        $this->authorize('update', $maintenance);
+
         $rooms      = Room::orderBy('floor')->orderBy('zone')->orderBy('room_number')->get();
+
         $facilities = Facility::all();
         return view('maintenances.edit', compact('maintenance', 'rooms', 'facilities'));
     }
@@ -163,7 +178,10 @@ class MaintenanceController extends Controller
      */
     public function update(Request $request, Maintenance $maintenance)
     {
+        $this->authorize('update', $maintenance);
+
         $validated = $request->validate([
+
             'room_id'          => 'required|exists:rooms,id',
             'facility_id'      => 'nullable|exists:facilities,id',
             'maintenance_type' => 'required',
@@ -193,11 +211,10 @@ class MaintenanceController extends Controller
      */
     public function destroy(Maintenance $maintenance)
     {
-        if (! auth()->check() || ! auth()->user()->isManagerOrAdmin()) {
-            abort(403, 'คุณไม่มีสิทธิ์ดำเนินการนี้');
-        }
+        $this->authorize('delete', $maintenance);
 
         $maintenance->delete();
+
         return redirect()->route('maintenances.index')
             ->with('success', 'ลบรายการเรียบร้อยแล้ว');
     }
@@ -207,7 +224,10 @@ class MaintenanceController extends Controller
      */
     public function startWork(Maintenance $maintenance)
     {
+        $this->authorize('startWork', $maintenance);
+
         $maintenance->update(['status' => 'in_progress']);
+
 
         if ($maintenance->facility_id) {
             Facility::where('id', $maintenance->facility_id)->update([
@@ -223,7 +243,10 @@ class MaintenanceController extends Controller
      */
     public function completeWork(Maintenance $maintenance)
     {
+        $this->authorize('completeWork', $maintenance);
+
         $maintenance->update(['status' => 'completed']);
+
 
         if ($maintenance->facility_id) {
             Facility::where('id', $maintenance->facility_id)->update([
@@ -240,7 +263,10 @@ class MaintenanceController extends Controller
      */
     public function byRoom(int $roomId)
     {
+        $this->authorize('byRoom', Maintenance::class);
+
         $facilities = Facility::where('room_id', $roomId)
+
             ->select('id', 'name', 'type', 'status')
             ->get();
 

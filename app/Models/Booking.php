@@ -37,8 +37,10 @@ class Booking extends Model
     use SoftDeletes;
 
     // Status constants
+    const STATUS_PENDING = 'pending';
     const STATUS_CONFIRMED = 'confirmed';
     const STATUS_CANCELLED = 'cancelled';
+
 
     protected $fillable = [
         'guest_id',
@@ -128,9 +130,10 @@ class Booking extends Model
     public function getStatusLabelAttribute(): string
     {
         return match ($this->status) {
+            self::STATUS_PENDING   => 'รอยืนยัน',
             self::STATUS_CONFIRMED => 'ยืนยันแล้ว',
             self::STATUS_CANCELLED => 'ยกเลิก',
-            default                => 'ยืนยันแล้ว',
+            default                => 'รอยืนยัน',
         };
     }
 
@@ -142,6 +145,7 @@ class Booking extends Model
     public function getStatusBadgeAttribute(): string
     {
         return match ($this->status) {
+            self::STATUS_PENDING   => 'warning',
             self::STATUS_CONFIRMED => 'success',
             self::STATUS_CANCELLED => 'danger',
             default                => 'secondary',

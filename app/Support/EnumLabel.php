@@ -7,6 +7,8 @@ class EnumLabel
     private const MAP = [
         'room_type' => [
             'fan' => ['en' => 'Fan', 'th' => 'พัด'],
+            'air' => ['en' => 'Air Conditioning', 'th' => 'แอร์'],
+            // backward compatibility for old saved data
             'air_conditioning' => ['en' => 'Air Conditioning', 'th' => 'แอร์'],
         ],
         'room_status' => [

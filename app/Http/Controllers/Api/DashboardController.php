@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
@@ -20,9 +20,6 @@ class DashboardController extends Controller
         // ══════════════════════════════════════
         //  KPI Data
         // ══════════════════════════════════════
-
-        // ✅ แก้ไข: รวม Room stats เป็น query เดียวแทนที่จะยิง 4 queries แยก
-        // เดิม: Room::count(), Room::where('occupied'), Room::where('available'), Room::where('maintenance')
         $roomStats = Room::query()
             ->selectRaw("
                 COUNT(*)                                        AS total,
@@ -41,11 +38,7 @@ class DashboardController extends Controller
         $bookingCount = Booking::count();
 
         // ══════════════════════════════════════
-        //  Pending Notifications
-        //  ✅ แก้ไข: ดึงจาก ViewComposer ที่ inject เข้า view อยู่แล้ว
-        //  เดิมยิง query ซ้ำกับ AppServiceProvider::View::composer อีก 3 รายการ
-        //  ตอนนี้ใช้ตัวแปร $pendingPayments และ $pendingMaintenance ที่ ViewComposer inject มาแทน
-        //  (ตัวแปร $expiringContracts ยังต้องดึงเองเพราะ ViewComposer ไม่ส่งออกมา)
+        //  Expiring Contracts
         // ══════════════════════════════════════
         $expiringContracts = Contract::where('status', 'active')
             ->whereDate('end_date', '>=', Carbon::today())
@@ -63,9 +56,9 @@ class DashboardController extends Controller
             ->whereYear('issue_date', $currentYear)
             ->sum('total');
 
-        $lastMonthDate    = Carbon::now()->subMonth();
-        $lastMonth        = $lastMonthDate->month;
-        $lastMonthYear    = $lastMonthDate->year;
+        $lastMonthDate = Carbon::now()->subMonth();
+        $lastMonth     = $lastMonthDate->month;
+        $lastMonthYear = $lastMonthDate->year;
 
         $lastMonthRevenue = Invoice::where('status', 'paid')
             ->whereMonth('issue_date', $lastMonth)
@@ -81,15 +74,15 @@ class DashboardController extends Controller
         //  Monthly Bookings (12 เดือนย้อนหลัง)
         // ══════════════════════════════════════
         $thaiMonths = [
-            1 => 'ม.ค.',
-            2 => 'ก.พ.',
-            3 => 'มี.ค.',
-            4 => 'เม.ย.',
-            5 => 'พ.ค.',
-            6 => 'มิ.ย.',
-            7 => 'ก.ค.',
-            8 => 'ส.ค.',
-            9 => 'ก.ย.',
+            1  => 'ม.ค.',
+            2  => 'ก.พ.',
+            3  => 'มี.ค.',
+            4  => 'เม.ย.',
+            5  => 'พ.ค.',
+            6  => 'มิ.ย.',
+            7  => 'ก.ค.',
+            8  => 'ส.ค.',
+            9  => 'ก.ย.',
             10 => 'ต.ค.',
             11 => 'พ.ย.',
             12 => 'ธ.ค.',
@@ -97,7 +90,7 @@ class DashboardController extends Controller
 
         $monthlyBookings = [];
         for ($i = 11; $i >= 0; $i--) {
-            $date = Carbon::now()->subMonths($i);
+            $date              = Carbon::now()->subMonths($i);
             $monthlyBookings[] = [
                 'label' => $thaiMonths[$date->month] . ' ' . ($date->year + 543),
                 'count' => Booking::whereYear('created_at', $date->year)
@@ -108,7 +101,6 @@ class DashboardController extends Controller
 
         // ══════════════════════════════════════
         //  Room Type Stats
-        //  ✅ แก้ไข: รวมเป็น query เดียวแทน 6 queries แยก (fan×3 + air×3)
         // ══════════════════════════════════════
         $roomTypeRaw = Room::query()
             ->selectRaw("
@@ -124,7 +116,7 @@ class DashboardController extends Controller
 
         $roomTypeStats = [];
         foreach (['fan', 'air'] as $type) {
-            $row = $roomTypeRaw->get($type);
+            $row                  = $roomTypeRaw->get($type);
             $roomTypeStats[$type] = [
                 'available'   => (int) ($row->available   ?? 0),
                 'occupied'    => (int) ($row->occupied    ?? 0),

@@ -8,6 +8,8 @@ use App\Models\Facility;
 use App\Models\Guest;
 use App\Models\Invoice;
 use App\Models\Maintenance;
+use App\Policies\MaintenancePolicy;
+
 use App\Models\Meter;
 use App\Models\Role;
 use App\Models\Room;
@@ -54,6 +56,8 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Meter::class,    MeterPolicy::class);
         Gate::policy(Role::class,     RolePolicy::class);
         Gate::policy(Room::class,     RoomPolicy::class);
+        Gate::policy(Maintenance::class, MaintenancePolicy::class);
+
 
         // Register @role directive for Blade - improved with null safety
         Blade::directive('role', function ($role) {
@@ -91,7 +95,7 @@ class AppServiceProvider extends ServiceProvider
                 ->count();
 
             $pendingBookings = Booking::query()
-                ->where('status', 'pending')
+                ->where('status', Booking::STATUS_PENDING)
                 ->count();
 
             $expiringContracts = Contract::query()

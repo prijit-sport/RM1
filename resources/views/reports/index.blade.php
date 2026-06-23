@@ -357,7 +357,7 @@
                                         <td>
                                             @if ($room->room_type === 'fan')
                                                 <span class="badge bg-info">🌀 พัดลม</span>
-                                            @elseif($room->room_type === 'air_conditioning')
+                                            @elseif($room->room_type === 'air')
                                                 <span class="badge bg-primary">❄️ แอร์</span>
                                             @else<span class="badge bg-secondary">{{ $room->room_type }}</span>
                                             @endif
