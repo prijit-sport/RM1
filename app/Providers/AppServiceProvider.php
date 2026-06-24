@@ -27,6 +27,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\View;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -101,7 +102,7 @@ class AppServiceProvider extends ServiceProvider
             $expiringContracts = Contract::query()
                 ->where('status', 'active')
                 ->whereDate('end_date', '>=', $today)
-                ->whereDate('end_date', '<=', $today->copy()->addDays(30))
+                ->whereDate('end_date', '<=', $today->copy()->addDays(config('rm1.contract_expiry_warning_days')))
                 ->count();
 
             $notifications = collect();

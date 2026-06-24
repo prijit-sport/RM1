@@ -30,7 +30,6 @@ class AuthController extends Controller
             ], 401);
         }
 
-        // Check if user account is active (default to true if column doesn't exist)
         $isActive = $user->is_active ?? true;
         if (!$isActive) {
             return response()->json([
@@ -41,7 +40,17 @@ class AuthController extends Controller
         $token = $user->createToken('api-token')->plainTextToken;
 
         return response()->json([
-            'user' => $user->load('role'),
+            'user' => [
+                'id'         => $user->id,
+                'name'       => $user->name,
+                'email'      => $user->email,
+                'is_active'  => $user->is_active,
+                'created_at' => $user->created_at,
+                'role'       => $user->role ? [
+                    'name'  => $user->role->name,
+                    'label' => $user->role->label ?? $user->role->name,
+                ] : null,
+            ],
             'token' => $token,
         ]);
     }
@@ -57,9 +66,20 @@ class AuthController extends Controller
 
     public function me(Request $request): JsonResponse
     {
+        $user = $request->user()->load('role');
+
         return response()->json([
-            'user' => $request->user()->load('role'),
+            'user' => [
+                'id'         => $user->id,
+                'name'       => $user->name,
+                'email'      => $user->email,
+                'is_active'  => $user->is_active,
+                'created_at' => $user->created_at,
+                'role'       => $user->role ? [
+                    'name'  => $user->role->name,
+                    'label' => $user->role->label ?? $user->role->name,
+                ] : null,
+            ],
         ]);
     }
 }
-

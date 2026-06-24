@@ -43,7 +43,7 @@ class BookingController extends Controller
                 });
             })
             ->latest('id')
-            ->paginate(10)
+            ->paginate(config('rm1.items_per_page'))
             ->withQueryString();
 
         // ✅ แก้ room_type จาก 'air_conditioning' → 'air'

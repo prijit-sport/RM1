@@ -57,10 +57,31 @@ class Room extends Model
     //  RELATIONSHIPS
     // ─────────────────────────────────────────
 
+    public function contracts(): HasMany
+    {
+        return $this->hasMany(\App\Models\Contract::class);
+    }
+
+    public function invoices(): HasMany
+    {
+        return $this->hasMany(\App\Models\Invoice::class);
+    }
+
+    public function facilities(): HasMany
+    {
+        return $this->hasMany(\App\Models\Facility::class);
+    }
+
+    public function maintenances(): HasMany
+    {
+        return $this->hasMany(\App\Models\Maintenance::class);
+    }
+
     public function bookings(): HasMany
     {
         return $this->hasMany(Booking::class);
     }
+
 
     public function meters(): HasMany
     {

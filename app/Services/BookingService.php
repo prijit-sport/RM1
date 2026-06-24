@@ -19,6 +19,7 @@ class BookingService
     public function create(array $data): Booking
     {
         $data['rent_amount'] = $data['rent_amount'] ?? 0;
+
         $data['deposit_amount'] = $data['deposit_amount'] ?? 0;
         $data['total_price'] = (float) $data['rent_amount'] + (float) $data['deposit_amount'];
 
@@ -53,6 +54,7 @@ class BookingService
             if ($booking->status === Booking::STATUS_CONFIRMED) {
                 $this->lockRoom($booking->room_id);
             }
+
 
             return $booking;
         });
@@ -116,7 +118,7 @@ class BookingService
             if ($oldRoomId !== $newRoomId) {
                 $this->releaseRoom($oldRoomId);
 
-                if ($newStatus === Booking::STATUS_CONFIRMED || $newStatus === 'confirmed') {
+                if ($newStatus === Booking::STATUS_CONFIRMED) {
                     $this->lockRoom($newRoomId);
                 }
 
@@ -124,14 +126,15 @@ class BookingService
             }
 
             if ($oldStatus !== $newStatus) {
-                if ($newStatus === Booking::STATUS_CONFIRMED || $newStatus === 'confirmed') {
+                if ($newStatus === Booking::STATUS_CONFIRMED) {
                     $this->lockRoom($newRoomId);
-                } elseif ($newStatus === Booking::STATUS_CANCELLED || $newStatus === 'cancelled') {
+                } elseif ($newStatus === Booking::STATUS_CANCELLED) {
                     $this->releaseRoom($newRoomId);
                 }
             }
 
             return $booking;
+
         });
     }
 

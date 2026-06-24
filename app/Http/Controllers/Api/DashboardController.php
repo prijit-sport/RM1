@@ -7,10 +7,8 @@ use App\Models\Booking;
 use App\Models\Contract;
 use App\Models\Guest;
 use App\Models\Invoice;
-use App\Models\Maintenance;
 use App\Models\Room;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class DashboardController extends Controller
@@ -42,7 +40,7 @@ class DashboardController extends Controller
         // ══════════════════════════════════════
         $expiringContracts = Contract::where('status', 'active')
             ->whereDate('end_date', '>=', Carbon::today())
-            ->whereDate('end_date', '<=', Carbon::today()->addDays(30))
+            ->whereDate('end_date', '<=', Carbon::today()->addDays(config('rm1.contract_expiry_warning_days', 30)))
             ->count();
 
         // ══════════════════════════════════════
