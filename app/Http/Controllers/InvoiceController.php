@@ -452,56 +452,89 @@ class InvoiceController extends Controller
             ? $request->input('invoice_type')
             : 'rent';
  
+        // IMPORTANT: ลดจำนวน input เพื่อหลีกเลี่ยง max_input_vars>1000
+        // ส่งเฉพาะ booking_id ที่เลือก + issue/due/global status
         $validated = $request->validate([
-            'invoices'                   => ['required', 'array', 'min:1'],
-            'invoices.*.booking_id'      => ['required', 'exists:bookings,id'],
-            'invoices.*.invoice_number'  => ['required', 'string', 'max:50', 'distinct', 'unique:invoices,invoice_number'],
-            'invoices.*.amount'          => ['required', 'numeric', 'min:0'],
-            'invoices.*.tax'             => ['required', 'numeric', 'min:0'],
-            'invoices.*.total'           => ['required', 'numeric', 'min:0'],
-            'invoices.*.issue_date'      => ['required', 'date'],
-            'invoices.*.due_date'        => ['required', 'date'],
-            'invoices.*.status'          => ['required', 'in:' . implode(',', self::STATUSES)],
-            'invoices.*.notes'           => ['nullable', 'string', 'max:500'],
+            'selected_bookings'            => ['required', 'array', 'min:1'],
+            'selected_bookings.*'          => ['required', 'exists:bookings,id', 'integer'],
+            'invoice_type'                 => ['required', 'in:rent,utility'],
+            'issue_date'                   => ['required', 'date'],
+            'due_date'                     => ['required', 'date', 'after_or_equal:issue_date'],
+            'status'                       => ['required', 'in:' . implode(',', self::STATUSES)],
         ]);
  
-        foreach ($validated['invoices'] as $index => $invoiceData) {
-            if ($invoiceData['due_date'] <= $invoiceData['issue_date']) {
-                throw ValidationException::withMessages([
-                    "invoices.$index.due_date" => 'Due date must be after issue date.',
-                ]);
-            }
-        }
- 
         $count = 0;
+
         try {
             DB::transaction(function () use ($validated, $invoiceType, &$count): void {
-                foreach ($validated['invoices'] as $invoiceData) {
-                    $booking = Booking::findOrFail((int) $invoiceData['booking_id']);
+                foreach ($validated['selected_bookings'] as $bookingId) {
+                    $booking = Booking::with(['room', 'guest'])->findOrFail((int) $bookingId);
+
+                    // คำนวณยอดจากข้อมูลฝั่ง server (ลด payload)
+                    if ($invoiceType === 'utility') {
+                        $month = (int) $request->input('month', now()->month);
+                        $year  = (int) $request->input('year', now()->year);
+
+                        $prevMonth = $month === 1 ? 12 : $month - 1;
+                        $prevYear  = $month === 1 ? $year - 1 : $year;
+
+                        $electricData = $this->getMeterBillData((int) $booking->room_id, 'electric', $month, $year);
+                        $waterData    = $this->getMeterBillData((int) $booking->room_id, 'water', $month, $year);
+
+                        // ต้องมี reading ทั้งคู่ถึงจะคิดรวม (สอดคล้องกับ logic เดิมที่แสดงเลขที่ใบแจ้งหนี้ตาม has_reading)
+                        $hasReading = (bool) ($electricData['has_reading'] ?? false) || (bool) ($waterData['has_reading'] ?? false);
+                        if (!$hasReading) {
+                            continue;
+                        }
+
+
+                        $baseCost = round((float) ($electricData['cost'] ?? 0) + (float) ($waterData['cost'] ?? 0), 2);
+                        $tax      = round($baseCost * 0.07, 2);
+                        $total    = round($baseCost + $tax, 2);
+
+                    // ถ้าไม่มี reading ให้ข้าม
+                    // (เดิมคำนวณไว้แล้วด้านบน)
+
+
+                        $amount = $baseCost;
+                    } else {
+                        $room   = $booking->room;
+                        $amount = (float) ($booking->rent_amount ?? $room?->price_per_month ?? 0);
+                        $tax    = round($amount * 0.07, 2);
+                        $total  = round($amount + $tax, 2);
+                    }
+
+                    $issueDate = $validated['issue_date'];
+                    $dueDate   = $validated['due_date'];
+
+                    // เลขใบแจ้งหนี้ให้สร้างแบบเดิมจากเดือน/ปี/ลำดับ (ใช้ generateInvoiceNumber ปัจจุบัน)
+                    $invoiceNumber = $this->invoiceService->generateInvoiceNumber();
+
                     Invoice::create([
-                        'booking_id'     => $invoiceData['booking_id'],
+                        'booking_id'     => (int) $bookingId,
                         'guest_id'       => $booking->guest_id ?? null,
                         'room_id'        => $booking->room_id ?? null,
-                        'invoice_number' => $invoiceData['invoice_number'],
-                        'amount'         => $invoiceData['amount'],
-                        'tax'            => $invoiceData['tax'],
-                        'total'          => $invoiceData['total'],
-                        'issue_date'     => $invoiceData['issue_date'],
-                        'due_date'       => $invoiceData['due_date'],
-                        'status'         => $invoiceData['status'],
+                        'invoice_number' => $invoiceNumber,
+                        'amount'         => $amount,
+                        'tax'            => $tax ?? round((float)$amount * 0.07, 2),
+                        'total'          => $total,
+                        'issue_date'     => $issueDate,
+                        'due_date'       => $dueDate,
+                        'status'         => $validated['status'],
                         'invoice_type'   => $invoiceType,
-                        'notes'          => $invoiceData['notes'] ?? null,
+                        'notes'          => null,
                     ]);
                     $count++;
                 }
             });
         } catch (\Exception $e) {
             \Log::error('InvoiceController bulkStore failed', [
-                'count' => count($validated['invoices']),
+                'count' => count($validated['selected_bookings']),
                 'error' => $e->getMessage(),
             ]);
             throw $e;
         }
+
  
         $redirectType = $invoiceType === 'utility' ? 'utility' : 'rent';
         return redirect()

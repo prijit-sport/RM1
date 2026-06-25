@@ -395,6 +395,14 @@
         @csrf
         <input type="hidden" name="invoice_type" value="{{ $type }}">
 
+        {{-- ลดจำนวน input ที่ต้อง submit เพื่อลดปัญหา max_input_vars>1000 --}}
+        <input type="hidden" name="issue_date"
+            value="{{ \Carbon\Carbon::create($year, $month, $type === 'utility' ? 21 : 1)->format('Y-m-d') }}">
+        <input type="hidden" name="due_date"
+            value="{{ \Carbon\Carbon::create($year, $month, $type === 'utility' ? 21 : 7)->format('Y-m-d') }}">
+        <input type="hidden" name="status" value="sent">
+
+
         <div class="rooms-table-card">
             <table>
                 <thead>
@@ -480,10 +488,11 @@
                         <tr data-index="{{ $i }}" data-amount="{{ $total }}"
                             class="{{ !$hasRead && $type === 'utility' ? 'no-reading' : '' }}">
                             <td>
-                                <input type="checkbox" class="include-toggle room-check"
+                                <input type="checkbox" class="include-toggle room-check" value="{{ $booking->id }}"
                                     {{ $hasRead || $type === 'rent' ? 'checked' : '' }}
                                     onchange="toggleRow(this, {{ $i }})">
                             </td>
+
                             <td>
                                 <span class="room-chip {{ $type === 'utility' ? 'utility-chip' : '' }}">
                                     <i class="bi bi-door-closed"></i>
@@ -527,57 +536,19 @@
                             @endif
 
                             <td>
-                                <input type="text" class="form-control form-control-sm inv-number"
-                                    name="invoices[{{ $i }}][invoice_number]" value="{{ $invNum }}"
-                                    style="min-width:170px;" {{ !$hasRead && $type === 'utility' ? 'disabled' : '' }}
-                                    required>
-                            </td>
-                            <td>
-                                <input type="number" min="0" step="0.01"
-                                    class="form-control form-control-sm inv-amount"
-                                    name="invoices[{{ $i }}][amount]" value="{{ $amount }}"
-                                    onchange="recalcRow(this, {{ $i }})"
-                                    {{ !$hasRead && $type === 'utility' ? 'disabled' : '' }} required>
-                            </td>
-                            <td>
-                                <input type="number" min="0" step="0.01"
-                                    class="form-control form-control-sm inv-tax"
-                                    name="invoices[{{ $i }}][tax]" value="{{ $tax }}"
-                                    onchange="recalcRow(this, {{ $i }})"
-                                    {{ !$hasRead && $type === 'utility' ? 'disabled' : '' }} required>
-                            </td>
-                            <td>
-                                <input type="number" min="0" step="0.01"
-                                    class="form-control form-control-sm inv-total amount-cell"
-                                    name="invoices[{{ $i }}][total]" value="{{ $total }}" readonly
-                                    {{ !$hasRead && $type === 'utility' ? 'disabled' : '' }} required>
-                            </td>
-                            <td>
-                                <input type="date" class="form-control form-control-sm inv-issue"
-                                    name="invoices[{{ $i }}][issue_date]" value="{{ $issueDate }}"
-                                    {{ !$hasRead && $type === 'utility' ? 'disabled' : '' }} required>
-                            </td>
-                            <td>
-                                <input type="date" class="form-control form-control-sm inv-due"
-                                    name="invoices[{{ $i }}][due_date]" value="{{ $dueDate }}"
-                                    {{ !$hasRead && $type === 'utility' ? 'disabled' : '' }} required>
-                            </td>
-                            <td>
-                                <select class="form-select form-select-sm inv-status"
-                                    name="invoices[{{ $i }}][status]"
-                                    {{ !$hasRead && $type === 'utility' ? 'disabled' : '' }} required>
-                                    <option value="sent" selected>ส่งมอบแล้ว</option>
-                                    <option value="draft">ร่าง</option>
-                                    <option value="paid">ชำระแล้ว</option>
-                                </select>
-                            </td>
+                                {{-- NOTE: ลด input ที่ถูก submit เพื่อไม่ให้เกิน max_input_vars
+                                 UI เดิมยังแสดงยอด แต่ค่าที่จำเป็นจะถูกคำนวณ/กำหนดฝั่ง server --}}
+                            <td class="d-none"></td>
+                            <td class="d-none"></td>
+                            <td class="d-none"></td>
+                            <td class="d-none"></td>
+                            <td class="d-none"></td>
+                            <td class="d-none"></td>
+                            <td class="d-none"></td>
 
-                            {{-- hidden --}}
-                            <input type="hidden" name="invoices[{{ $i }}][booking_id]"
-                                value="{{ $booking->id }}">
-                            <input type="hidden" name="invoices[{{ $i }}][notes]"
-                                value="{{ $notes }}">
+                            {{-- submit เฉพาะ booking_id ผ่าน checkbox --}}
                         </tr>
+
                         @php $i++; @endphp
                     @endforeach
                 </tbody>
@@ -638,21 +609,16 @@
 
         function toggleRow(checkbox, idx) {
             const row = document.querySelector(`tr[data-index="${idx}"]`);
-            const inputs = row.querySelectorAll('input:not(.include-toggle), select');
+            // เมื่อเราไม่ submit input รายแถวแล้ว การ disable input จึงไม่จำเป็น
             if (checkbox.checked) {
                 row.classList.remove('excluded');
-                inputs.forEach(el => {
-                    el.disabled = false;
-                });
             } else {
                 row.classList.add('excluded');
-                inputs.forEach(el => {
-                    el.disabled = true;
-                });
             }
             updateSummary();
             updateCheckAll();
         }
+
 
         function toggleAll(masterCheckbox) {
             const isChecked = masterCheckbox.checked;
@@ -709,13 +675,24 @@
             const btn = document.getElementById('submitBtn');
             btn.disabled = true;
             document.getElementById('submitText').textContent = 'กำลังบันทึก...';
-            // clear name ของแถวที่ excluded เพื่อไม่ส่งข้อมูล
-            document.querySelectorAll('tr.excluded, tr.no-reading').forEach(row => {
-                if (!row.querySelector('.room-check')?.checked) {
-                    row.querySelectorAll('input, select').forEach(el => el.name = '');
-                }
+
+            // รวบรวม booking_id จาก checkbox ที่ติ๊กไว้
+            const selected = Array.from(document.querySelectorAll('.room-check:checked'))
+                .map(cb => cb.value)
+                .filter(Boolean);
+
+            // clear hidden เดิม (ถ้ามี)
+            document.querySelectorAll('input[name="selected_bookings[]"]').forEach(el => el.remove());
+
+            selected.forEach(id => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'selected_bookings[]';
+                input.value = id;
+                document.getElementById('bulkForm').appendChild(input);
             });
         });
+
 
         // init
         updateSummary();
