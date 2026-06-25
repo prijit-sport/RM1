@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use Illuminate\Support\Facades\Cache;
+
 use App\Models\Booking;
 use App\Models\Invoice;
 use App\Models\Room;
@@ -111,6 +113,9 @@ class InvoiceService
 
         $paidAmount = $amount ?? $invoice->total;
         DB::transaction(function () use ($invoice, $method, $paidAmount) {
+            Cache::forget('layout_notifications');
+
+
             $invoice->update([
                 'status'         => 'paid',
                 'payment_method' => $method,

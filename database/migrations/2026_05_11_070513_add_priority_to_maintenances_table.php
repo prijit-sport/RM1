@@ -12,7 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('maintenances', function (Blueprint $table) {
-            //
+            $table->string('maintenance_type')->nullable()->after('issue_type')
+                ->comment('ประเภทการซ่อม เช่น electrical, plumbing, furniture');
         });
     }
 
@@ -22,7 +23,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('maintenances', function (Blueprint $table) {
-            //
+            $table->dropColumn('maintenance_type');
         });
     }
 };

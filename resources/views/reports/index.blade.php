@@ -743,7 +743,7 @@
             // ───── Mapping ไทย ─────
             const roomTypeLabels = {
                 fan: '🌀 พัดลม',
-                air_conditioning: '❄️ แอร์'
+                air: '❄️ แอร์'
             };
             const statusLabels = {
                 good: '✅ ใช้งานได้',

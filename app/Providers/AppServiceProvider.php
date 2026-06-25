@@ -86,24 +86,33 @@ class AppServiceProvider extends ServiceProvider
 
             $today = Carbon::today();
 
-            $overdueInvoices = Invoice::query()
-                ->whereIn('status', ['sent', 'overdue'])
-                ->whereDate('due_date', '<', $today)
-                ->count();
+            $counts = Cache::remember('layout_notifications', 300, function () use ($today) {
+                return [
+                    'overdueInvoices' => Invoice::query()
+                        ->whereIn('status', ['sent', 'overdue'])
+                        ->whereDate('due_date', '<', $today)
+                        ->count(),
 
-            $pendingMaintenance = Maintenance::query()
-                ->whereIn('status', ['pending', 'in_progress'])
-                ->count();
+                    'pendingMaintenance' => Maintenance::query()
+                        ->whereIn('status', ['pending', 'in_progress'])
+                        ->count(),
 
-            $pendingBookings = Booking::query()
-                ->where('status', Booking::STATUS_PENDING)
-                ->count();
+                    'pendingBookings' => Booking::query()
+                        ->where('status', Booking::STATUS_PENDING)
+                        ->count(),
 
-            $expiringContracts = Contract::query()
-                ->where('status', 'active')
-                ->whereDate('end_date', '>=', $today)
-                ->whereDate('end_date', '<=', $today->copy()->addDays(config('rm1.contract_expiry_warning_days')))
-                ->count();
+                    'expiringContracts' => Contract::query()
+                        ->where('status', 'active')
+                        ->whereDate('end_date', '>=', $today)
+                        ->whereDate('end_date', '<=', $today->copy()->addDays(config('rm1.contract_expiry_warning_days')))
+                        ->count(),
+                ];
+            });
+
+            $overdueInvoices = $counts['overdueInvoices'];
+            $pendingMaintenance = $counts['pendingMaintenance'];
+            $pendingBookings = $counts['pendingBookings'];
+            $expiringContracts = $counts['expiringContracts'];
 
             $notifications = collect();
 

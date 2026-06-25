@@ -9,6 +9,7 @@ use App\Support\AuditLogger;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Validation\ValidationException;
  
 /**
@@ -118,6 +119,7 @@ class ContractService
         // ─── Step 7: Save to database (transaction) ──────────────────────
         $contract = DB::transaction(function () use ($validated, $shouldOccupied) {
             $contract = Contract::create($validated);
+            Cache::forget('layout_notifications');
             \Log::info('✅ Contract created', [
                 'id' => $contract->id,
                 'number' => $contract->contract_number,
@@ -211,6 +213,7 @@ class ContractService
  
         // ─── Save to database (transaction) ──────────────────────────────
         $contract = DB::transaction(function () use ($contract, $validated, $oldStatus, $newStatus, $oldRoomId, $newRoomId) {
+            Cache::forget('layout_notifications');
             $contract->update($validated);
             \Log::info('✅ Contract updated', [
                 'id' => $contract->id,

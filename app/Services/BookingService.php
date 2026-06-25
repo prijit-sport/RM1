@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use Illuminate\Support\Facades\Cache;
+
 use App\Models\Booking;
 use App\Models\Meter;
 use App\Models\MeterReading;
@@ -50,6 +52,8 @@ class BookingService
 
         return DB::transaction(function () use ($data) {
             $booking = Booking::create($data);
+
+            Cache::forget('layout_notifications');
 
             if ($booking->status === Booking::STATUS_CONFIRMED) {
                 $this->lockRoom($booking->room_id);
@@ -190,15 +194,21 @@ class BookingService
         return DB::transaction(function () use ($booking) {
             $booking->update(['status' => Booking::STATUS_CANCELLED]);
             $this->releaseRoom($booking->room_id);
+
+            Cache::forget('layout_notifications');
+
             return $booking;
         });
     }
+
 
     // ─────────────────────────────────────────
     //  DESTROY
     // ─────────────────────────────────────────
     public function destroy(Booking $booking): void
     {
+        Cache::forget('layout_notifications');
+
         DB::transaction(function () use ($booking) {
             if ($booking->status === Booking::STATUS_CONFIRMED || $booking->status === 'confirmed') {
                 $this->releaseRoom($booking->room_id);

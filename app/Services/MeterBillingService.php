@@ -8,6 +8,7 @@ use App\Models\Meter;
 use App\Models\MeterReading;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class MeterBillingService
 {
@@ -155,14 +156,15 @@ class MeterBillingService
         ?string $notes = null
     ): array {
         try {
-            $periodStart = Carbon::create($year, $month, 1)->startOfDay();
-            $periodEnd   = $periodStart->copy()->endOfMonth();
+            return DB::transaction(function () use ($meter, $month, $year, $readingValue, $notes) {
+                $periodStart = Carbon::create($year, $month, 1)->startOfDay();
+                $periodEnd   = $periodStart->copy()->endOfMonth();
 
-            // ✅ Step 1: หา active booking
-            $booking = $this->findActiveBooking($meter);
+                // ✅ Step 1: หา active booking
+                $booking = $this->findActiveBooking($meter);
 
-            // ✅ Step 2: บันทึก/อัปเดต reading ของมิเตอร์นี้
-            $reading = $this->upsertReading(
+                // ✅ Step 2: บันทึก/อัปเดต reading ของมิเตอร์นี้
+                $reading = $this->upsertReading(
                 $meter,
                 $booking,
                 $month,
@@ -192,15 +194,16 @@ class MeterBillingService
                 $grandTotal
             );
 
-            return [
-                'success' => true,
-                'reading' => $reading,
-                'invoice' => $invoice,
-                'totals'  => [
-                    'electric' => round($breakdown['electric']['total'], 2),
-                    'water'    => round($breakdown['water']['total'], 2),
-                ],
-            ];
+                return [
+                    'success' => true,
+                    'reading' => $reading,
+                    'invoice' => $invoice,
+                    'totals'  => [
+                        'electric' => round($breakdown['electric']['total'], 2),
+                        'water'    => round($breakdown['water']['total'], 2),
+                    ],
+                ];
+            });
         } catch (\Exception $e) {
             \Log::error('MeterBillingService recordMonthlyAndCreateInvoice failed', [
                 'meter_id' => $meter->id,

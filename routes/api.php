@@ -1,7 +1,8 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
-use App\Http\Controllers\Api\ApiDashboardController;
+use App\Http\Controllers\DashboardController;
+
 use Illuminate\Support\Facades\Route;
 
 // Public routes
@@ -15,6 +16,6 @@ Route::middleware('throttle:60,1')->group(function () {
         Route::get('/me', [AuthController::class, 'me']);
 
         // Dashboard
-        Route::get('/dashboard', [ApiDashboardController::class, 'index']);
+        Route::get('/dashboard', [DashboardController::class, 'index']);
     });
 });

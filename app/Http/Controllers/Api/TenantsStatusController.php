@@ -14,11 +14,10 @@ use Illuminate\Http\Request;
  * รวมรายชื่อผู้เช่า + สถานะห้อง + สถานะบิล ในหน้าเดียว
  *
  * ⚠️ สมมุติฐาน schema (ปรับได้):
- * - rooms.room_type   : เก็บค่า "แอร์" / "พัดลม" (ภาษาไทย)
- *   ถ้าระบบเก็บเป็น 'air' / 'fan' ภาษาอังกฤษ ให้ค้นหาคำว่า "🔧 [ปรับตรงนี้]" แล้วแก้
+ * - rooms.room_type   : เก็บค่า 'air' / 'fan'
  * - rooms.zone        : โซน เก็บเป็นข้อความหรือเลข
  * - rooms.price (หรือ rooms.monthly_rent) : ราคาต่อเดือน
- * - bookings.status   : ใช้ค่า 'checked_in' สำหรับผู้เช่าปัจจุบัน
+ * - bookings.status   : ใช้ค่า Booking::STATUS_CONFIRMED สำหรับผู้เช่าปัจจุบัน
  * - bookings.check_in_date : วันที่เข้าพัก
  * - invoices.status   : 'paid' / 'pending' / 'overdue'
  * - invoices.due_date : วันที่ครบกำหนดชำระ
@@ -33,7 +32,7 @@ class TenantsStatusController extends Controller
  
         // ── Query หลัก: ผู้เช่าที่กำลังพักอยู่ ──
         $query = Booking::with(['guest', 'room', 'invoices'])
-            ->where('status', 'checked_in');  // 🔧 [ปรับตรงนี้] ถ้าใช้สถานะอื่น เช่น 'active'
+            ->where('status', Booking::STATUS_CONFIRMED);
  
         // ── Filter โซน ──
         if ($request->filled('zone')) {
@@ -55,13 +54,13 @@ class TenantsStatusController extends Controller
         $tenants = $query->orderBy('room_id')->paginate(15)->withQueryString();
  
         // ── สถิติ ──
-        $activeQuery   = Booking::where('status', 'checked_in');
+        $activeQuery   = Booking::where('status', Booking::STATUS_CONFIRMED);
         $totalTenants  = (clone $activeQuery)->count();
         $acRoomsCount  = (clone $activeQuery)
-            ->whereHas('room', fn ($q) => $q->where('room_type', 'like', '%แอร์%'))  // 🔧 [ปรับตรงนี้]
+            ->whereHas('room', fn ($q) => $q->where('room_type', 'air'))
             ->count();
         $fanRoomsCount = (clone $activeQuery)
-            ->whereHas('room', fn ($q) => $q->where('room_type', 'like', '%พัดลม%'))  // 🔧 [ปรับตรงนี้]
+            ->whereHas('room', fn ($q) => $q->where('room_type', 'fan'))
             ->count();
  
         // ── สถิติบิล (ใช้ try/catch กันกรณี schema ของ invoice ต่างจากที่คิด) ──

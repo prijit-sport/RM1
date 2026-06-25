@@ -7,6 +7,8 @@ use App\Models\Maintenance;
 use App\Models\Room;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use App\Http\Requests\StoreMaintenanceRequest;
+use App\Http\Requests\UpdateMaintenanceRequest;
 
 /**
  * หมายเหตุ: โค้ดนี้เป็น Laravel (access model fields เป็น property)
@@ -107,21 +109,11 @@ class MaintenanceController extends Controller
      *   - โหมด Lock (มาจาก Facility): ใช้ facility_id จาก hidden input
      *   - โหมดปกติ: ใช้ facility_type (6 ประเภทคงที่) ไม่มี facility_id
      */
-    public function store(Request $request)
+    public function store(StoreMaintenanceRequest $request)
     {
         $this->authorize('create', Maintenance::class);
 
-        $validated = $request->validate([
-
-            'room_id'          => 'required|exists:rooms,id',
-            'facility_id'      => 'nullable|exists:facilities,id',
-            'facility_type'    => 'nullable|in:bed,mattress,wardrobe,dressing_table,tv_stand,clothes_rack',
-            'maintenance_type' => 'required',
-            'description'      => 'required',
-            'status'           => 'required|in:pending,in_progress,completed,cancelled',
-            'priority'         => 'nullable|in:ทั่วไป,ด่วน,ด่วนมาก',
-            'notes'            => 'nullable',
-        ]);
+        $validated = $request->validated();
 
         // ✅ ตัด facility_type ออก ไม่ส่งลง DB (เก็บแค่ facility_id)
         // facility_type ใช้เพื่อ display เท่านั้น ไม่มี column นี้ใน maintenances table
@@ -176,22 +168,11 @@ class MaintenanceController extends Controller
     /**
      * อัปเดตข้อมูลการแจ้งซ่อม
      */
-    public function update(Request $request, Maintenance $maintenance)
+    public function update(UpdateMaintenanceRequest $request, Maintenance $maintenance)
     {
         $this->authorize('update', $maintenance);
 
-        $validated = $request->validate([
-
-            'room_id'          => 'required|exists:rooms,id',
-            'facility_id'      => 'nullable|exists:facilities,id',
-            'maintenance_type' => 'required',
-            'description'      => 'nullable',
-            'assigned_to'      => 'nullable',
-            'cost'             => 'nullable|numeric',
-            'status'           => 'required|in:pending,in_progress,completed,cancelled',
-            'priority'         => 'nullable|in:ทั่วไป,ด่วน,ด่วนมาก',
-            'notes'            => 'nullable',
-        ]);
+        $validated = $request->validated();
 
         $maintenance->update($validated);
 
