@@ -2,14 +2,17 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Resources\LoginResource;
+use App\Http\Resources\UserResource;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
-    public function login(Request $request): JsonResponse
+    public function login(Request $request): JsonResource|JsonResponse
     {
         $request->validate([
             'email' => 'required|email',
@@ -39,18 +42,8 @@ class AuthController extends Controller
 
         $token = $user->createToken('api-token')->plainTextToken;
 
-        return response()->json([
-            'user' => [
-                'id'         => $user->id,
-                'name'       => $user->name,
-                'email'      => $user->email,
-                'is_active'  => $user->is_active,
-                'created_at' => $user->created_at,
-                'role'       => $user->role ? [
-                    'name'  => $user->role->name,
-                    'label' => $user->role->label ?? $user->role->name,
-                ] : null,
-            ],
+        return new LoginResource([
+            'user'  => $user->load('role'),
             'token' => $token,
         ]);
     }
@@ -64,22 +57,8 @@ class AuthController extends Controller
         ]);
     }
 
-    public function me(Request $request): JsonResponse
+    public function me(Request $request): JsonResource
     {
-        $user = $request->user()->load('role');
-
-        return response()->json([
-            'user' => [
-                'id'         => $user->id,
-                'name'       => $user->name,
-                'email'      => $user->email,
-                'is_active'  => $user->is_active,
-                'created_at' => $user->created_at,
-                'role'       => $user->role ? [
-                    'name'  => $user->role->name,
-                    'label' => $user->role->label ?? $user->role->name,
-                ] : null,
-            ],
-        ]);
+        return new UserResource($request->user()->load('role'));
     }
 }

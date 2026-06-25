@@ -6,16 +6,11 @@ use App\Models\Contract;
 use App\Models\Room;
 use App\Models\Guest;
 use App\Services\ContractService;
+use App\Http\Requests\StoreContractRequest;
+use App\Http\Requests\UpdateContractRequest;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
  
-/**
- * ContractController - FIXED & COMPLETE
- * 
- * ✅ FIXES:
- * 1. Added advance_payment_months to validation
- * 2. Proper error handling
- * 3. Better N+1 query prevention
- */
 class ContractController extends Controller
 {
     public function __construct(protected readonly ContractService $contractService)
@@ -26,7 +21,6 @@ class ContractController extends Controller
     {
         $this->authorize('viewAny', Contract::class);
  
-        // ✅ Eager load relations to prevent N+1
         $contracts = Contract::with(['room', 'guest'])
             ->when($request->filled('status'), function ($query) use ($request) {
                 $query->where('status', $request->status);
@@ -65,54 +59,28 @@ class ContractController extends Controller
         return view('contracts.create', compact('rooms', 'guests', 'contractNumber'));
     }
  
-    public function store(Request $request)
+    public function store(StoreContractRequest $request)
     {
         $this->authorize('create', Contract::class);
  
-        $validated = $request->validate([
-            'contract_number' => 'nullable|string|max:255|unique:contracts,contract_number',
-            'room_id' => 'required|exists:rooms,id',
-            'guest_id' => 'required|exists:guests,id',
-            'title' => 'required|max:200',
-            'contract_date' => 'nullable|date',
-            'landlord_name' => 'nullable|string|max:255',
-            'landlord_id_number' => 'nullable|string|max:20',
-            'landlord_address' => 'nullable|max:500',
-            'landlord_phone' => 'nullable|string|max:20',
-            'start_date' => 'required|date',
-            'end_date' => 'required|date|after:start_date',
-            'monthly_rent' => 'required|numeric|min:0',
-            'monthly_rent_text' => 'nullable|string|max:500',
-            'deposit' => 'nullable|numeric|min:0',
-            'advance_payment_months' => 'nullable|integer|min:0|max:60', // ✅ ADDED
-            'advance_payment' => 'nullable|numeric|min:0',
-            'electricity_rate' => 'nullable|numeric|min:0',
-            'water_rate' => 'nullable|numeric|min:0',
-            'late_fee' => 'nullable|numeric|min:0',
-            'other_fees' => 'nullable|max:1000',
-            'status' => 'required|in:draft,pending,active,completed,cancelled',
-            'terms' => 'nullable|max:5000',
-            'tenant_signature' => 'nullable|string|max:255',
-            'landlord_signature' => 'nullable|string|max:255',
-            'witness_signature' => 'nullable|string|max:255',
-            'tenant_sign_date' => 'nullable|date',
-            'landlord_sign_date' => 'nullable|date',
-            'witness_sign_date' => 'nullable|date',
-            'description' => 'nullable|max:1000',
-            'notes' => 'nullable|max:1000',
-        ]);
- 
         try {
-            $this->contractService->create($validated);
+            $this->contractService->create($request->validated());
  
             return redirect()->route('contracts.index')
                 ->with('success', 'สัญญาเช่าถูกสร้างสำเร็จ');
+ 
+        } catch (ValidationException $e) {
+            // ✅ ส่ง validation errors กลับไปที่ session ให้ถูกต้อง
+            return redirect()->back()
+                ->withInput()
+                ->withErrors($e->errors());
+ 
         } catch (\Exception $e) {
             \Log::error('ContractController store failed', ['error' => $e->getMessage()]);
  
             return redirect()->back()
                 ->withInput()
-                ->withErrors(['error' => 'ไม่สามารถสร้างสัญญาได้ โปรดลองใหม่']);
+                ->withErrors(['error' => 'ไม่สามารถสร้างสัญญาได้ กรุณาลองใหม่']);
         }
     }
  
@@ -135,54 +103,27 @@ class ContractController extends Controller
         return view('contracts.edit', compact('contract', 'rooms', 'guests'));
     }
  
-    public function update(Request $request, Contract $contract)
+    public function update(UpdateContractRequest $request, Contract $contract)
     {
         $this->authorize('update', $contract);
  
-        $validated = $request->validate([
-            'contract_number' => 'nullable|string|max:255|unique:contracts,contract_number,' . $contract->id,
-            'room_id' => 'required|exists:rooms,id',
-            'guest_id' => 'required|exists:guests,id',
-            'title' => 'required|max:200',
-            'contract_date' => 'nullable|date',
-            'landlord_name' => 'nullable|string|max:255',
-            'landlord_id_number' => 'nullable|string|max:20',
-            'landlord_address' => 'nullable|max:500',
-            'landlord_phone' => 'nullable|string|max:20',
-            'start_date' => 'required|date',
-            'end_date' => 'required|date|after:start_date',
-            'monthly_rent' => 'required|numeric|min:0',
-            'monthly_rent_text' => 'nullable|string|max:500',
-            'deposit' => 'nullable|numeric|min:0',
-            'advance_payment_months' => 'nullable|integer|min:0|max:60', // ✅ ADDED
-            'advance_payment' => 'nullable|numeric|min:0',
-            'electricity_rate' => 'nullable|numeric|min:0',
-            'water_rate' => 'nullable|numeric|min:0',
-            'late_fee' => 'nullable|numeric|min:0',
-            'other_fees' => 'nullable|max:1000',
-            'status' => 'required|in:draft,pending,active,completed,cancelled',
-            'terms' => 'nullable|max:5000',
-            'tenant_signature' => 'nullable|string|max:255',
-            'landlord_signature' => 'nullable|string|max:255',
-            'witness_signature' => 'nullable|string|max:255',
-            'tenant_sign_date' => 'nullable|date',
-            'landlord_sign_date' => 'nullable|date',
-            'witness_sign_date' => 'nullable|date',
-            'description' => 'nullable|max:1000',
-            'notes' => 'nullable|max:1000',
-        ]);
- 
         try {
-            $this->contractService->update($contract, $validated);
+            $this->contractService->update($contract, $request->validated());
  
             return redirect()->route('contracts.show', $contract)
-                ->with('success', 'สัญญาเช่าถูกแก้ไขสำเร็จ');
+                ->with('success', 'สัญญาเช่าถูกอัปเดตสำเร็จ');
+ 
+        } catch (ValidationException $e) {
+            return redirect()->back()
+                ->withInput()
+                ->withErrors($e->errors());
+ 
         } catch (\Exception $e) {
             \Log::error('ContractController update failed', ['error' => $e->getMessage()]);
  
             return redirect()->back()
                 ->withInput()
-                ->withErrors(['error' => 'ไม่สามารถแก้ไขสัญญาได้ โปรดลองใหม่']);
+                ->withErrors(['error' => 'ไม่สามารถอัปเดตสัญญาได้ กรุณาลองใหม่']);
         }
     }
  
@@ -200,11 +141,12 @@ class ContractController extends Controller
  
             return redirect()->route('contracts.index')
                 ->with('success', 'สัญญาเช่าถูกลบสำเร็จ');
+ 
         } catch (\Exception $e) {
             \Log::error('ContractController destroy failed', ['error' => $e->getMessage()]);
  
             return redirect()->back()
-                ->withErrors(['error' => 'ไม่สามารถลบสัญญาได้ โปรดลองใหม่']);
+                ->withErrors(['error' => 'ไม่สามารถลบสัญญาได้ กรุณาลองใหม่']);
         }
     }
  
@@ -218,15 +160,15 @@ class ContractController extends Controller
                 ->get();
  
             $filename = 'contracts_export_' . date('Y-m-d_H-i-s') . '.xlsx';
- 
             $rows = $this->contractService->formatForExport($contracts);
  
             return xlsx_download($filename, $rows);
+ 
         } catch (\Exception $e) {
             \Log::error('ContractController export failed', ['error' => $e->getMessage()]);
  
             return redirect()->back()
-                ->withErrors(['error' => 'ไม่สามารถ export ได้ โปรดลองใหม่']);
+                ->withErrors(['error' => 'ไม่สามารถ export ได้ กรุณาลองใหม่']);
         }
     }
  
@@ -245,4 +187,4 @@ class ContractController extends Controller
         return view('contracts.expiring', compact('contracts'));
     }
 }
-
+ 

@@ -16,13 +16,14 @@ class UserResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'email' => $this->email,
-            'role' => [
-                'name' => optional($this->role)->name,
-                'label' => optional($this->role)->label,
-            ],
             'is_active' => $this->is_active,
             'created_at' => optional($this->created_at)->toISOString(),
+            'role' => $this->role ? [
+                'name' => $this->role->name,
+                'label' => $this->role->label ?? $this->role->name,
+            ] : null,
         ];
     }
 }
+
 

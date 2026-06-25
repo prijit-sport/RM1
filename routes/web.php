@@ -31,7 +31,6 @@ Route::middleware(['web'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
  
     // --- Redirect Root ---
-    // ✅ แก้ไข: ถ้า login แล้วไป dashboard, ถ้ายังไม่ login ไป login page
     Route::get('/', function () {
         if (auth()->check()) {
             return redirect('/dashboard');
@@ -122,8 +121,8 @@ Route::middleware(['web'])->group(function () {
         Route::resource('roles', RoleController::class);
     });
  
+    // ✅ แก้ไข: return 404 response แทน abort(404) เพื่อให้ test ผ่าน
     Route::fallback(function () {
-        abort(404);
+        return response()->view('errors.404', [], 404);
     });
 });
- 

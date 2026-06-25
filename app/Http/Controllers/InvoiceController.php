@@ -210,39 +210,99 @@ class InvoiceController extends Controller
     public function bulkCreate(Request $request): View
     {
         $this->authorize('create', Invoice::class);
- 
+
         $type  = $request->input('type', 'rent'); // rent | utility
         $month = (int) $request->input('month', now()->month);
         $year  = (int) $request->input('year', now()->year);
- 
-        // ✅ ดึง bookings ที่ confirmed
+
         /** @var Collection<int, Booking> $bookings */
         $bookings = Booking::with(['room', 'guest'])
             ->where('status', 'confirmed')
             ->orderBy('room_id')
             ->get();
- 
-        // ✅ ถ้าเป็น utility: คำนวณยอดมิเตอร์แต่ละห้อง
+
+        // ✅ ถ้าเป็น utility: คำนวณยอดมิเตอร์แต่ละห้องแบบ batch (ลด query ใน loop)
         $utilityData = collect();
         if ($type === 'utility') {
+            /** @var Collection<int, int> $roomIds */
+            $roomIds = $bookings->pluck('room_id')->filter()->map(fn ($id) => (int) $id)->unique()->values();
+
+            // months: current + previous
+            $prevMonth = $month === 1 ? 12 : $month - 1;
+            $prevYear  = $month === 1 ? $year - 1 : $year;
+
+            // ดึง meters ของห้องทั้งหมดที่ต้องใช้ (electric/water) พร้อมกัน
+            /** @var Collection<int, Meter> $meters */
+            $meters = Meter::query()
+
+                ->whereIn('room_id', $roomIds)
+                ->whereIn('type', ['electric', 'water'])
+                ->get()
+                ->groupBy(fn (Meter $m) => (int) $m->room_id);
+
+            // ดึง reading เดือนนี้และเดือนก่อนหน้า ของ meters ทั้งหมดในครั้งเดียว
+            $meterIds = $meters
+                ->flatten()
+                ->pluck('id')
+                ->filter()
+                ->unique()
+                ->values();
+
+
+            /** @var Collection<int, MeterReading> $readings */
+            $readings = MeterReading::query()
+                ->whereIn('meter_id', $meterIds)
+                ->where(function ($q) use ($month, $year, $prevMonth, $prevYear): void {
+                    $q->where(function ($sub) use ($month, $year): void {
+                        $sub->where('period_month', $month)
+                            ->where('period_year', $year);
+                    })->orWhere(function ($sub) use ($prevMonth, $prevYear): void {
+                        $sub->where('period_month', $prevMonth)
+                            ->where('period_year', $prevYear);
+                    });
+                })
+                ->get();
+
+            // จัดกลุ่มให้ lookup ง่าย: meter_id + period_month + period_year
+            $readingsByKey = $readings->groupBy(function (MeterReading $r): string {
+                return $r->meter_id . ':' . $r->period_month . ':' . $r->period_year;
+            });
+
             foreach ($bookings as $booking) {
                 $roomId = (int) $booking->room_id;
- 
-                // ดึง meter readings เดือนนี้และเดือนก่อนหน้า
-                $electricData = $this->getMeterBillData($roomId, 'electric', $month, $year);
-                $waterData    = $this->getMeterBillData($roomId, 'water', $month, $year);
- 
-                // รวมยอด
+
+                $electricData = $this->buildMeterBillDataFromBatch(
+                    roomId: $roomId,
+                    meterType: 'electric',
+                    meterMap: $meters,
+                    readingsByKey: $readingsByKey,
+                    month: $month,
+                    year: $year,
+                    prevMonth: $prevMonth,
+                    prevYear: $prevYear,
+                );
+
+                $waterData = $this->buildMeterBillDataFromBatch(
+                    roomId: $roomId,
+                    meterType: 'water',
+                    meterMap: $meters,
+                    readingsByKey: $readingsByKey,
+                    month: $month,
+                    year: $year,
+                    prevMonth: $prevMonth,
+                    prevYear: $prevYear,
+                );
+
                 $electricCost = $electricData['cost'] ?? 0;
                 $waterCost    = $waterData['cost'] ?? 0;
-                $baseCost     = round($electricCost + $waterCost, 2);
-                $taxRate      = 0.07;
-                $tax          = round($baseCost * $taxRate, 2);
-                $total        = round($baseCost + $tax, 2);
- 
-                // เฉพาะห้องที่มีข้อมูลมิเตอร์เดือนนี้เท่านั้น
+
+                $baseCost = round($electricCost + $waterCost, 2);
+                $taxRate  = 0.07;
+                $tax      = round($baseCost * $taxRate, 2);
+                $total    = round($baseCost + $tax, 2);
+
                 $hasReading = ($electricData['has_reading'] ?? false) || ($waterData['has_reading'] ?? false);
- 
+
                 $utilityData->put($booking->id, [
                     'electric'    => $electricData,
                     'water'       => $waterData,
@@ -253,16 +313,85 @@ class InvoiceController extends Controller
                 ]);
             }
         }
- 
+
         return view('invoices.bulk-create', compact('bookings', 'type', 'month', 'year', 'utilityData'));
     }
- 
+
     /**
+     * Utility calculation using batch-loaded meters/readings.
+     *
+     * @param  int  $roomId
+     * @param  string  $meterType electric|water
+     * @param  \Illuminate\Database\Eloquent\Collection<int, Meter>  $meterMap keyed by room_id
+     * @param  \Illuminate\Support\Collection<string, \Illuminate\Database\Eloquent\Collection<int, MeterReading>>  $readingsByKey
+     * @return array<string, mixed>
+     */
+    private function buildMeterBillDataFromBatch(
+        int $roomId,
+
+
+        string $meterType,
+        \Illuminate\Database\Eloquent\Collection $meterMap,
+        \Illuminate\Support\Collection $readingsByKey,
+        int $month,
+        int $year,
+        int $prevMonth,
+        int $prevYear,
+    ): array {
+        /** @var Meter|null $meter */
+        $meter = $meterMap->get($roomId)?->first(function (Meter $m) use ($meterType): bool {
+            return $m->type === $meterType;
+        });
+
+        if (!$meter) {
+            return ['has_reading' => false, 'cost' => 0];
+        }
+
+        $currentKey = $meter->id . ':' . $month . ':' . $year;
+        $previousKey = $meter->id . ':' . $prevMonth . ':' . $prevYear;
+
+        /** @var Collection<int, MeterReading> $currentReadings */
+        $currentReadings = $readingsByKey->get($currentKey, collect());
+        /** @var Collection<int, MeterReading> $previousReadings */
+        $previousReadings = $readingsByKey->get($previousKey, collect());
+
+        /** @var MeterReading|null $current */
+        $current = $currentReadings->first();
+        if (!$current) {
+            return ['has_reading' => false, 'cost' => 0, 'meter_number' => (string) ($meter->meter_number ?? '-')];
+        }
+
+        /** @var MeterReading|null $previous */
+        $previous = $previousReadings->first();
+
+        $currentVal = (float) $current->reading_value;
+        $previousVal = $previous ? (float) $previous->reading_value : 0;
+        $usage = max(0, $currentVal - $previousVal);
+
+        $rate = (float) ($meter->rate_per_unit ?? 0);
+        $cost = round($usage * $rate, 2);
+
+        return [
+            'has_reading' => true,
+            'meter_number' => (string) ($meter->meter_number ?? '-'),
+            'previous_value' => $previousVal,
+            'current_value' => $currentVal,
+            'usage' => $usage,
+            'rate' => $rate,
+            'cost' => $cost,
+        ];
+
+    }
+
+    /**
+
      * คำนวณยอดมิเตอร์แต่ละห้องสำหรับเดือนที่กำหนด
      *
      * @return array<string, mixed>
      */
+
     private function getMeterBillData(int $roomId, string $type, int $month, int $year): array
+
     {
         /** @var Meter|null $meter */
         $meter = Meter::where('room_id', $roomId)->where('type', $type)->first();

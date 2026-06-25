@@ -1,7 +1,7 @@
 <?php
-
+ 
 namespace App\Http\Controllers\Api;
-
+ 
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use App\Models\Contract;
@@ -9,11 +9,11 @@ use App\Models\Guest;
 use App\Models\Invoice;
 use App\Models\Room;
 use Carbon\Carbon;
-use Illuminate\View\View;
-
+use Illuminate\Http\JsonResponse;
+ 
 class DashboardController extends Controller
 {
-    public function index(): View
+    public function index(): JsonResponse
     {
         // ══════════════════════════════════════
         //  KPI Data
@@ -26,48 +26,50 @@ class DashboardController extends Controller
                 SUM(status = 'maintenance')                     AS maintenance
             ")
             ->first();
-
+ 
         $roomCount        = (int) ($roomStats->total       ?? 0);
         $occupiedCount    = (int) ($roomStats->occupied    ?? 0);
         $availableCount   = (int) ($roomStats->available   ?? 0);
         $maintenanceCount = (int) ($roomStats->maintenance ?? 0);
-
+ 
         $guestCount   = Guest::count();
         $bookingCount = Booking::count();
-
+ 
         // ══════════════════════════════════════
         //  Expiring Contracts
         // ══════════════════════════════════════
         $expiringContracts = Contract::where('status', 'active')
             ->whereDate('end_date', '>=', Carbon::today())
-            ->whereDate('end_date', '<=', Carbon::today()->addDays(config('rm1.contract_expiry_warning_days', 30)))
+            ->whereDate('end_date', '<=', Carbon::today()->addDays(
+                config('rm1.contract_expiry_warning_days', 30)
+            ))
             ->count();
-
+ 
         // ══════════════════════════════════════
         //  Monthly Revenue
         // ══════════════════════════════════════
         $currentMonth = Carbon::now()->month;
         $currentYear  = Carbon::now()->year;
-
+ 
         $currentMonthRevenue = Invoice::where('status', 'paid')
             ->whereMonth('issue_date', $currentMonth)
             ->whereYear('issue_date', $currentYear)
             ->sum('total');
-
+ 
         $lastMonthDate = Carbon::now()->subMonth();
         $lastMonth     = $lastMonthDate->month;
         $lastMonthYear = $lastMonthDate->year;
-
+ 
         $lastMonthRevenue = Invoice::where('status', 'paid')
             ->whereMonth('issue_date', $lastMonth)
             ->whereYear('issue_date', $lastMonthYear)
             ->sum('total');
-
+ 
         $revenuePercentChange = 0;
         if ($lastMonthRevenue > 0) {
             $revenuePercentChange = (($currentMonthRevenue - $lastMonthRevenue) / $lastMonthRevenue) * 100;
         }
-
+ 
         // ══════════════════════════════════════
         //  Monthly Bookings (12 เดือนย้อนหลัง)
         // ══════════════════════════════════════
@@ -85,7 +87,7 @@ class DashboardController extends Controller
             11 => 'พ.ย.',
             12 => 'ธ.ค.',
         ];
-
+ 
         $monthlyBookings = [];
         for ($i = 11; $i >= 0; $i--) {
             $date              = Carbon::now()->subMonths($i);
@@ -96,7 +98,7 @@ class DashboardController extends Controller
                     ->count(),
             ];
         }
-
+ 
         // ══════════════════════════════════════
         //  Room Type Stats
         // ══════════════════════════════════════
@@ -111,7 +113,7 @@ class DashboardController extends Controller
             ->groupBy('room_type')
             ->get()
             ->keyBy('room_type');
-
+ 
         $roomTypeStats = [];
         foreach (['fan', 'air'] as $type) {
             $row                  = $roomTypeRaw->get($type);
@@ -121,7 +123,7 @@ class DashboardController extends Controller
                 'maintenance' => (int) ($row->maintenance ?? 0),
             ];
         }
-
+ 
         // ══════════════════════════════════════
         //  Recent Bookings
         // ══════════════════════════════════════
@@ -142,7 +144,7 @@ class DashboardController extends Controller
                     'status'        => $b->status ?? '-',
                 ];
             });
-
+ 
         // ══════════════════════════════════════
         //  Pending Invoices
         // ══════════════════════════════════════
@@ -165,24 +167,25 @@ class DashboardController extends Controller
                     'is_overdue'     => $dueDate instanceof Carbon && $dueDate->isPast(),
                 ];
             });
-
+ 
         // ══════════════════════════════════════
-        //  Response
+        //  Response (JSON for API)
         // ══════════════════════════════════════
-        return view('dashboard.index', compact(
-            'roomCount',
-            'guestCount',
-            'bookingCount',
-            'occupiedCount',
-            'availableCount',
-            'maintenanceCount',
-            'expiringContracts',
-            'currentMonthRevenue',
-            'revenuePercentChange',
-            'monthlyBookings',
-            'roomTypeStats',
-            'recentBookings',
-            'pendingInvoices'
-        ));
+        return response()->json([
+            'room_count'             => $roomCount,
+            'occupied_count'         => $occupiedCount,
+            'available_count'        => $availableCount,
+            'maintenance_count'      => $maintenanceCount,
+            'guest_count'            => $guestCount,
+            'booking_count'          => $bookingCount,
+            'expiring_contracts'     => (int) $expiringContracts,
+            'current_month_revenue'  => (float) $currentMonthRevenue,
+            'revenue_percent_change' => (float) round($revenuePercentChange, 2),
+            'monthly_bookings'       => $monthlyBookings,
+            'room_type_stats'        => $roomTypeStats,
+            'recent_bookings'        => $recentBookings,
+            'pending_invoices'       => $pendingInvoices,
+        ]);
     }
 }
+ 
