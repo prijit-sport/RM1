@@ -3,6 +3,7 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Symfony\Component\HttpKernel\Exception\HttpException;
  
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -32,12 +33,27 @@ return Application::configure(basePath: dirname(__DIR__))
             return null;
         });
  
-        // ✅ เพิ่มใหม่: AuthenticationException (401)
+        // ✅ AuthenticationException (401)
         $exceptions->render(function (\Illuminate\Auth\AuthenticationException $e, $request) use ($isApi) {
             if ($isApi($request)) {
                 return response()->json(['message' => 'Unauthenticated.'], 401);
             }
             return redirect()->guest(route('login'));
+        });
+ 
+        // ✅ HttpException — จาก abort(403), abort(404) ใน middleware
+        // ต้องอยู่ก่อน General Throwable เพื่อให้ 403/404 ส่งกลับถูกต้อง
+        $exceptions->render(function (HttpException $e, $request) use ($isApi) {
+            $status = $e->getStatusCode();
+            if ($isApi($request)) {
+                return response()->json(['message' => $e->getMessage() ?: 'Error'], $status);
+            }
+            // ลอง render error view ถ้ามี ถ้าไม่มีก็ return response ธรรมดา
+            $view = "errors.{$status}";
+            if (view()->exists($view)) {
+                return response()->view($view, ['message' => $e->getMessage()], $status);
+            }
+            return response($e->getMessage() ?: 'Error', $status);
         });
  
         // 1) ModelNotFoundException
@@ -56,7 +72,7 @@ return Application::configure(basePath: dirname(__DIR__))
             return response()->view('errors.403', ['message' => $e->getMessage()], 403);
         });
  
-        // 4) ThrottleRequestsException (rate limit)
+        // 3) ThrottleRequestsException (rate limit)
         $exceptions->render(function (\Illuminate\Contracts\Routing\ThrottleRequestsException $e, $request) use ($isApi) {
             if ($isApi($request)) {
                 return response()->json(['message' => 'ลองใหม่อีกครั้งในอีกสักครู่'], 429);
@@ -64,7 +80,7 @@ return Application::configure(basePath: dirname(__DIR__))
             return redirect()->back()->with('error', 'ลองใหม่อีกครั้งในอีกสักครู่');
         });
  
-        // 5) General Throwable (500) — ต้องอยู่ท้ายสุดเสมอ
+        // 4) General Throwable (500) — ต้องอยู่ท้ายสุดเสมอ
         $exceptions->render(function (\Throwable $e, $request) use ($isApi) {
             report($e);
             if ($isApi($request)) {

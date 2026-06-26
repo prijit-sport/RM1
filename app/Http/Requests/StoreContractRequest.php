@@ -14,20 +14,9 @@ class StoreContractRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'contract_number' => ['nullable', 'string', 'max:255', 'unique:contracts,contract_number'],
- 
-            // ✅ เพิ่ม custom rule ตรวจสอบว่าห้องไม่ได้ occupied อยู่
-            'room_id' => [
-                'required',
-                'exists:rooms,id',
-                function ($attribute, $value, $fail) {
-                    $room = \App\Models\Room::find($value);
-                    if ($room && $room->status === 'occupied') {
-                        $fail('ห้องนี้มีผู้เช่าอยู่แล้ว ไม่สามารถสร้างสัญญาได้');
-                    }
-                },
-            ],
- 
+            'contract_number'       => ['nullable', 'string', 'max:255', 'unique:contracts,contract_number'],
+            // ✅ ลบ custom rule occupied ออก — ตรวจใน controller แทน
+            'room_id'               => ['required', 'exists:rooms,id'],
             'guest_id'              => ['required', 'exists:guests,id'],
             'title'                 => ['required', 'max:200'],
             'contract_date'         => ['nullable', 'date'],
@@ -36,7 +25,7 @@ class StoreContractRequest extends FormRequest
             'landlord_address'      => ['nullable', 'max:500'],
             'landlord_phone'        => ['nullable', 'string', 'max:20'],
             'start_date'            => ['required', 'date'],
-            'end_date'              => ['required', 'date', 'after:start_date'],
+            'end_date'              => ['required', 'date'],
             'monthly_rent'          => ['required', 'numeric', 'min:0'],
             'monthly_rent_text'     => ['nullable', 'string', 'max:500'],
             'deposit'               => ['nullable', 'numeric', 'min:0'],

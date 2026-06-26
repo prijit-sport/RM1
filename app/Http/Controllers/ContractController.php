@@ -8,6 +8,7 @@ use App\Models\Guest;
 use App\Services\ContractService;
 use App\Http\Requests\StoreContractRequest;
 use App\Http\Requests\UpdateContractRequest;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
  
@@ -63,14 +64,34 @@ class ContractController extends Controller
     {
         $this->authorize('create', Contract::class);
  
+        $validated = $request->validated();
+ 
+        // ✅ ตรวจสอบ end_date > start_date
+        if (!empty($validated['start_date']) && !empty($validated['end_date'])) {
+            $startDate = Carbon::parse($validated['start_date']);
+            $endDate   = Carbon::parse($validated['end_date']);
+            if (!$endDate->isAfter($startDate)) {
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors(['end_date' => 'วันสิ้นสุดสัญญาต้องมากกว่าวันเริ่มสัญญา']);
+            }
+        }
+ 
+        // ✅ ตรวจสอบ room occupied
+        $room = Room::find($validated['room_id'] ?? null);
+        if ($room && $room->status === 'occupied') {
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['room_id' => 'ห้องนี้มีผู้เช่าอยู่แล้ว ไม่สามารถสร้างสัญญาได้']);
+        }
+ 
         try {
-            $this->contractService->create($request->validated());
+            $this->contractService->create($validated);
  
             return redirect()->route('contracts.index')
                 ->with('success', 'สัญญาเช่าถูกสร้างสำเร็จ');
  
         } catch (ValidationException $e) {
-            // ✅ ส่ง validation errors กลับไปที่ session ให้ถูกต้อง
             return redirect()->back()
                 ->withInput()
                 ->withErrors($e->errors());
@@ -87,19 +108,15 @@ class ContractController extends Controller
     public function show(Contract $contract)
     {
         $this->authorize('view', $contract);
- 
         $contract->load(['room', 'guest']);
- 
         return view('contracts.show', compact('contract'));
     }
  
     public function edit(Contract $contract)
     {
         $this->authorize('update', $contract);
- 
         $rooms = Room::all();
         $guests = Guest::all();
- 
         return view('contracts.edit', compact('contract', 'rooms', 'guests'));
     }
  

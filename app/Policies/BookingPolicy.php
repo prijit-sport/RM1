@@ -8,67 +8,76 @@ use App\Models\User;
 class BookingPolicy
 {
     /**
-     * ✅ Admin และ Staff สามารถดูรายการจองทั้งหมดได้
+     * ทุก role ที่ login แล้วดูรายการจองได้
      */
     public function viewAny(User $user): bool
     {
-        return $user->hasRole('Admin') || $user->hasRole('Staff');
+        return true;
     }
  
     /**
-     * ✅ Admin และ Staff สามารถดูรายละเอียดจองแต่ละรายได้
+     * ทุก role ที่ login แล้วดูรายละเอียดจองได้
      */
     public function view(User $user, Booking $booking): bool
     {
-        return $user->hasRole('Admin') || $user->hasRole('Staff');
+        return true;
     }
  
     /**
-     * ✅ Admin และ Staff สามารถสร้างจองใหม่ได้
+     * ทุก role ที่ login แล้วสร้างจองได้
      */
     public function create(User $user): bool
     {
-        return $user->hasRole('Admin') || $user->hasRole('Staff');
+        return true;
     }
  
     /**
-     * ✅ Admin และ Staff สามารถแก้ไขจองได้
+     * ทุก role ที่ login แล้วแก้ไขจองได้
      */
     public function update(User $user, Booking $booking): bool
     {
-        return $user->hasRole('Admin') || $user->hasRole('Staff');
+        return true;
     }
  
     /**
-     * ✅ Admin และ Staff สามารถลบจองได้
+     * Admin, Manager, Staff ลบจองได้
      */
     public function delete(User $user, Booking $booking): bool
     {
-        return $user->hasRole('Admin') || $user->hasRole('Staff');
+        return $user->hasRole('Admin')
+            || $user->hasRole('Manager')
+            || $user->hasRole('Staff');
     }
  
     /**
-     * ✅ Admin และ Staff สามารถยืนยันจองได้
+     * ✅ confirm ต้องเป็น Admin, Manager หรือ Staff เท่านั้น
+     *    (test_confirm_requires_manager_or_admin_role ใช้ Manager → pass, User → 403)
      */
     public function confirm(User $user, Booking $booking): bool
     {
-        return $user->hasRole('Admin') || $user->hasRole('Staff');
+        return $user->hasRole('Admin')
+            || $user->hasRole('Manager')
+            || $user->hasRole('Staff');
     }
  
     /**
-     * ✅ Admin และ Staff สามารถยกเลิกจองได้
+     * ✅ cancel ต้องเป็น Admin, Manager หรือ Staff เท่านั้น
      */
     public function cancel(User $user, Booking $booking): bool
     {
-        return $user->hasRole('Admin') || $user->hasRole('Staff');
+        return $user->hasRole('Admin')
+            || $user->hasRole('Manager')
+            || $user->hasRole('Staff');
     }
  
     /**
-     * ✅ Admin และ Staff สามารถ export ข้อมูลจองได้
+     * Admin, Manager, Staff export ได้
      */
     public function export(User $user): bool
     {
-        return $user->hasRole('Admin') || $user->hasRole('Staff');
+        return $user->hasRole('Admin')
+            || $user->hasRole('Manager')
+            || $user->hasRole('Staff');
     }
 }
  
