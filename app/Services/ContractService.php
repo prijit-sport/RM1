@@ -72,13 +72,6 @@ class ContractService
             $calculated_advance = $monthly_rent * 1;  // ← คิดแค่ 1 เดือนเสมอ
             
             $validated['advance_payment'] = $calculated_advance;
-            
-            \Log::info('💰 Calculated advance_payment', [
-                'monthly_rent' => $monthly_rent,
-                'months' => 1,
-                'result' => $calculated_advance,
-                'formula' => "{$monthly_rent} × 1 = {$calculated_advance}",
-            ]);
         } else {
             // If no data, set to 0
             $validated['advance_payment'] = 0;
@@ -90,16 +83,8 @@ class ContractService
         
         if (!isset($validated['deposit']) || $validated['deposit'] === null || $validated['deposit'] === '') {
             $validated['deposit'] = (float)($validated['monthly_rent'] ?? 0);
-            \Log::info('🔧 Deposit auto-filled', [
-                'input' => $original_deposit,
-                'default_to' => $validated['deposit'],
-                'reason' => 'empty or null',
-            ]);
         } else {
             $validated['deposit'] = (float)$validated['deposit'];
-            \Log::info('🔧 Deposit manual override', [
-                'value' => $validated['deposit'],
-            ]);
         }
  
         // ─── Step 5: Ensure advance_payment_months is set ──────────────────
@@ -124,10 +109,6 @@ class ContractService
             // Update room status if active
             if ($shouldOccupied && $contract->room_id) {
                 $contract->room->update(['status' => 'occupied']);
-                \Log::info('🏠 Room status updated', [
-                    'room_id' => $contract->room_id,
-                    'status' => 'occupied',
-                ]);
             }
  
             // Audit log
@@ -135,13 +116,6 @@ class ContractService
  
             return $contract;
         });
- 
-        \Log::info('🟢 ContractService::create() SUCCESS', [
-            'id' => $contract->id,
-            'monthly_rent' => $contract->monthly_rent,
-            'deposit' => $contract->deposit,
-            'advance_payment' => $contract->advance_payment,
-        ]);
  
         return $contract;
     }
@@ -154,12 +128,6 @@ class ContractService
      */
     public function update(Contract $contract, array $validated): Contract
     {
-        \Log::info('🔵 ContractService::update() START', [
-            'contract_id' => $contract->id,
-            'old_status' => $contract->status,
-            'new_status' => $validated['status'] ?? null,
-        ]);
- 
         $oldStatus = $contract->status;
         $oldRoomId = $contract->room_id;
  
@@ -182,12 +150,6 @@ class ContractService
             $calculated_advance = $monthly_rent * 1;  // ← คิดแค่ 1 เดือนเสมอ
             
             $validated['advance_payment'] = $calculated_advance;
-            
-            \Log::info('💰 Recalculated advance_payment', [
-                'monthly_rent' => $monthly_rent,
-                'months' => 1,
-                'result' => $calculated_advance,
-            ]);
         }
  
         // ─── Default deposit ─────────────────────────────────────────────
@@ -230,12 +192,6 @@ class ContractService
  
             return $contract->fresh();
         });
- 
-        \Log::info('🟢 ContractService::update() SUCCESS', [
-            'id' => $contract->id,
-            'advance_payment' => $contract->advance_payment,
-            'deposit' => $contract->deposit,
-        ]);
  
         return $contract;
     }
