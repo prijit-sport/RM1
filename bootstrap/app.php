@@ -28,7 +28,13 @@ return Application::configure(basePath: dirname(__DIR__))
         $isApi = fn($request) => $request->expectsJson()
             || str_starts_with($request->path(), 'api/');
  
-        // Let Laravel handle ValidationException automatically
+        // ✅ ValidationException — ให้ Laravel จัดการเองอัตโนมัติ (redirect + flash errors)
+        // ต้องอยู่ก่อน General Throwable เพื่อกัน Throwable handler มา catch ก่อน
+        $exceptions->render(function (\Illuminate\Validation\ValidationException $e, $request) {
+            return null; // คืน null = ให้ Laravel ใช้ default behavior (redirect + withErrors)
+        });
+ 
+        // Let Laravel handle HttpResponseException automatically
         $exceptions->render(function (\Illuminate\Http\Exception\HttpResponseException $e, $request) {
             return null;
         });
@@ -42,13 +48,11 @@ return Application::configure(basePath: dirname(__DIR__))
         });
  
         // ✅ HttpException — จาก abort(403), abort(404) ใน middleware
-        // ต้องอยู่ก่อน General Throwable เพื่อให้ 403/404 ส่งกลับถูกต้อง
         $exceptions->render(function (HttpException $e, $request) use ($isApi) {
             $status = $e->getStatusCode();
             if ($isApi($request)) {
                 return response()->json(['message' => $e->getMessage() ?: 'Error'], $status);
             }
-            // ลอง render error view ถ้ามี ถ้าไม่มีก็ return response ธรรมดา
             $view = "errors.{$status}";
             if (view()->exists($view)) {
                 return response()->view($view, ['message' => $e->getMessage()], $status);
