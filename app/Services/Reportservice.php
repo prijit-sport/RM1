@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
  
 class ReportService
+
 {
     public function buildReportData(): array
     {

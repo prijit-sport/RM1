@@ -36,20 +36,22 @@ class RoomController extends Controller
             $query->where('zone', $request->zone);
         }
 
-        // ดึงข้อมูลที่กรองแล้วมานับสถิติ
-        $allFilteredRooms = (clone $query)->get();
+        // ดึงข้อมูลนับสถิติจากฐานข้อมูลโดยตรงเพื่อลด memory usage
+        $availableCount = (clone $query)->where('status', 'available')->count();
+        $occupiedCount = (clone $query)->where('status', 'occupied')->count();
+        $maintenanceCount = (clone $query)->where('status', 'maintenance')->count();
 
-        $availableCount   = $allFilteredRooms->where('status', 'available')->count();
-        $occupiedCount    = $allFilteredRooms->where('status', 'occupied')->count();
-        $maintenanceCount = $allFilteredRooms->where('status', 'maintenance')->count();
-
-        $availableRoomList = $allFilteredRooms->where('status', 'available')
-            ->sortBy('room_number')
+        // รายชื่อห้องที่ว่าง/ไม่ว่าง: ใช้ query DB เพื่อตัดภาระการโหลดทั้งก้อน
+        $availableRoomList = (clone $query)
+            ->where('status', 'available')
+            ->orderBy('room_number')
             ->pluck('room_number');
 
-        $occupiedRoomList  = $allFilteredRooms->where('status', 'occupied')
-            ->sortBy('room_number')
+        $occupiedRoomList = (clone $query)
+            ->where('status', 'occupied')
+            ->orderBy('room_number')
             ->pluck('room_number');
+
 
         // ดึงข้อมูลแสดงในตารางพร้อม Pagination
         $rooms = $query->orderBy('floor')->orderBy('zone')->orderBy('room_number')->paginate(30)->withQueryString();

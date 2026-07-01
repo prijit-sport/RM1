@@ -41,16 +41,12 @@ class ContractService
      */
     public function create(array $validated): Contract
     {
-        \Log::info('🔵 ContractService::create() START', [
-            'monthly_rent' => $validated['monthly_rent'] ?? null,
-            'deposit_input' => $validated['deposit'] ?? null,
-            'advance_months' => $validated['advance_payment_months'] ?? null,
-        ]);
+
  
         // ─── Step 1: Auto-generate contract number ───────────────────────
         if (empty($validated['contract_number'] ?? null)) {
+            
             $validated['contract_number'] = $this->generateContractNumber();
-            \Log::info('📝 Generated contract number', ['number' => $validated['contract_number']]);
         }
  
         // ─── Step 2: Validate dates ───────────────────────────────────────
@@ -213,7 +209,6 @@ class ContractService
  
         // ─── Save to database (transaction) ──────────────────────────────
         $contract = DB::transaction(function () use ($contract, $validated, $oldStatus, $newStatus, $oldRoomId, $newRoomId) {
-            Cache::forget('layout_notifications');
             $contract->update($validated);
             \Log::info('✅ Contract updated', [
                 'id' => $contract->id,
