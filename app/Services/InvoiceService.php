@@ -21,6 +21,304 @@ class InvoiceService
     private const DEFAULT_TAX_RATE = 0.07;
     private const DEFAULT_LATE_FEE_RATE = 0.01;
 
+    /**
+     * Utility invoice bulk-create calculation (batch-loaded).
+     *
+     * @param  \Illuminate\Support\Collection<int, \App\Models\Booking>  $bookings
+     * @return \Illuminate\Support\Collection<int, array<string, mixed>> keyed by booking_id
+     */
+    public function calculateUtilityBulkData(
+        \Illuminate\Support\Collection $bookings,
+        int $month,
+        int $year,
+    ): \Illuminate\Support\Collection {
+        /** @var \Illuminate\Support\Collection<int, int> $roomIds */
+        $roomIds = $bookings
+            ->pluck('room_id')
+            ->filter()
+            ->map(fn ($id): int => (int) $id)
+            ->unique()
+            ->values();
+
+        $utilityData = collect();
+        if ($roomIds->isEmpty()) {
+            return $utilityData;
+        }
+
+        // months: current + previous
+        $prevMonth = $month === 1 ? 12 : $month - 1;
+        $prevYear  = $month === 1 ? $year - 1 : $year;
+
+        // Dedupe + batch load meters and readings
+        /** @var \Illuminate\Support\Collection<int, \App\Models\Meter> $meters */
+        $meters = \App\Models\Meter::query()
+            ->whereIn('room_id', $roomIds)
+            ->whereIn('type', ['electric', 'water'])
+            ->get()
+            ->groupBy(fn (\App\Models\Meter $m): int => (int) $m->room_id);
+
+        /** @var \Illuminate\Support\Collection<int, int> $meterIds */
+        $meterIds = $meters
+            ->flatten()
+            ->pluck('id')
+            ->filter()
+            ->unique()
+            ->values();
+
+        if ($meterIds->isEmpty()) {
+            return $utilityData;
+        }
+
+        /** @var \Illuminate\Support\Collection<int, \App\Models\MeterReading> $readings */
+        $readings = \App\Models\MeterReading::query()
+            ->whereIn('meter_id', $meterIds)
+            ->where(function ($q) use ($month, $year, $prevMonth, $prevYear): void {
+                $q->where(function ($sub) use ($month, $year): void {
+                    $sub->where('period_month', $month)
+                        ->where('period_year', $year);
+                })->orWhere(function ($sub) use ($prevMonth, $prevYear): void {
+                    $sub->where('period_month', $prevMonth)
+                        ->where('period_year', $prevYear);
+                });
+            })
+            ->get();
+
+        /** @var \Illuminate\Support\Collection<string, \Illuminate\Support\Collection<int, \App\Models\MeterReading>> $readingsByKey */
+        $readingsByKey = $readings->groupBy(function (\App\Models\MeterReading $r): string {
+            return $r->meter_id . ':' . $r->period_month . ':' . $r->period_year;
+        });
+
+        foreach ($bookings as $booking) {
+            $roomId = (int) $booking->room_id;
+
+            $electricData = $this->buildMeterBillDataFromBatch(
+                roomId: $roomId,
+                meterType: 'electric',
+                meterMap: $meters,
+                readingsByKey: $readingsByKey,
+                month: $month,
+                year: $year,
+                prevMonth: $prevMonth,
+                prevYear: $prevYear,
+            );
+
+            $waterData = $this->buildMeterBillDataFromBatch(
+                roomId: $roomId,
+                meterType: 'water',
+                meterMap: $meters,
+                readingsByKey: $readingsByKey,
+                month: $month,
+                year: $year,
+                prevMonth: $prevMonth,
+                prevYear: $prevYear,
+            );
+
+            $electricCost = (float) ($electricData['cost'] ?? 0);
+            $waterCost    = (float) ($waterData['cost'] ?? 0);
+
+            $baseCost = round($electricCost + $waterCost, 2);
+            $tax      = round($baseCost * self::DEFAULT_TAX_RATE, 2);
+            $total    = round($baseCost + $tax, 2);
+
+            $hasReading = (bool) ($electricData['has_reading'] ?? false) || (bool) ($waterData['has_reading'] ?? false);
+
+            $utilityData->put($booking->id, [
+                'electric'    => $electricData,
+                'water'       => $waterData,
+                'base_cost'   => $baseCost,
+                'tax'         => $tax,
+                'total'       => $total,
+                'has_reading' => $hasReading,
+            ]);
+        }
+
+        return $utilityData;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function buildMeterBillDataFromBatch(
+        int $roomId,
+        string $meterType,
+        \Illuminate\Database\Eloquent\Collection $meterMap,
+        \Illuminate\Support\Collection $readingsByKey,
+        int $month,
+        int $year,
+        int $prevMonth,
+        int $prevYear,
+    ): array {
+        /** @var \App\Models\Meter|null $meter */
+        $meter = $meterMap->get($roomId)?->first(function (\App\Models\Meter $m) use ($meterType): bool {
+            return $m->type === $meterType;
+        });
+
+        if (!$meter) {
+            return ['has_reading' => false, 'cost' => 0];
+        }
+
+        $currentKey = $meter->id . ':' . $month . ':' . $year;
+        $previousKey = $meter->id . ':' . $prevMonth . ':' . $prevYear;
+
+        /** @var \Illuminate\Support\Collection<int, \App\Models\MeterReading> $currentReadings */
+        $currentReadings = $readingsByKey->get($currentKey, collect());
+        /** @var \Illuminate\Support\Collection<int, \App\Models\MeterReading> $previousReadings */
+        $previousReadings = $readingsByKey->get($previousKey, collect());
+
+        /** @var \App\Models\MeterReading|null $current */
+        $current = $currentReadings->first();
+        if (!$current) {
+            return [
+                'has_reading' => false,
+                'cost' => 0,
+                'meter_number' => (string) ($meter->meter_number ?? '-'),
+            ];
+        }
+
+        /** @var \App\Models\MeterReading|null $previous */
+        $previous = $previousReadings->first();
+
+        $currentVal = (float) $current->reading_value;
+        $previousVal = $previous ? (float) $previous->reading_value : 0;
+        $usage = max(0, $currentVal - $previousVal);
+
+        $rate = (float) ($meter->rate_per_unit ?? 0);
+        $cost = round($usage * $rate, 2);
+
+        return [
+            'has_reading' => true,
+            'meter_number' => (string) ($meter->meter_number ?? '-'),
+            'previous_value' => $previousVal,
+            'current_value' => $currentVal,
+            'usage' => $usage,
+            'rate' => $rate,
+            'cost' => $cost,
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function getMeterBillData(int $roomId, string $type, int $month, int $year): array
+    {
+        /** @var \App\Models\Meter|null $meter */
+        $meter = \App\Models\Meter::where('room_id', $roomId)
+            ->where('type', $type)
+            ->first();
+
+        if (!$meter) {
+            return ['has_reading' => false, 'cost' => 0];
+        }
+
+        /** @var \App\Models\MeterReading|null $current */
+        $current = \App\Models\MeterReading::where('meter_id', $meter->id)
+            ->where('period_month', $month)
+            ->where('period_year', $year)
+            ->first();
+
+        if (!$current) {
+            return ['has_reading' => false, 'cost' => 0, 'meter_number' => $meter->meter_number];
+        }
+
+        /** @var \App\Models\MeterReading|null $previous */
+        $previous = \App\Models\MeterReading::where('meter_id', $meter->id)
+            ->where(function ($q) use ($month, $year): void {
+                if ($month === 1) {
+                    $q->where('period_month', 12)
+                        ->where('period_year', $year - 1);
+                } else {
+                    $q->where('period_month', $month - 1)
+                        ->where('period_year', $year);
+                }
+            })
+            ->first();
+
+        $currentVal = (float) $current->reading_value;
+        $previousVal = $previous ? (float) $previous->reading_value : 0;
+        $usage = max(0, $currentVal - $previousVal);
+
+        $rate = (float) ($meter->rate_per_unit ?? 0);
+        $cost = round($usage * $rate, 2);
+
+        return [
+            'has_reading' => true,
+            'meter_number' => (string) ($meter->meter_number ?? '-'),
+            'previous_value' => $previousVal,
+            'current_value' => $currentVal,
+            'usage' => $usage,
+            'rate' => $rate,
+            'cost' => $cost,
+        ];
+    }
+
+    /**
+     * Bulk-create helper for invoices from selected bookings.
+     * Returns how many invoices were created.
+     */
+    public function bulkCreateFromBookings(
+        array $validated,
+        string $invoiceType,
+        int $month,
+        int $year,
+    ): int {
+        $count = 0;
+
+        DB::transaction(function () use ($validated, $invoiceType, $month, $year, &$count): void {
+            foreach ($validated['selected_bookings'] as $bookingId) {
+                $booking = \App\Models\Booking::with(['room', 'guest'])->findOrFail((int) $bookingId);
+
+                if ($invoiceType === 'utility') {
+                    $prevMonth = $month === 1 ? 12 : $month - 1;
+                    $prevYear  = $month === 1 ? $year - 1 : $year;
+
+                    $electricData = $this->getMeterBillData((int) $booking->room_id, 'electric', $month, $year);
+                    $waterData    = $this->getMeterBillData((int) $booking->room_id, 'water', $month, $year);
+
+                    $hasReading = (bool) ($electricData['has_reading'] ?? false) || (bool) ($waterData['has_reading'] ?? false);
+                    if (!$hasReading) {
+                        continue;
+                    }
+
+                    $baseCost = round((float) ($electricData['cost'] ?? 0) + (float) ($waterData['cost'] ?? 0), 2);
+                    $tax      = round($baseCost * self::DEFAULT_TAX_RATE, 2);
+                    $total    = round($baseCost + $tax, 2);
+
+                    $amount = $baseCost;
+                } else {
+                    $room = $booking->room;
+                    $amount = (float) ($booking->rent_amount ?? $room?->price_per_month ?? 0);
+                    $tax    = round($amount * self::DEFAULT_TAX_RATE, 2);
+                    $total  = round($amount + $tax, 2);
+                }
+
+                $issueDate = $validated['issue_date'];
+                $dueDate   = $validated['due_date'];
+
+                $invoiceNumber = $this->generateInvoiceNumber();
+
+                \App\Models\Invoice::create([
+                    'booking_id'     => (int) $bookingId,
+                    'guest_id'       => $booking->guest_id ?? null,
+                    'room_id'        => $booking->room_id ?? null,
+                    'invoice_number' => $invoiceNumber,
+                    'amount'         => $amount,
+                    'tax'            => $tax,
+                    'total'          => $total,
+                    'issue_date'     => $issueDate,
+                    'due_date'       => $dueDate,
+                    'status'         => $validated['status'],
+                    'invoice_type'   => $invoiceType,
+                    'notes'          => null,
+                ]);
+
+                $count++;
+            }
+        });
+
+        return $count;
+    }
+
+
     public function createFromBooking(Booking $booking, array $validated): Invoice
     {
         return DB::transaction(function () use ($booking, $validated) {

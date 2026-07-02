@@ -6,8 +6,7 @@ use App\Http\Requests\StoreInvoiceRequest;
 use App\Http\Requests\UpdateInvoiceRequest;
 use App\Models\Booking;
 use App\Models\Invoice;
-use App\Models\Meter;
-use App\Models\MeterReading;
+
 use App\Services\InvoiceService;
 use App\Services\MeterBillingService;
 use Illuminate\Database\Eloquent\Builder;
@@ -221,226 +220,20 @@ class InvoiceController extends Controller
             ->orderBy('room_id')
             ->get();
 
-        // ✅ ถ้าเป็น utility: คำนวณยอดมิเตอร์แต่ละห้องแบบ batch (ลด query ใน loop)
+        // ✅ ถ้าเป็น utility: คำนวณยอดมิเตอร์แต่ละห้อง (batch-loaded) ผ่าน InvoiceService
         $utilityData = collect();
         if ($type === 'utility') {
-            /** @var Collection<int, int> $roomIds */
-            $roomIds = $bookings->pluck('room_id')->filter()->map(fn ($id) => (int) $id)->unique()->values();
-
-            // months: current + previous
-            $prevMonth = $month === 1 ? 12 : $month - 1;
-            $prevYear  = $month === 1 ? $year - 1 : $year;
-
-            // ดึง meters ของห้องทั้งหมดที่ต้องใช้ (electric/water) พร้อมกัน
-            /** @var Collection<int, Meter> $meters */
-            $meters = Meter::query()
-
-                ->whereIn('room_id', $roomIds)
-                ->whereIn('type', ['electric', 'water'])
-                ->get()
-                ->groupBy(fn (Meter $m) => (int) $m->room_id);
-
-            // ดึง reading เดือนนี้และเดือนก่อนหน้า ของ meters ทั้งหมดในครั้งเดียว
-            $meterIds = $meters
-                ->flatten()
-                ->pluck('id')
-                ->filter()
-                ->unique()
-                ->values();
-
-
-            /** @var Collection<int, MeterReading> $readings */
-            $readings = MeterReading::query()
-                ->whereIn('meter_id', $meterIds)
-                ->where(function ($q) use ($month, $year, $prevMonth, $prevYear): void {
-                    $q->where(function ($sub) use ($month, $year): void {
-                        $sub->where('period_month', $month)
-                            ->where('period_year', $year);
-                    })->orWhere(function ($sub) use ($prevMonth, $prevYear): void {
-                        $sub->where('period_month', $prevMonth)
-                            ->where('period_year', $prevYear);
-                    });
-                })
-                ->get();
-
-            // จัดกลุ่มให้ lookup ง่าย: meter_id + period_month + period_year
-            $readingsByKey = $readings->groupBy(function (MeterReading $r): string {
-                return $r->meter_id . ':' . $r->period_month . ':' . $r->period_year;
-            });
-
-            foreach ($bookings as $booking) {
-                $roomId = (int) $booking->room_id;
-
-                $electricData = $this->buildMeterBillDataFromBatch(
-                    roomId: $roomId,
-                    meterType: 'electric',
-                    meterMap: $meters,
-                    readingsByKey: $readingsByKey,
-                    month: $month,
-                    year: $year,
-                    prevMonth: $prevMonth,
-                    prevYear: $prevYear,
-                );
-
-                $waterData = $this->buildMeterBillDataFromBatch(
-                    roomId: $roomId,
-                    meterType: 'water',
-                    meterMap: $meters,
-                    readingsByKey: $readingsByKey,
-                    month: $month,
-                    year: $year,
-                    prevMonth: $prevMonth,
-                    prevYear: $prevYear,
-                );
-
-                $electricCost = $electricData['cost'] ?? 0;
-                $waterCost    = $waterData['cost'] ?? 0;
-
-                $baseCost = round($electricCost + $waterCost, 2);
-                $taxRate  = 0.07;
-                $tax      = round($baseCost * $taxRate, 2);
-                $total    = round($baseCost + $tax, 2);
-
-                $hasReading = ($electricData['has_reading'] ?? false) || ($waterData['has_reading'] ?? false);
-
-                $utilityData->put($booking->id, [
-                    'electric'    => $electricData,
-                    'water'       => $waterData,
-                    'base_cost'   => $baseCost,
-                    'tax'         => $tax,
-                    'total'       => $total,
-                    'has_reading' => $hasReading,
-                ]);
-            }
+            $utilityData = $this->invoiceService->calculateUtilityBulkData(
+                $bookings,
+                month: $month,
+                year: $year,
+            );
         }
+
 
         return view('invoices.bulk-create', compact('bookings', 'type', 'month', 'year', 'utilityData'));
     }
 
-    /**
-     * Utility calculation using batch-loaded meters/readings.
-     *
-     * @param  int  $roomId
-     * @param  string  $meterType electric|water
-     * @param  \Illuminate\Database\Eloquent\Collection<int, Meter>  $meterMap keyed by room_id
-     * @param  \Illuminate\Support\Collection<string, \Illuminate\Database\Eloquent\Collection<int, MeterReading>>  $readingsByKey
-     * @return array<string, mixed>
-     */
-    private function buildMeterBillDataFromBatch(
-        int $roomId,
-
-
-        string $meterType,
-        \Illuminate\Database\Eloquent\Collection $meterMap,
-        \Illuminate\Support\Collection $readingsByKey,
-        int $month,
-        int $year,
-        int $prevMonth,
-        int $prevYear,
-    ): array {
-        /** @var Meter|null $meter */
-        $meter = $meterMap->get($roomId)?->first(function (Meter $m) use ($meterType): bool {
-            return $m->type === $meterType;
-        });
-
-        if (!$meter) {
-            return ['has_reading' => false, 'cost' => 0];
-        }
-
-        $currentKey = $meter->id . ':' . $month . ':' . $year;
-        $previousKey = $meter->id . ':' . $prevMonth . ':' . $prevYear;
-
-        /** @var Collection<int, MeterReading> $currentReadings */
-        $currentReadings = $readingsByKey->get($currentKey, collect());
-        /** @var Collection<int, MeterReading> $previousReadings */
-        $previousReadings = $readingsByKey->get($previousKey, collect());
-
-        /** @var MeterReading|null $current */
-        $current = $currentReadings->first();
-        if (!$current) {
-            return ['has_reading' => false, 'cost' => 0, 'meter_number' => (string) ($meter->meter_number ?? '-')];
-        }
-
-        /** @var MeterReading|null $previous */
-        $previous = $previousReadings->first();
-
-        $currentVal = (float) $current->reading_value;
-        $previousVal = $previous ? (float) $previous->reading_value : 0;
-        $usage = max(0, $currentVal - $previousVal);
-
-        $rate = (float) ($meter->rate_per_unit ?? 0);
-        $cost = round($usage * $rate, 2);
-
-        return [
-            'has_reading' => true,
-            'meter_number' => (string) ($meter->meter_number ?? '-'),
-            'previous_value' => $previousVal,
-            'current_value' => $currentVal,
-            'usage' => $usage,
-            'rate' => $rate,
-            'cost' => $cost,
-        ];
-
-    }
-
-    /**
-
-     * คำนวณยอดมิเตอร์แต่ละห้องสำหรับเดือนที่กำหนด
-     *
-     * @return array<string, mixed>
-     */
-
-    private function getMeterBillData(int $roomId, string $type, int $month, int $year): array
-
-    {
-        /** @var Meter|null $meter */
-        $meter = Meter::where('room_id', $roomId)->where('type', $type)->first();
- 
-        if (!$meter) {
-            return ['has_reading' => false, 'cost' => 0];
-        }
- 
-        // reading เดือนนี้
-        /** @var MeterReading|null $current */
-        $current = MeterReading::where('meter_id', $meter->id)
-            ->where('period_month', $month)
-            ->where('period_year', $year)
-            ->first();
- 
-        if (!$current) {
-            return ['has_reading' => false, 'cost' => 0, 'meter_number' => $meter->meter_number];
-        }
- 
-        // reading เดือนก่อนหน้า
-        /** @var MeterReading|null $previous */
-        $previous = MeterReading::where('meter_id', $meter->id)
-            ->where(function ($q) use ($month, $year): void {
-                // เดือนก่อนหน้า
-                if ($month === 1) {
-                    $q->where('period_month', 12)->where('period_year', $year - 1);
-                } else {
-                    $q->where('period_month', $month - 1)->where('period_year', $year);
-                }
-            })
-            ->first();
- 
-        $currentVal  = (float) $current->reading_value;
-        $previousVal = $previous ? (float) $previous->reading_value : 0;
-        $usage       = max(0, $currentVal - $previousVal);
-        $rate        = (float) ($meter->rate_per_unit ?? 0);
-        $cost        = round($usage * $rate, 2);
- 
-        return [
-            'has_reading'    => true,
-            'meter_number'   => (string) ($meter->meter_number ?? '-'),
-            'previous_value' => $previousVal,
-            'current_value'  => $currentVal,
-            'usage'          => $usage,
-            'rate'           => $rate,
-            'cost'           => $cost,
-        ];
-    }
- 
     // ─────────────────────────────────────────────────────────────
     //  BULK STORE — รองรับ invoice_type จาก form
     // ─────────────────────────────────────────────────────────────
@@ -465,68 +258,16 @@ class InvoiceController extends Controller
  
         $count = 0;
 
+        $month = (int) $request->input('month', now()->month);
+        $year  = (int) $request->input('year', now()->year);
+
         try {
-            DB::transaction(function () use ($validated, $invoiceType, &$count): void {
-                foreach ($validated['selected_bookings'] as $bookingId) {
-                    $booking = Booking::with(['room', 'guest'])->findOrFail((int) $bookingId);
-
-                    // คำนวณยอดจากข้อมูลฝั่ง server (ลด payload)
-                    if ($invoiceType === 'utility') {
-                        $month = (int) $request->input('month', now()->month);
-                        $year  = (int) $request->input('year', now()->year);
-
-                        $prevMonth = $month === 1 ? 12 : $month - 1;
-                        $prevYear  = $month === 1 ? $year - 1 : $year;
-
-                        $electricData = $this->getMeterBillData((int) $booking->room_id, 'electric', $month, $year);
-                        $waterData    = $this->getMeterBillData((int) $booking->room_id, 'water', $month, $year);
-
-                        // ต้องมี reading ทั้งคู่ถึงจะคิดรวม (สอดคล้องกับ logic เดิมที่แสดงเลขที่ใบแจ้งหนี้ตาม has_reading)
-                        $hasReading = (bool) ($electricData['has_reading'] ?? false) || (bool) ($waterData['has_reading'] ?? false);
-                        if (!$hasReading) {
-                            continue;
-                        }
-
-
-                        $baseCost = round((float) ($electricData['cost'] ?? 0) + (float) ($waterData['cost'] ?? 0), 2);
-                        $tax      = round($baseCost * 0.07, 2);
-                        $total    = round($baseCost + $tax, 2);
-
-                    // ถ้าไม่มี reading ให้ข้าม
-                    // (เดิมคำนวณไว้แล้วด้านบน)
-
-
-                        $amount = $baseCost;
-                    } else {
-                        $room   = $booking->room;
-                        $amount = (float) ($booking->rent_amount ?? $room?->price_per_month ?? 0);
-                        $tax    = round($amount * 0.07, 2);
-                        $total  = round($amount + $tax, 2);
-                    }
-
-                    $issueDate = $validated['issue_date'];
-                    $dueDate   = $validated['due_date'];
-
-                    // เลขใบแจ้งหนี้ให้สร้างแบบเดิมจากเดือน/ปี/ลำดับ (ใช้ generateInvoiceNumber ปัจจุบัน)
-                    $invoiceNumber = $this->invoiceService->generateInvoiceNumber();
-
-                    Invoice::create([
-                        'booking_id'     => (int) $bookingId,
-                        'guest_id'       => $booking->guest_id ?? null,
-                        'room_id'        => $booking->room_id ?? null,
-                        'invoice_number' => $invoiceNumber,
-                        'amount'         => $amount,
-                        'tax'            => $tax ?? round((float)$amount * 0.07, 2),
-                        'total'          => $total,
-                        'issue_date'     => $issueDate,
-                        'due_date'       => $dueDate,
-                        'status'         => $validated['status'],
-                        'invoice_type'   => $invoiceType,
-                        'notes'          => null,
-                    ]);
-                    $count++;
-                }
-            });
+            $count = $this->invoiceService->bulkCreateFromBookings(
+                validated: $validated,
+                invoiceType: $invoiceType,
+                month: $month,
+                year: $year,
+            );
         } catch (\Exception $e) {
             \Log::error('InvoiceController bulkStore failed', [
                 'count' => count($validated['selected_bookings']),
@@ -534,6 +275,7 @@ class InvoiceController extends Controller
             ]);
             throw $e;
         }
+
 
  
         $redirectType = $invoiceType === 'utility' ? 'utility' : 'rent';
