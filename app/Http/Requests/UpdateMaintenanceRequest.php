@@ -15,18 +15,25 @@ class UpdateMaintenanceRequest extends FormRequest
     {
         return [
             'room_id' => ['sometimes', 'required', 'exists:rooms,id'],
-            'issue_type' => ['sometimes', 'required', 'string', 'max:255'],
-            'reported_date' => ['sometimes', 'nullable', 'date'],
+
+            // ฟอร์มส่ง maintenance_type (เดิมใช้เป็น issue_type ใน DB)
+            'maintenance_type' => ['sometimes', 'required', 'string', 'max:255'],
+
+            // ฟอร์มส่ง request_date (เดิมชื่อ reported_date ใน DB)
+            'request_date' => ['sometimes', 'required', 'date'],
+
             'status' => ['sometimes', 'required', 'in:pending,in_progress,completed,cancelled'],
 
             'description' => ['sometimes', 'nullable', 'string'],
             'assigned_to' => ['sometimes', 'nullable', 'string', 'max:255'],
             'cost' => ['sometimes', 'nullable', 'numeric', 'min:0'],
-            'facility_id' => ['sometimes', 'nullable', 'exists:facilities,id'],
-            'maintenance_type' => ['sometimes', 'nullable', 'string', 'max:100'],
-            'priority' => ['sometimes', 'nullable', 'in:low,medium,high,urgent'],
-
             'notes' => ['sometimes', 'nullable', 'string'],
+
+            // เผื่อฟิลด์ที่ UI ส่งมา แต่ไม่จำเป็นต้อง validate
+            'priority' => ['sometimes', 'nullable'],
+            'facility_id' => ['sometimes', 'nullable'],
+            'issue_type' => ['sometimes', 'nullable'],
+            'reported_date' => ['sometimes', 'nullable'],
 
             // เผื่อบางฟอร์มส่งมาเพื่อ UI
             'facility_type' => ['sometimes', 'nullable', 'string'],

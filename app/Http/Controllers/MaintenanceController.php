@@ -115,28 +115,25 @@ class MaintenanceController extends Controller
 
         $validated = $request->validated();
 
-        // ✅ ตัด facility_type ออก ไม่ส่งลง DB (เก็บแค่ facility_id)
-        // facility_type ใช้เพื่อ display เท่านั้น ไม่มี column นี้ใน maintenances table
+        // DB maintenances มีคอลัมน์: room_id, issue_type, description, reported_date,
+        // completed_date, status, assigned_to, cost, notes
+        // ฟอร์มส่ง maintenance_type/request_date ให้ map ก่อน insert
         $data = [
-            'room_id'          => $validated['room_id'],
-            'facility_id'      => $validated['facility_id'] ?? null,
-            'maintenance_type' => $validated['maintenance_type'],
-            'description'      => $validated['description'],
-            'status'           => $validated['status'],
-            'priority'         => $validated['priority'] ?? 'ทั่วไป',
-            'notes'            => $validated['notes'] ?? null,
+            'room_id'        => $validated['room_id'],
+            'issue_type'    => $validated['maintenance_type'],
+            'description'   => $validated['description'],
+            'reported_date' => $validated['request_date'],
+            'status'        => $validated['status'],
+            'assigned_to'   => $validated['assigned_to'] ?? null,
+            'cost'           => $validated['cost'] ?? null,
+            'notes'         => $validated['notes'] ?? null,
         ];
+
 
         Maintenance::create($data);
 
-        // ✅ อัปเดต facility status เมื่อมา Lock mode
-        if (! empty($validated['facility_id'])) {
-            Facility::where('id', $validated['facility_id'])->update([
-                'status' => 'needs_repair'
-            ]);
-        }
-
         return redirect()->route('maintenances.index')
+
             ->with('success', 'แจ้งซ่อมเรียบร้อยแล้ว');
     }
 
@@ -174,9 +171,22 @@ class MaintenanceController extends Controller
 
         $validated = $request->validated();
 
-        $maintenance->update($validated);
+        // Map field ที่มาจากฟอร์มให้ตรงกับ schema
+        $updateData = [
+            'room_id'        => $validated['room_id'] ?? $maintenance->room_id,
+            'issue_type'    => $validated['maintenance_type'] ?? $maintenance->issue_type,
+            'description'   => $validated['description'] ?? $maintenance->description,
+            'reported_date' => $validated['request_date'] ?? $maintenance->reported_date,
+            'status'        => $validated['status'] ?? $maintenance->status,
+            'assigned_to'   => $validated['assigned_to'] ?? $maintenance->assigned_to,
+            'cost'           => $validated['cost'] ?? $maintenance->cost,
+            'notes'         => $validated['notes'] ?? $maintenance->notes,
+        ];
+
+        $maintenance->update($updateData);
 
         if ($request->status === 'completed' && $maintenance->facility_id) {
+
             Facility::where('id', $maintenance->facility_id)->update([
                 'status'                => 'good',
                 'last_maintenance_date' => now(),

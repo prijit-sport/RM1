@@ -40,23 +40,25 @@ class MaintenanceControllerTest extends TestCase
         $this->assertSame(0, Maintenance::count());
     }
 
-    public function test_store_rejects_bad_data_due_to_controller_bug(): void
+    public function test_store_creates_maintenance_with_valid_data(): void
     {
-        // Controller มี bug: พยายาม insert maintenance_type ลง DB
-        // แต่ maintenances table ไม่มี column maintenance_type
-        // ดังนั้น store() จะ return 500 เสมอ
         $user = $this->createUserWithRole('Manager');
         $room = $this->createRoom('M101');
 
         $response = $this->actingAs($user)
             ->post(route('maintenances.store'), [
                 'room_id' => $room->id,
-                'issue_type' => 'ไฟฟ้า',
+                'maintenance_type' => 'ไฟฟ้า',
+                'request_date' => Carbon::today()->toDateString(),
                 'status' => 'pending',
+                'description' => 'ทดสอบ',
+
             ]);
 
-        $response->assertStatus(500);
+        $response->assertRedirect(route('maintenances.index'));
+        $this->assertSame(1, Maintenance::count());
     }
+
 
     public function test_show_displays_existing_maintenance_details(): void
     {
