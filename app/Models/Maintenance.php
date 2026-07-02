@@ -7,13 +7,15 @@ class Maintenance extends Model
 {
     protected $fillable = [
         'room_id',
-        'issue_type',       // ✅ ตรงกับ migration
+        'issue_type',            // ✅ ตรงกับ migration
+        'maintenance_type',     // ✅ จาก migration 2026_05_11_070513
         'description',
-        'reported_date',    // ✅ ตรงกับ migration
-        'completed_date',   // ✅ ตรงกับ migration
+        'reported_date',       // ✅ ตรงกับ migration
+        'completed_date',      // ✅ ตรงกับ migration
         'status',
         'assigned_to',
         'cost',
+        'priority',            // ✅ จาก migration 2026_03_01_000006
         'notes',
     ];
  
