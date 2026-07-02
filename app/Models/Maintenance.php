@@ -7,6 +7,7 @@ class Maintenance extends Model
 {
     protected $fillable = [
         'room_id',
+        'facility_id',
         'issue_type',            // ✅ ตรงกับ migration
         'maintenance_type',     // ✅ จาก migration 2026_05_11_070513
         'description',
@@ -18,6 +19,7 @@ class Maintenance extends Model
         'priority',            // ✅ จาก migration 2026_03_01_000006
         'notes',
     ];
+
  
     protected $casts = [
         'reported_date'  => 'date',  // ✅ ตรงกับ migration
@@ -30,9 +32,8 @@ class Maintenance extends Model
         return $this->belongsTo(Room::class, 'room_id');
     }
  
-    // ⚠️ facility relation ยังคงไว้เพราะ Controller ใช้งานอยู่
-    // แต่ maintenances table ไม่มี facility_id column จริงๆ
-    // ถ้าต้องการใช้งานจริงต้องเพิ่ม migration เพิ่ม facility_id ก่อน
+    // facility relation (facility_id)
+
     public function facility(): BelongsTo
     {
         return $this->belongsTo(Facility::class, 'facility_id');

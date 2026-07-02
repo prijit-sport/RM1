@@ -31,7 +31,8 @@ class StoreMaintenanceRequest extends FormRequest
 
             // กรณีมีฟิลด์เพิ่มจากบางหน้าฟอร์ม ให้ปล่อยเป็น nullable เพื่อไม่ชน schema
             'priority' => ['nullable'],
-            'facility_id' => ['nullable'],
+            'facility_id' => ['nullable', 'exists:facilities,id'],
+
 
             // เผื่อฟิลด์ที่ UI ส่งมา แต่ไม่จำเป็นต้อง validate
             'issue_type' => ['nullable'],

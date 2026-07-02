@@ -31,7 +31,8 @@ class UpdateMaintenanceRequest extends FormRequest
 
             // เผื่อฟิลด์ที่ UI ส่งมา แต่ไม่จำเป็นต้อง validate
             'priority' => ['sometimes', 'nullable'],
-            'facility_id' => ['sometimes', 'nullable'],
+            'facility_id' => ['sometimes', 'nullable', 'exists:facilities,id'],
+
 
             // เผื่อฟิลด์ที่ UI ส่งมา แต่ไม่จำเป็นต้อง validate
             'issue_type' => ['sometimes', 'nullable'],
