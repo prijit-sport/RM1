@@ -48,10 +48,11 @@ class MaintenanceControllerTest extends TestCase
         $response = $this->actingAs($user)
             ->post(route('maintenances.store'), [
                 'room_id' => $room->id,
-                'maintenance_type' => 'ไฟฟ้า',
-                'request_date' => Carbon::today()->toDateString(),
+                'issue_type' => 'ไฟฟ้า',
+                'reported_date' => Carbon::today()->toDateString(),
                 'status' => 'pending',
                 'description' => 'ทดสอบ',
+
 
             ]);
 

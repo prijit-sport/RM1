@@ -50,7 +50,7 @@ class MaintenanceController extends Controller
         if ($request->filled('search')) {
             $search = $request->input('search');
             $query->where(function ($q) use ($search) {
-                $q->where('maintenance_type', 'like', "%{$search}%")
+                $q->where('issue_type', 'like', "%{$search}%")
                     ->orWhere('description', 'like', "%{$search}%")
                     ->orWhereHas('room', fn($r) => $r->where('room_number', 'like', "%{$search}%"))
                     ->orWhereHas('facility', fn($f) => $f->where('name', 'like', "%{$search}%"));
@@ -120,9 +120,9 @@ class MaintenanceController extends Controller
         // ฟอร์มส่ง maintenance_type/request_date ให้ map ก่อน insert
         $data = [
             'room_id'        => $validated['room_id'],
-            'issue_type'    => $validated['maintenance_type'],
+            'issue_type'    => $validated['issue_type'],
             'description'   => $validated['description'],
-            'reported_date' => $validated['request_date'],
+            'reported_date' => $validated['reported_date'],
             'status'        => $validated['status'],
             'assigned_to'   => $validated['assigned_to'] ?? null,
             'cost'           => $validated['cost'] ?? null,
@@ -174,9 +174,9 @@ class MaintenanceController extends Controller
         // Map field ที่มาจากฟอร์มให้ตรงกับ schema
         $updateData = [
             'room_id'        => $validated['room_id'] ?? $maintenance->room_id,
-            'issue_type'    => $validated['maintenance_type'] ?? $maintenance->issue_type,
+            'issue_type'    => $validated['issue_type'] ?? $maintenance->issue_type,
             'description'   => $validated['description'] ?? $maintenance->description,
-            'reported_date' => $validated['request_date'] ?? $maintenance->reported_date,
+            'reported_date' => $validated['reported_date'] ?? $maintenance->reported_date,
             'status'        => $validated['status'] ?? $maintenance->status,
             'assigned_to'   => $validated['assigned_to'] ?? $maintenance->assigned_to,
             'cost'           => $validated['cost'] ?? $maintenance->cost,

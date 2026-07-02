@@ -61,8 +61,8 @@
                                     {{-- โหมดปกติ: dropdown 6 ประเภทคงที่ ไม่ซ้ำ ไม่ขึ้นกับ DB --}}
                                     <select name="facility_type" id="facility_type" class="form-select">
                                         <option value="">-- เลือกประเภทอุปกรณ์ (ถ้ามี) --</option>
-                                        <option value="bed"
-                                            {{ old('facility_type') == 'bed' ? 'selected' : '' }}>🛏️ เตียง
+                                        <option value="bed" {{ old('facility_type') == 'bed' ? 'selected' : '' }}>🛏️
+                                            เตียง
                                         </option>
                                         <option value="mattress"
                                             {{ old('facility_type') == 'mattress' ? 'selected' : '' }}>🛌 ที่นอน
@@ -95,26 +95,26 @@
                                 <div class="col-md-6">
                                     <label class="form-label fw-bold">ประเภทงานซ่อม <span
                                             class="text-danger">*</span></label>
-                                    <select name="maintenance_type" id="maintenance_type"
-                                        class="form-select @error('maintenance_type') is-invalid @enderror" required>
+                                    <select name="issue_type" id="issue_type"
+                                        class="form-select @error('issue_type') is-invalid @enderror" required>
                                         <option value="">-- เลือกประเภท --</option>
-                                        <option value="ไฟฟ้า"
-                                            {{ old('maintenance_type') == 'ไฟฟ้า' ? 'selected' : '' }}>💡 ไฟฟ้า
+                                        <option value="ไฟฟ้า" {{ old('issue_type') == 'ไฟฟ้า' ? 'selected' : '' }}>
+                                            💡 ไฟฟ้า
                                         </option>
-                                        <option value="ประปา/ท่อ"
-                                            {{ old('maintenance_type') == 'ประปา/ท่อ' ? 'selected' : '' }}>🚰
+                                        <option value="ประปา/ท่อ" {{ old('issue_type') == 'ประปา/ท่อ' ? 'selected' : '' }}>
+                                            🚰
                                             ประปา/ท่อ</option>
                                         <option value="เครื่องปรับอากาศ"
-                                            {{ old('maintenance_type') == 'เครื่องปรับอากาศ' ? 'selected' : '' }}>❄️
+                                            {{ old('issue_type') == 'เครื่องปรับอากาศ' ? 'selected' : '' }}>❄️
                                             เครื่องปรับอากาศ</option>
                                         <option value="เฟอร์นิเจอร์"
-                                            {{ old('maintenance_type') == 'เฟอร์นิเจอร์' ? 'selected' : '' }}>🪑
+                                            {{ old('issue_type') == 'เฟอร์นิเจอร์' ? 'selected' : '' }}>🪑
                                             เฟอร์นิเจอร์</option>
-                                        <option value="อื่นๆ"
-                                            {{ old('maintenance_type') == 'อื่นๆ' ? 'selected' : '' }}>🛠️
+                                        <option value="อื่นๆ" {{ old('issue_type') == 'อื่นๆ' ? 'selected' : '' }}>
+                                            🛠️
                                             อื่นๆ</option>
                                     </select>
-                                    @error('maintenance_type')
+                                    @error('issue_type')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
@@ -134,10 +134,10 @@
                             {{-- ── 4. วันที่แจ้งซ่อม ── --}}
                             <div class="mb-4">
                                 <label class="form-label fw-bold">วันที่แจ้งซ่อม <span class="text-danger">*</span></label>
-                                <input type="date" name="request_date"
-                                    class="form-control @error('request_date') is-invalid @enderror"
-                                    value="{{ old('request_date', date('Y-m-d')) }}" required>
-                                @error('request_date')
+                                <input type="date" name="reported_date"
+                                    class="form-control @error('reported_date') is-invalid @enderror"
+                                    value="{{ old('reported_date', date('Y-m-d')) }}" required>
+                                @error('reported_date')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
@@ -157,16 +157,16 @@
                                 <label class="form-label fw-bold">สถานะ <span class="text-danger">*</span></label>
                                 <select name="status" id="status"
                                     class="form-select @error('status') is-invalid @enderror" required>
-                                    <option value="pending"
-                                        {{ old('status', 'pending') == 'pending' ? 'selected' : '' }}>⏳ รอดำเนิน
+                                    <option value="pending" {{ old('status', 'pending') == 'pending' ? 'selected' : '' }}>⏳
+                                        รอดำเนิน
                                     </option>
-                                    <option value="in_progress"
-                                        {{ old('status') == 'in_progress' ? 'selected' : '' }}>🔄 กำลังดำเนิน
+                                    <option value="in_progress" {{ old('status') == 'in_progress' ? 'selected' : '' }}>🔄
+                                        กำลังดำเนิน
                                     </option>
-                                    <option value="completed"
-                                        {{ old('status') == 'completed' ? 'selected' : '' }}>✅ สำเร็จ</option>
-                                    <option value="cancelled"
-                                        {{ old('status') == 'cancelled' ? 'selected' : '' }}>❌ ยกเลิก</option>
+                                    <option value="completed" {{ old('status') == 'completed' ? 'selected' : '' }}>✅ สำเร็จ
+                                    </option>
+                                    <option value="cancelled" {{ old('status') == 'cancelled' ? 'selected' : '' }}>❌ ยกเลิก
+                                    </option>
                                 </select>
                                 @error('status')
                                     <div class="invalid-feedback">{{ $message }}</div>

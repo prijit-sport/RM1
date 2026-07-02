@@ -16,11 +16,11 @@ class UpdateMaintenanceRequest extends FormRequest
         return [
             'room_id' => ['sometimes', 'required', 'exists:rooms,id'],
 
-            // ฟอร์มส่ง maintenance_type (เดิมใช้เป็น issue_type ใน DB)
-            'maintenance_type' => ['sometimes', 'required', 'string', 'max:255'],
+            // ฟอร์มส่ง issue_type
+            'issue_type' => ['sometimes', 'required', 'string', 'max:255'],
 
-            // ฟอร์มส่ง request_date (เดิมชื่อ reported_date ใน DB)
-            'request_date' => ['sometimes', 'required', 'date'],
+            // ฟอร์มส่ง reported_date
+            'reported_date' => ['sometimes', 'required', 'date'],
 
             'status' => ['sometimes', 'required', 'in:pending,in_progress,completed,cancelled'],
 
@@ -32,6 +32,8 @@ class UpdateMaintenanceRequest extends FormRequest
             // เผื่อฟิลด์ที่ UI ส่งมา แต่ไม่จำเป็นต้อง validate
             'priority' => ['sometimes', 'nullable'],
             'facility_id' => ['sometimes', 'nullable'],
+
+            // เผื่อฟิลด์ที่ UI ส่งมา แต่ไม่จำเป็นต้อง validate
             'issue_type' => ['sometimes', 'nullable'],
             'reported_date' => ['sometimes', 'nullable'],
 
