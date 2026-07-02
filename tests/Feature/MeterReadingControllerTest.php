@@ -59,7 +59,10 @@ class MeterReadingControllerTest extends TestCase
                 'notes' => 'bad',
             ]);
 
-        $response->assertStatus(500);
+        $response->assertRedirect(route('meters.readings.create', $meter));
+
+        $response->assertSessionHasErrors();
+
         $this->assertSame(0, MeterReading::count());
     }
 

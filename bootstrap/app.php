@@ -30,9 +30,23 @@ return Application::configure(basePath: dirname(__DIR__))
  
         // ✅ ValidationException — ให้ Laravel จัดการเองอัตโนมัติ (redirect + flash errors)
         // ต้องอยู่ก่อน General Throwable เพื่อกัน Throwable handler มา catch ก่อน
-        $exceptions->render(function (\Illuminate\Validation\ValidationException $e, $request) {
-            return null; // คืน null = ให้ Laravel ใช้ default behavior (redirect + withErrors)
+        $exceptions->dontReport(\Illuminate\Validation\ValidationException::class);
+        $exceptions->dontFlash(\Illuminate\Validation\ValidationException::class);
+
+        $exceptions->render(function (\Illuminate\Validation\ValidationException $e, $request) use ($isApi) {
+            if ($isApi($request)) {
+                return response()->json([
+                    'message' => $e->getMessage(),
+                    'errors'  => $e->errors(),
+                ], 422);
+            }
+
+            return redirect()->back()
+                ->withInput()
+                ->withErrors($e->errors());
         });
+
+
  
         // Let Laravel handle HttpResponseException automatically
         $exceptions->render(function (\Illuminate\Http\Exception\HttpResponseException $e, $request) {

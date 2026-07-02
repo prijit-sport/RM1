@@ -47,7 +47,10 @@ class GuestControllerTest extends TestCase
             ->post(route('guests.store'), []);
  
         // ✅ ยืนยันว่าไม่ได้ 200 OK (validation ทำงาน)
-        $response->assertStatus(500);
+        $response->assertRedirect(route('guests.create'));
+
+        $response->assertSessionHasErrors();
+
  
         // ✅ ยืนยันว่าไม่มี Guest ถูกสร้าง (สำคัญที่สุด)
         $this->assertSame(0, Guest::count());

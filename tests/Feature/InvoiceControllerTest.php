@@ -50,7 +50,10 @@ class InvoiceControllerTest extends TestCase
             ->from(route('invoices.create'))
             ->post(route('invoices.store'), []);
 
-        $response->assertStatus(500);
+        $response->assertRedirect(route('invoices.create'));
+
+        $response->assertSessionHasErrors();
+
         $this->assertSame(0, Invoice::count());
     }
 

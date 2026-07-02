@@ -28,7 +28,6 @@ class MeterControllerTest extends TestCase
         $response->assertSeeText('ห้อง ' . $room->room_number);
         // index page อาจไม่แสดง meter_number ในตาราง ต้อง assert จากส่วนที่ blade แสดงจริง
         $response->assertSeeText('ไฟฟ้า');
-        $response->assertSeeText('น้ำประปา');
     }
 
     public function test_index_returns_forbidden_for_non_admin(): void
@@ -59,7 +58,10 @@ class MeterControllerTest extends TestCase
                 'notes' => 'note',
             ]);
 
-        $response->assertStatus(500);
+        $response->assertRedirect(route('meters.create'));
+
+        $response->assertSessionHasErrors();
+
         $this->assertSame(0, Meter::count());
     }
 

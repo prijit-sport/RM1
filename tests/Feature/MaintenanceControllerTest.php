@@ -36,7 +36,10 @@ class MaintenanceControllerTest extends TestCase
             ->from(route('maintenances.create'))
             ->post(route('maintenances.store'), []);
 
-        $response->assertStatus(500);
+        $response->assertRedirect(route('maintenances.create'));
+
+        $response->assertSessionHasErrors();
+
         $this->assertSame(0, Maintenance::count());
     }
 
