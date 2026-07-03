@@ -7,8 +7,10 @@ use App\Models\Guest;
 use App\Models\Invoice;
 use App\Models\Meter;
 use App\Models\Room;
+use App\Models\Role;
 use App\Models\User;
 use Carbon\Carbon;
+
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -16,10 +18,20 @@ class BusinessLogicRiskTest extends TestCase
 {
     use RefreshDatabase;
 
+    private function createUserWithRole(string $roleName): User
+    {
+        $role = Role::firstOrCreate(['name' => $roleName], ['description' => $roleName]);
+
+        return User::factory()->create(['role_id' => $role->id]);
+    }
+
+
+
     public function test_marking_invoice_as_paid_updates_payment_details(): void
     {
-        $user = User::factory()->create();
+        $user = $this->createUserWithRole('Manager');
         $this->actingAs($user);
+
 
         $guest = Guest::create([
             'first_name' => 'Siri',

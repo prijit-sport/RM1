@@ -41,7 +41,7 @@ class InvoicePolicy
      */
     public function update(User $user, Invoice $invoice): bool
     {
-        return true;
+        return $user->hasRole('Admin') || $user->hasRole('Manager');
     }
 
 
@@ -50,7 +50,7 @@ class InvoicePolicy
      */
     public function delete(User $user, Invoice $invoice): bool
     {
-        return true;
+        return $user->hasRole('Admin') || $user->hasRole('Manager');
     }
 
 
@@ -59,7 +59,7 @@ class InvoicePolicy
      */
     public function restore(User $user, Invoice $invoice): bool
     {
-        return true;
+        return $user->hasRole('Admin') || $user->hasRole('Manager');
     }
 
 
@@ -68,7 +68,8 @@ class InvoicePolicy
      */
     public function forceDelete(User $user, Invoice $invoice): bool
     {
-        return true;
+        return $user->hasRole('Admin') || $user->hasRole('Manager');
     }
+
 
 }
