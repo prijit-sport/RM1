@@ -81,9 +81,16 @@ Route::middleware(['web'])->group(function () {
  
     // --- Manager or Admin เท่านั้น ---
     Route::middleware(['auth', 'manager_or_admin'])->group(function () {
- 
+
+        // 5. รายงาน (Reports)
+        Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+        Route::get('/reports/export', [ReportController::class, 'export'])->name('reports.export');
+        Route::get('/reports/revenue', [ReportController::class, 'revenue'])->name('reports.revenue');
+        Route::get('/reports/occupancy', [ReportController::class, 'occupancy'])->name('reports.occupancy');
+
         // สัญญาเช่า
         Route::get('contracts/export', [ContractController::class, 'export'])->name('contracts.export');
+
         Route::get('contracts/expiring', [ContractController::class, 'expiring'])->name('contracts.expiring');
         Route::resource('contracts', ContractController::class);
  

@@ -40,7 +40,9 @@ class Room extends Model
         'room_type',
         'zone',
         'floor',
+        'building',
         'price_per_month',
+
         'capacity',
         'description',
         'status',

@@ -59,7 +59,7 @@
                                     </div>
 
                                     <div class="row mb-4">
-                                        <div class="col-md-6">
+                                        <div class="col-md-4">
                                             <label class="form-label required">ชั้น</label>
                                             <input type="number" name="floor"
                                                 class="form-control @error('floor') is-invalid @enderror"
@@ -68,10 +68,21 @@
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
                                         </div>
-                                        <div class="col-md-6">
+                                        <div class="col-md-4">
+                                            <label class="form-label">อาคาร</label>
+                                            <input type="text" name="building"
+                                                class="form-control @error('building') is-invalid @enderror"
+                                                value="{{ old('building', $room->building) }}" placeholder="เช่น A, B">
+                                            @error('building')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+                                        <div class="col-md-4">
                                             <label class="form-label required">สถานะ</label>
                                             <select name="status" class="form-select @error('status') is-invalid @enderror"
                                                 required>
+
+
                                                 <option value="available"
                                                     {{ $room->status == 'available' ? 'selected' : '' }}>ว่าง</option>
                                                 <option value="occupied"

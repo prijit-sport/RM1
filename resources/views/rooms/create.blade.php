@@ -82,9 +82,9 @@
                                 </div>
                             </div>
 
-                            {{-- ── ชั้น + สถานะ ── --}}
+                            {{-- ── ชั้น + อาคาร + สถานะ ── --}}
                             <div class="row mb-4">
-                                <div class="col-md-6">
+                                <div class="col-md-4">
                                     <label class="form-label required">ชั้น <span class="text-danger">*</span></label>
                                     <input type="number" name="floor"
                                         class="form-control @error('floor') is-invalid @enderror"
@@ -93,10 +93,20 @@
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
-                                <div class="col-md-6">
+                                <div class="col-md-4">
+                                    <label class="form-label">อาคาร</label>
+                                    <input type="text" name="building"
+                                        class="form-control @error('building') is-invalid @enderror"
+                                        value="{{ old('building') }}" placeholder="เช่น A, B">
+                                    @error('building')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                                <div class="col-md-4">
                                     <label class="form-label required">สถานะ <span class="text-danger">*</span></label>
                                     <select name="status" class="form-select @error('status') is-invalid @enderror"
                                         required>
+
                                         <option value="available"
                                             {{ old('status', 'available') == 'available' ? 'selected' : '' }}>ว่าง
                                         </option>
