@@ -69,12 +69,6 @@ Route::middleware(['web'])->group(function () {
         Route::post('guests/bulk-store', [GuestController::class, 'bulkStore'])->name('guests.bulk-store');
         Route::resource('guests', GuestController::class);
  
-        // 5. รายงาน (Reports)
-        Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
-        Route::get('/reports/export', [ReportController::class, 'export'])->name('reports.export');
-        Route::get('/reports/revenue', [ReportController::class, 'revenue'])->name('reports.revenue');
-        Route::get('/reports/occupancy', [ReportController::class, 'occupancy'])->name('reports.occupancy');
- 
         // 6. รายชื่อผู้เช่า + สถานะห้อง
         Route::get('tenants-status', [TenantsStatusController::class, 'index'])->name('tenants-status.index');
     });
