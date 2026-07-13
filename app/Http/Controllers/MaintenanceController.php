@@ -9,6 +9,8 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use App\Http\Requests\StoreMaintenanceRequest;
 use App\Http\Requests\UpdateMaintenanceRequest;
+use Illuminate\Support\Facades\Cache;
+
 
 /**
  * หมายเหตุ: โค้ดนี้เป็น Laravel (access model fields เป็น property)
@@ -80,7 +82,8 @@ class MaintenanceController extends Controller
 
 
         // ✅ แก้ไข: ส่ง facilities เฉพาะที่ต้องใช้ตอน Lock mode (มาจาก facility_id)
-        $facilities = Facility::all();
+        $facilities = Cache::remember('facilities.all', now()->addHours(6), fn () => Facility::orderBy('id')->get());
+
 
         $facilityId         = $request->input('facility_id');
         $selectedRoomId     = null;
@@ -132,7 +135,10 @@ class MaintenanceController extends Controller
 
         Maintenance::create($data);
 
+        Cache::forget('facilities.all');
+
         return redirect()->route('maintenances.index')
+
 
             ->with('success', 'แจ้งซ่อมเรียบร้อยแล้ว');
     }
@@ -158,7 +164,8 @@ class MaintenanceController extends Controller
 
         $rooms      = Room::orderBy('floor')->orderBy('zone')->orderBy('room_number')->get();
 
-        $facilities = Facility::all();
+        $facilities = Cache::remember('facilities.all', now()->addHours(6), fn () => Facility::orderBy('id')->get());
+
         return view('maintenances.edit', compact('maintenance', 'rooms', 'facilities'));
     }
 

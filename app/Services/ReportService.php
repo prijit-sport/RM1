@@ -13,8 +13,8 @@ use App\Models\MeterReading;
 use App\Models\Room;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
  
 class ReportService
 
@@ -62,19 +62,51 @@ class ReportService
  
     private function getFinancialData(): array
     {
+        // NOTE: Keep output shape identical to previous version.
+        // Replace in-memory aggregation with query-level GROUP BY.
         $monthly_revenue = collect();
-        for ($i = 11; $i >= 0; $i--) {
-            $date = now()->subMonths($i);
-            $monthly_revenue->push([
-                'label' => $date->format('M Y'),
-                'value' => (float) Booking::whereMonth('created_at', $date->month)
-                    ->whereYear('created_at', $date->year)
-                    ->where('status', '!=', 'cancelled')
-                    ->sum('total_price'),
-            ]);
+
+        // Use query-level aggregation; fall back to PHP when DB driver doesn't support MySQL functions.
+        // MySQL-specific: DATE_FORMAT(...) for month-year grouping.
+        $from = now()->subMonths(11)->startOfMonth();
+        $to   = now()->endOfMonth();
+
+        if (DB::getDriverName() === 'mysql') {
+            $rows = Booking::query()
+                ->where('status', '!=', 'cancelled')
+                ->whereBetween('created_at', [$from, $to])
+                ->selectRaw("DATE_FORMAT(created_at, '%b %Y') as label, SUM(total_price) as total")
+                ->groupBy('label')
+                ->orderByRaw("MIN(created_at) asc")
+                ->get();
+
+            $byLabel = $rows->pluck('total', 'label');
+
+            for ($i = 11; $i >= 0; $i--) {
+                $date  = now()->subMonths($i);
+                $label = $date->format('M Y');
+                $monthly_revenue->push([
+                    'label' => $label,
+                    'value' => (float) ($byLabel[$label] ?? 0),
+                ]);
+            }
+        } else {
+            // SQLite (tests) doesn't have DATE_FORMAT().
+            // Keep output shape identical while still avoiding loading all rows.
+            for ($i = 11; $i >= 0; $i--) {
+                $date = now()->subMonths($i);
+                $monthly_revenue->push([
+                    'label' => $date->format('M Y'),
+                    'value' => (float) Booking::whereMonth('created_at', $date->month)
+                        ->whereYear('created_at', $date->year)
+                        ->where('status', '!=', 'cancelled')
+                        ->sum('total_price'),
+                ]);
+            }
         }
- 
-        $revenue_by_room_type = Booking::join('rooms', 'bookings.room_id', '=', 'rooms.id')
+
+        $revenue_by_room_type = Booking::query()
+            ->join('rooms', 'bookings.room_id', '=', 'rooms.id')
             ->where('bookings.status', '!=', 'cancelled')
             ->selectRaw('rooms.room_type, SUM(bookings.total_price) as total')
             ->groupBy('rooms.room_type')

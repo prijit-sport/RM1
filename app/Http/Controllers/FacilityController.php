@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Facility;
 use App\Models\Room;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class FacilityController extends Controller
 {
@@ -43,9 +44,13 @@ class FacilityController extends Controller
             $query->where('location', 'like', '%' . $request->location . '%');
         }
 
-        $facilities = $query->latest('id')->paginate(20)->withQueryString();
+        $facilities = Cache::remember('facilities.all', now()->addHours(6), function () use ($query) {
+            return $query->latest('id')->paginate(20)->withQueryString();
+        });
 
         // ✅ นับสถิติ รวม 'active' เข้ากับ 'good'
+
+
         $statusCounts = Facility::selectRaw('status, COUNT(*) as cnt')
             ->groupBy('status')
             ->pluck('cnt', 'status')
@@ -68,6 +73,8 @@ class FacilityController extends Controller
             ->orderBy('location')
             ->pluck('location');
 
+
+
         return view('facilities.index', compact('facilities', 'stats', 'locations'));
     }
 
@@ -85,6 +92,7 @@ class FacilityController extends Controller
         $selectedRoomId = $request->input('room_id');
 
         return view('facilities.create', compact('rooms', 'selectedRoomId'));
+
     }
 
     // ─────────────────────────────────────────
@@ -108,8 +116,11 @@ class FacilityController extends Controller
 
         Facility::create($validated);
 
+        Cache::forget('facilities.all');
+
         return redirect()->route('facilities.index')
             ->with('success', __('ui.facility.created'));
+
     }
 
     // ─────────────────────────────────────────
@@ -155,8 +166,11 @@ class FacilityController extends Controller
 
         $facility->update($validated);
 
+        Cache::forget('facilities.all');
+
         return redirect()->route('facilities.show', $facility)
             ->with('success', __('ui.facility.updated'));
+
     }
 
     // ─────────────────────────────────────────
@@ -167,8 +181,12 @@ class FacilityController extends Controller
         $this->authorize('delete', $facility);
 
         $facility->delete();
+
+        Cache::forget('facilities.all');
+
         return redirect()->route('facilities.index')
             ->with('success', __('ui.facility.deleted'));
+
     }
 
     // ─────────────────────────────────────────
