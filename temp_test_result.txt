@@ -1,0 +1,126 @@
+
+   PASS  Tests\Unit\ExampleTest
+  ✓ that true is true   0.01s  
+
+   PASS  Tests\Feature\AccountFeatureTest
+  ✓ profile page is ac… 0.28s  
+  ✓ profile can be upd… 0.03s  
+  ✓ settings page and…  0.01s  
+
+   PASS  Tests\Feature\ApiSmokeTest
+  ✓ login route return… 0.02s  
+  ✓ dashboard requires… 0.01s  
+  ✓ room index require… 0.01s  
+
+   PASS  Tests\Feature\AuthLoginTest
+  ✓ inactive user cann… 0.02s  
+
+   PASS  Tests\Feature\AuthorizationLoggingTest
+  ✓ admin only denied…  0.01s  
+
+   PASS  Tests\Feature\BookingFlowTest
+  ✓ store rejects over… 0.02s  
+  ✓ confirm changes st… 0.02s  
+  ✓ confirm is rejecte… 0.01s  
+  ✓ cancel changes sta… 0.01s  
+  ✓ index applies stat… 0.02s  
+  ✓ update when changi… 0.01s  
+  ✓ update allows edge… 0.01s  
+  ✓ update rejects inv… 0.01s  
+  ✓ confirm requires m… 0.01s  
+
+   PASS  Tests\Feature\BusinessLogicRiskTest
+  ✓ marking invoice as… 0.03s  
+  ✓ record monthly and… 0.01s  
+
+   PASS  Tests\Feature\ContractFlowTest
+  ✓ create contract se… 0.03s  
+  ✓ terminate contract… 0.01s  
+  ✓ cannot create cont… 0.01s  
+  ✓ contract expiry da… 0.01s  
+
+   PASS  Tests\Feature\DashboardControllerTest
+  ✓ index returns ok f… 0.02s  
+  ✓ unauthenticated re… 0.01s  
+
+   PASS  Tests\Feature\ExampleTest
+  ✓ the application re… 0.01s  
+
+   PASS  Tests\Feature\FacilityControllerTest
+  ✓ index returns ok f… 0.02s  
+  ✓ index returns forb… 0.01s  
+  ✓ store validation w… 0.01s  
+  ✓ show displays faci… 0.01s  
+
+   PASS  Tests\Feature\GuestControllerTest
+  ✓ index returns view… 0.02s  
+  ✓ store rejects empt… 0.01s  
+  ✓ store creates gues… 0.01s  
+  ✓ show displays gues… 0.01s  
+  ✓ index redirects to… 0.01s  
+
+   PASS  Tests\Feature\InvoiceControllerTest
+  ✓ index returns ok f… 0.02s  
+  ✓ show displays exis… 0.02s  
+  ✓ store rejects empt… 0.01s  
+  ✓ store creates invo… 0.02s  
+  ✓ mark as paid chang… 0.01s  
+  ✓ unauthorized user…  0.01s  
+
+   PASS  Tests\Feature\MaintenanceControllerTest
+  ✓ index returns ok f… 0.02s  
+  ✓ store rejects empt… 0.01s  
+  ✓ store creates main… 0.01s  
+  ✓ show displays exis… 0.01s  
+  ✓ unauthorized user…  0.01s  
+
+   PASS  Tests\Feature\MeterBillingTest
+  ✓ record monthly cre… 0.01s  
+  ✓ record monthly upd… 0.01s  
+  ✓ record monthly fai… 0.01s  
+
+   PASS  Tests\Feature\MeterControllerTest
+  ✓ index returns ok f… 0.02s  
+  ✓ index returns forb… 0.01s  
+  ✓ store validation f… 0.01s  
+  ✓ show displays mete… 0.01s  
+
+   PASS  Tests\Feature\MeterReadingControllerTest
+  ✓ index returns ok f… 0.02s  
+  ✓ index returns forb… 0.01s  
+  ✓ store validation f… 0.01s  
+
+   PASS  Tests\Feature\ModuleAccessTest
+  ✓ manager can access… 0.02s  
+  ✓ regular user canno… 0.01s  
+
+   PASS  Tests\Feature\PolicyFirstAccessTest
+  ✓ regular user is de… 0.01s  
+  ✓ admin is allowed b… 0.01s  
+  ✓ regular user canno… 0.01s  
+  ✓ admin can access r… 0.01s  
+
+   PASS  Tests\Feature\ReportControllerTest
+  ✓ index returns ok f… 0.02s  
+  ✓ index returns forb… 0.01s  
+  ✓ unauthenticated re… 0.01s  
+
+   PASS  Tests\Feature\RoomControllerFeatureTest
+  ✓ rooms index return… 0.02s  
+  ✓ rooms store valida… 0.01s  
+
+   PASS  Tests\Feature\RouteTest
+  ✓ login page is acce… 0.01s  
+  ✓ unauthenticated us… 0.01s  
+  ✓ authenticated user… 0.01s  
+  ✓ authenticated user… 0.01s  
+  ✓ root path redirect… 0.01s  
+  ✓ dashboard requires… 0.01s  
+  ✓ authenticated user… 0.01s  
+  ✓ fallback route for… 0.01s  
+  ✓ fallback route wit… 0.01s  
+  ✓ login route exists  0.01s  
+
+  Tests:    78 passed (206 assertions)
+  Duration: 1.54s
+
