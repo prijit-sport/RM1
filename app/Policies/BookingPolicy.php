@@ -4,9 +4,12 @@ namespace App\Policies;
  
 use App\Models\Booking;
 use App\Models\User;
+use App\Models\Role;
  
 class BookingPolicy
 {
+
+
     /**
      * ทุก role ที่ login แล้วดูรายการจองได้
      */
@@ -44,8 +47,8 @@ class BookingPolicy
      */
     public function delete(User $user, Booking $booking): bool
     {
-        return $user->hasRole('Admin')
-            || $user->hasRole('Manager')
+        return $user->hasRole(\App\Models\Role::ADMIN)
+            || $user->hasRole(\App\Models\Role::MANAGER)
             || $user->hasRole('Staff');
     }
  
@@ -55,8 +58,8 @@ class BookingPolicy
      */
     public function confirm(User $user, Booking $booking): bool
     {
-        return $user->hasRole('Admin')
-            || $user->hasRole('Manager')
+        return $user->hasRole(\App\Models\Role::ADMIN)
+            || $user->hasRole(\App\Models\Role::MANAGER)
             || $user->hasRole('Staff');
     }
  
@@ -65,8 +68,8 @@ class BookingPolicy
      */
     public function cancel(User $user, Booking $booking): bool
     {
-        return $user->hasRole('Admin')
-            || $user->hasRole('Manager')
+        return $user->hasRole(\App\Models\Role::ADMIN)
+            || $user->hasRole(\App\Models\Role::MANAGER)
             || $user->hasRole('Staff');
     }
  
@@ -75,8 +78,8 @@ class BookingPolicy
      */
     public function export(User $user): bool
     {
-        return $user->hasRole('Admin')
-            || $user->hasRole('Manager')
+        return $user->hasRole(\App\Models\Role::ADMIN)
+            || $user->hasRole(\App\Models\Role::MANAGER)
             || $user->hasRole('Staff');
     }
 }

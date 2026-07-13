@@ -7,7 +7,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
- 
+
+use App\Models\Role;
+
 class ManagerOrAdmin
 {
     public function handle(Request $request, Closure $next): Response

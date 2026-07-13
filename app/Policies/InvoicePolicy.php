@@ -4,7 +4,9 @@ namespace App\Policies;
 
 use App\Models\Invoice;
 use App\Models\User;
+use App\Models\Role;
 use Illuminate\Auth\Access\Response;
+
 
 class InvoicePolicy
 {
