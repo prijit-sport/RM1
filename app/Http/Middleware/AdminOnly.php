@@ -40,7 +40,7 @@ class AdminOnly
             abort(403, 'คุณไม่มีสิทธิ์เข้าถึงหน้านี้');
         }
 
-        if ($user->role?->name !== 'Admin') {
+        if ($user->role?->name !== Role::ADMIN) {
             DirectLog::write(json_encode([
                 'msg'     => 'Authorization denied',
                 'route'   => $request->route()?->getName() ?? $request->path(),
