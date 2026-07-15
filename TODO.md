@@ -1,5 +1,8 @@
-# TODO
+# TODO - Role constants refactor (Policies)
 
-- [x] ลบ route /reports ที่ประกาศซ้ำชุดเก่าออก (routes/web.php)
-- [x] งาน 1: ย้าย ReportService ให้คำนวณด้วย SQL aggregation แทน in-memory
-- [ ] งาน 2: เพิ่ม Caching สำหรับข้อมูลที่เปลี่ยนไม่บ่อย (roles/permissions, facilities) + cache invalidation + ตรวจ test ผ่าน 78/78
+- [ ] แก้ไฟล์ policies ทั้ง 4 ไฟล์ (InvoicePolicy, MaintenancePolicy, FacilityPolicy, MeterPolicy)
+- [ ] ตรวจ/เพิ่ม use App\Models\Role ในทั้ง 4 ไฟล์
+- [ ] แทนที่ hasRole('Admin') -> hasRole(Role::ADMIN) และ hasRole('Manager') -> hasRole(Role::MANAGER) (ตามที่ระบุ)
+- [ ] รัน findstr เพื่อตรวจว่าไม่มี hasRole('Admin') หรือ hasRole('Manager') คงอยู่ในทั้ง 4 ไฟล์
+- [ ] รัน php artisan test และยืนยันผล 78/78
+- [ ] commit ด้วย message: refactor: apply Role constants to remaining policies
