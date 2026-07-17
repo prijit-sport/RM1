@@ -51,6 +51,7 @@ class Invoice extends Model
         'booking_id',
         'guest_id',
         'room_id',
+        'invoice_type',
         'invoice_number',
         'amount',
         'tax',

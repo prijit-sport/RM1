@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreInvoiceRequest extends FormRequest
 {
@@ -23,7 +24,11 @@ class StoreInvoiceRequest extends FormRequest
     {
         return [
             'booking_id' => 'required|exists:bookings,id',
-            'invoice_number' => 'required|unique:invoices|max:50',
+'invoice_number' => [
+                'required',
+                'max:50',
+                Rule::unique('invoices')->ignore($this->input('draft_invoice_id')),
+            ],
             'amount' => 'required|numeric|min:0',
             'tax' => 'required|numeric|min:0',
             'total' => 'nullable|numeric|min:0',

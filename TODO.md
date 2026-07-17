@@ -1,6 +1,2 @@
-# TODO
-
-- [x] Update InvoiceController constructor to inject NotificationService
-- [x] Refactor remindAll() to call NotificationService::sendBulkInvoiceReminders() and use returned sent count
-- [x] Ensure success message uses returned count and failures are logged with error
-- [ ] Run test suite (phpunit/phpstan) on environment (tools missing in PATH right now)
+- [ ] Update app/Models/Invoice.php: add `invoice_type` into `$fillable` array after `room_id`
+- [ ] Run PHPUnit/feature tests to confirm end-to-end meter->invoice flow passes

@@ -6,6 +6,7 @@ use App\Http\Requests\StoreInvoiceRequest;
 use App\Http\Requests\UpdateInvoiceRequest;
 use App\Models\Booking;
 use App\Models\Invoice;
+use App\Models\Meter;
 
 use App\Services\InvoiceService;
 use App\Services\MeterBillingService;
