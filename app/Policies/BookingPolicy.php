@@ -49,7 +49,7 @@ class BookingPolicy
     {
         return $user->hasRole(\App\Models\Role::ADMIN)
             || $user->hasRole(\App\Models\Role::MANAGER)
-            || $user->hasRole('Staff');
+            || $user->hasRole(\App\Models\Role::STAFF);
     }
  
     /**
@@ -60,7 +60,7 @@ class BookingPolicy
     {
         return $user->hasRole(\App\Models\Role::ADMIN)
             || $user->hasRole(\App\Models\Role::MANAGER)
-            || $user->hasRole('Staff');
+            || $user->hasRole(\App\Models\Role::STAFF);
     }
  
     /**
@@ -70,7 +70,7 @@ class BookingPolicy
     {
         return $user->hasRole(\App\Models\Role::ADMIN)
             || $user->hasRole(\App\Models\Role::MANAGER)
-            || $user->hasRole('Staff');
+            || $user->hasRole(\App\Models\Role::STAFF);
     }
  
     /**
@@ -80,7 +80,7 @@ class BookingPolicy
     {
         return $user->hasRole(\App\Models\Role::ADMIN)
             || $user->hasRole(\App\Models\Role::MANAGER)
-            || $user->hasRole('Staff');
+            || $user->hasRole(\App\Models\Role::STAFF);
     }
 }
  

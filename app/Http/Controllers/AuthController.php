@@ -26,19 +26,20 @@ class AuthController extends Controller
         ]);
 
         $user = User::where('email', $credentials['email'])->first();
-        
-        if (!$user) {
+
+        $dummyHash = '$2y$12$abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWX';
+        $passwordValid = Hash::check(
+            $credentials['password'],
+            $user->password ?? $dummyHash
+        );
+
+        if (!$user || !$passwordValid) {
             return back()->withErrors(['email' => __('ui.auth.login_failed')])->onlyInput('email');
         }
-        
+
         // Check if user is active (default to true if column doesn't exist)
         $isActive = $user->is_active ?? true;
-        
-        // Validate password first, then check if account is active
-        if (!Hash::check($credentials['password'], $user->password)) {
-            return back()->withErrors(['email' => __('ui.auth.login_failed')])->onlyInput('email');
-        }
-        
+
         if (!$isActive) {
             return back()->withErrors(['email' => __('ui.auth.inactive')])->onlyInput('email');
         }

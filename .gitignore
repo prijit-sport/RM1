@@ -27,4 +27,7 @@ Thumbs.db
 /storage/framework/views/*
 !/storage/framework/views/.gitkeep
 /storage/logs/*
- 
+ temp_*.txt 
+_ide_helper.php 
+_ide_helper_models.php 
+.phpstorm.meta.php 

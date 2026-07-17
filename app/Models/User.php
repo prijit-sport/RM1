@@ -22,8 +22,6 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'role_id',
-        'is_active',
     ];
 
     /**
@@ -111,5 +109,19 @@ class User extends Authenticatable
     {
         return $this->hasAnyPermission(is_array($abilities) ? $abilities : [$abilities]);
     }
+
+    // Privileged setters (avoid mass-assignment for role/status)
+    public function assignRole(int $roleId): void
+    {
+        $this->role_id = $roleId;
+        $this->save();
+    }
+
+    public function setActive(bool $isActive): void
+    {
+        $this->is_active = $isActive;
+        $this->save();
+    }
 }
+
 
