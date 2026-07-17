@@ -18,10 +18,14 @@ class StoreBookingRequest extends FormRequest
     {
         return [
             'guest_id'             => 'required|exists:guests,id',
+            'guest_id_2'           => 'nullable|exists:guests,id|different:guest_id',
+            'guest_id_3'           => 'nullable|exists:guests,id|different:guest_id|different:guest_id_2',
             'room_id'              => 'required|exists:rooms,id',
             'check_in_date'        => 'required|date|after_or_equal:today',
+
             'check_out_date'       => 'nullable|date|after:check_in_date',
             // ✅ nullable เพื่อให้ test ที่ไม่ส่งค่ามาผ่านได้
+
             'rent_amount'          => 'nullable|numeric|min:0',
             'deposit_amount'       => 'nullable|numeric|min:0',
             'electric_meter_start' => 'nullable|integer|min:0',
@@ -36,6 +40,10 @@ class StoreBookingRequest extends FormRequest
         return [
             'guest_id.required'          => 'กรุณาเลือกผู้เช่า',
             'guest_id.exists'            => 'ผู้เช่าที่เลือกไม่พบในระบบ',
+            'guest_id_2.exists'        => 'ผู้เช่าคนที่ 2 ที่เลือกไม่พบในระบบ',
+            'guest_id_2.different'    => 'ผู้เช่าคนที่ 2 ต้องไม่ซ้ำกับผู้เช่าหลัก',
+            'guest_id_3.exists'        => 'ผู้เช่าคนที่ 3 ที่เลือกไม่พบในระบบ',
+            'guest_id_3.different'    => 'ผู้เช่าคนที่ 3 ต้องไม่ซ้ำกับผู้เช่าคนอื่น',
             'room_id.required'           => 'กรุณาเลือกห้องพัก',
             'room_id.exists'             => 'ห้องพักที่เลือกไม่พบในระบบ',
             'check_in_date.required'     => 'กรุณาระบุวันที่เข้าพัก',
