@@ -9,6 +9,7 @@ use App\Models\Invoice;
 
 use App\Services\InvoiceService;
 use App\Services\MeterBillingService;
+use App\Services\NotificationService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\RedirectResponse;
@@ -25,6 +26,7 @@ class InvoiceController extends Controller
     public function __construct(
         protected readonly InvoiceService $invoiceService,
         protected readonly MeterBillingService $billingService,
+        protected readonly NotificationService $notificationService,
     ) {}
  
     public function index(Request $request): View
@@ -325,17 +327,14 @@ class InvoiceController extends Controller
     {
         $this->authorize('export', Invoice::class);
         try {
-            /** @var Collection<int, Invoice> $dueInvoices */
-            $dueInvoices = Invoice::whereIn('status', ['sent', 'overdue'])
-                ->whereDate('due_date', '<', now())
-                ->get();
-            \Log::info('Invoice reminders sent', ['count' => $dueInvoices->count()]);
+            $sentCount = $this->notificationService->sendBulkInvoiceReminders();
             return redirect()->route('invoices.index')
-                ->with('success', __('ui.invoice.reminders_sent', ['count' => $dueInvoices->count()]));
+                ->with('success', __('ui.invoice.reminders_sent', ['count' => $sentCount]));
         } catch (\Exception $e) {
             \Log::error('InvoiceController remindAll failed', ['error' => $e->getMessage()]);
             return redirect()->back()->withError('Failed to send reminders');
         }
-    }
 }
+}
+
  
