@@ -1,2 +1,0 @@
-- [ ] Update app/Models/Invoice.php: add `invoice_type` into `$fillable` array after `room_id`
-- [ ] Run PHPUnit/feature tests to confirm end-to-end meter->invoice flow passes
