@@ -87,6 +87,23 @@ class MaintenanceControllerTest extends TestCase
         $response->assertStatus(403);
     }
 
+    public function test_store_rejects_payload_missing_issue_type_and_reported_date(): void
+    {
+        $user = $this->createUserWithRole('Manager');
+        $room = $this->createRoom('M104');
+
+        $response = $this->actingAs($user)
+            ->from(route('maintenances.create'))
+            ->post(route('maintenances.store'), [
+                'room_id' => $room->id,
+                'status' => 'pending',
+                // จงใจไม่ส่ง issue_type และ reported_date
+            ]);
+
+        $response->assertSessionHasErrors(['issue_type', 'reported_date']);
+        $this->assertSame(0, Maintenance::count());
+    }
+
     private function createMaintenance(Room $room): Maintenance
     {
         return Maintenance::create([
@@ -96,6 +113,7 @@ class MaintenanceControllerTest extends TestCase
             'status' => 'pending',
         ]);
     }
+
 
     private function createRoom(string $roomNumber, string $status = 'available'): Room
     {

@@ -33,12 +33,8 @@ class StoreMaintenanceRequest extends FormRequest
             'priority' => ['nullable'],
             'facility_id' => ['nullable', 'exists:facilities,id'],
 
-
-            // เผื่อฟิลด์ที่ UI ส่งมา แต่ไม่จำเป็นต้อง validate
-            'issue_type' => ['nullable'],
-            'reported_date' => ['nullable'],
-
             // รองรับชื่อเดิมที่เคยใช้ในบาง client (เพื่อไม่ให้พัง)
+
             'maintenance_type' => ['sometimes', 'nullable', 'string', 'max:255'],
             'request_date' => ['sometimes', 'nullable', 'date'],
 
