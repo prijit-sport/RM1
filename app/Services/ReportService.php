@@ -213,7 +213,7 @@ class ReportService
  
         try {
             $contracts_active  = Contract::where('status', 'active')->count();
-            $contracts_expired = Contract::where('status', 'expired')->count();
+            $contracts_expired = Contract::active()->expired()->count();
             $contracts_pending = Contract::where('status', 'pending')->count();
  
             $contracts_expiring_30 = Contract::with(['guest', 'room'])

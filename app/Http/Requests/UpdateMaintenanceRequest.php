@@ -34,8 +34,6 @@ class UpdateMaintenanceRequest extends FormRequest
             'facility_id' => ['sometimes', 'nullable', 'exists:facilities,id'],
 
 
-            // เผื่อบางฟอร์มส่งมาเพื่อ UI
-            'facility_type' => ['sometimes', 'nullable', 'string'],
         ];
     }
 }
