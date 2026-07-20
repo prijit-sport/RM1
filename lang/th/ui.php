@@ -4,7 +4,6 @@ return [
     'export' => 'ส่งออก',
     'search' => 'ค้นหา',
     'common' => [
-        'pdf_coming_soon' => 'กำลังจะมี PDF generation เร็วๆ นี้',
     ],
     'auth' => [
         'inactive' => 'บัญชีนี้ถูกปิดการใช้งาน',

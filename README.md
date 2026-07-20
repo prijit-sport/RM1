@@ -112,5 +112,3 @@ MIT (ตามที่ระบุใน `composer.json`)
 - แนะนำตั้งค่า QUEUE_CONNECTION เป็น database หรือ redis (ปัจจุบันใช้ database อยู่แล้ว)
 - ต้องรัน php artisan config:cache, route:cache, view:cache หลัง deploy
 - ต้อง backup ฐานข้อมูลด้วย mysqldump ก่อนรัน migration บน production เสมอ
-- Invoice PDF generation (route invoices.pdf) ยังเป็น placeholder ที่ redirect
-  กลับพร้อมข้อความ coming soon ยังไม่ได้ implement จริง

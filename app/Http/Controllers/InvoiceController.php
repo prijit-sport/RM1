@@ -318,12 +318,6 @@ class InvoiceController extends Controller
         }
     }
  
-    public function generatePdf(Invoice $invoice): RedirectResponse
-    {
-        $this->authorize('view', $invoice);
-        return redirect()->route('invoices.show', $invoice)->with('info', __('ui.common.pdf_coming_soon'));
-    }
- 
     public function remindAll(): RedirectResponse
     {
         $this->authorize('export', Invoice::class);

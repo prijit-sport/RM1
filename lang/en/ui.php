@@ -4,7 +4,6 @@ return [
     'export' => 'Export',
     'search' => 'Search',
     'common' => [
-        'pdf_coming_soon' => 'PDF generation is coming soon.',
     ],
     'auth' => [
         'inactive' => 'This account is inactive.',
