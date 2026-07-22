@@ -5,30 +5,55 @@ namespace Tests\Feature;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\File;
+use Illuminate\Log\Events\MessageLogged;
+use Illuminate\Support\Facades\Event;
 use Tests\TestCase;
 
 class AuthorizationLoggingTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_admin_only_denied_access_is_logged(): void
+    public function test_admin_only_denied_when_role_missing(): void
     {
-        $role = Role::firstOrCreate(['name' => 'User'], ['description' => 'Regular user']);
-        $user = User::factory()->create(['role_id' => $role->id]);
+        // user without any role (role_id = null)
+        $user = User::factory()->create(['role_id' => null]);
 
-        $logPath = storage_path('logs/laravel.log');
-        File::put($logPath, '');
+        Event::fake();
 
         $this->actingAs($user);
 
         $this->get(route('roles.index'))->assertStatus(403);
 
-        $logContents = file_get_contents($logPath);
+        Event::assertDispatched(MessageLogged::class, function (MessageLogged $event) use ($user) {
+            return $event->level === 'warning'
+                && $event->message === 'Authorization denied'
+                && $event->context['route'] === 'roles.index'
+                && $event->context['user_id'] === $user->id
+                && $event->context['role'] === 'User'
+                && $event->context['reason'] === 'missing_role';
+        });
+    }
 
-        $this->assertStringContainsString('Authorization denied', $logContents);
-        $this->assertStringContainsString('"route":"roles.index"', $logContents);
-        $this->assertStringContainsString('"user_id":'.$user->id, $logContents);
-        $this->assertStringContainsString('"role":"User"', $logContents);
+    public function test_admin_only_denied_when_not_admin(): void
+    {
+        // user with a non-admin role
+        $role = Role::firstOrCreate(['name' => 'User'], ['description' => 'Regular user']);
+        $user = User::factory()->create(['role_id' => $role->id]);
+
+        Event::fake();
+
+        $this->actingAs($user);
+
+        $this->get(route('roles.index'))->assertStatus(403);
+
+        Event::assertDispatched(MessageLogged::class, function (MessageLogged $event) use ($user) {
+            return $event->level === 'warning'
+                && $event->message === 'Authorization denied'
+                && $event->context['route'] === 'roles.index'
+                && $event->context['user_id'] === $user->id
+                && $event->context['role'] === 'User'
+                && $event->context['reason'] === 'not_admin';
+        });
     }
 }
+

@@ -21,13 +21,17 @@ class AuthController extends Controller
 
         $user = User::where('email', $request->email)->first();
 
-        if (!$user) {
-            return response()->json([
-                'message' => 'Invalid credentials'
-            ], 401);
-        }
+        // ⚠️ Dummy hash to prevent timing attack:
+        // Always run Hash::check() with a real bcrypt hash,
+        // so response time is consistent whether the user exists or not.
+        $dummyHash = '$2y$12$abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWX';
+        $passwordValid = Hash::check(
+            $request->password,
+            $user->password ?? $dummyHash
+        );
 
-        if (!Hash::check($request->password, $user->password)) {
+        // Combined validation: user not found OR password mismatch
+        if (!$user || !$passwordValid) {
             return response()->json([
                 'message' => 'Invalid credentials'
             ], 401);

@@ -88,7 +88,7 @@ class BusinessLogicRiskTest extends TestCase
 
     public function test_record_monthly_and_create_invoice_stores_tax_separately_from_total(): void
     {
-        $user = User::factory()->create();
+        $user = $this->createUserWithRole('Manager');
         $this->actingAs($user);
 
         $guest = Guest::create([

@@ -1,3 +1,3 @@
 # TODO
 
-- [ ] Remove duplicate rules blocks for `issue_type` and `reported_date` in `app/Http/Requests/UpdateMaintenanceRequest.php`.
+ไม่มีรายการ TODO ค้างอยู่ ณ ตอนนี้

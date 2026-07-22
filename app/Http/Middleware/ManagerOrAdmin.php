@@ -21,12 +21,6 @@ class ManagerOrAdmin
         $user = Auth::user();
         $role = $user?->role;
  
-        // ✅ ใน testing environment — ถ้า user ไม่มี role ให้ผ่านได้
-        // เพราะ test สร้าง User::factory()->create() โดยไม่กำหนด role
-        if (app()->environment('testing') && !$role) {
-            return $next($request);
-        }
- 
         if (!$role) {
             Log::warning('Authorization denied', [
                 'route'   => $request->route()?->getName() ?? $request->path(),
