@@ -92,9 +92,6 @@
                     <div>
                         <p class="text-muted mb-1">การจอง</p>
                         <h3 class="mb-0">{{ number_format($bookingCount ?? 0) }}</h3>
-                        <small class="text-danger">
-                            <i class="bi bi-clock"></i> รอตรวจสอบ
-                        </small>
                     </div>
                     <div class="stat-icon bg-danger bg-opacity-10 text-danger">
                         <i class="bi bi-calendar-check"></i>
