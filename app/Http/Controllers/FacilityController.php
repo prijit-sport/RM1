@@ -44,7 +44,15 @@ class FacilityController extends Controller
             $query->where('location', 'like', '%' . $request->location . '%');
         }
 
-        $facilities = Cache::remember('facilities.all', now()->addHours(6), function () use ($query) {
+        $cacheKey = 'facilities.list.' . md5(json_encode([
+            'search'   => $request->search,
+            'type'     => $request->type,
+            'status'   => $request->status,
+            'location' => $request->location,
+            'page'     => $request->get('page', 1),
+        ]));
+
+        $facilities = Cache::remember($cacheKey, now()->addMinutes(5), function () use ($query) {
             return $query->latest('id')->paginate(20)->withQueryString();
         });
 
@@ -116,8 +124,6 @@ class FacilityController extends Controller
 
         Facility::create($validated);
 
-        Cache::forget('facilities.all');
-
         return redirect()->route('facilities.index')
             ->with('success', __('ui.facility.created'));
 
@@ -166,8 +172,6 @@ class FacilityController extends Controller
 
         $facility->update($validated);
 
-        Cache::forget('facilities.all');
-
         return redirect()->route('facilities.show', $facility)
             ->with('success', __('ui.facility.updated'));
 
@@ -181,8 +185,6 @@ class FacilityController extends Controller
         $this->authorize('delete', $facility);
 
         $facility->delete();
-
-        Cache::forget('facilities.all');
 
         return redirect()->route('facilities.index')
             ->with('success', __('ui.facility.deleted'));
