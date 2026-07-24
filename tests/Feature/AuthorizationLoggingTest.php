@@ -29,7 +29,7 @@ class AuthorizationLoggingTest extends TestCase
                 && $event->message === 'Authorization denied'
                 && $event->context['route'] === 'roles.index'
                 && $event->context['user_id'] === $user->id
-                && $event->context['role'] === 'User'
+                && $event->context['role'] === 'none'
                 && $event->context['reason'] === 'missing_role';
         });
     }

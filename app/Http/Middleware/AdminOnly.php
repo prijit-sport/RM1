@@ -27,7 +27,7 @@ class AdminOnly
             Log::warning('Authorization denied', [
                 'route'   => $request->route()?->getName() ?? $request->path(),
                 'user_id' => $user->id,
-                'role'    => 'User',
+                'role'    => 'none',
                 'reason'  => 'missing_role',
             ]);
 
