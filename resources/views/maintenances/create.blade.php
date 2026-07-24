@@ -1,118 +1,193 @@
-<!DOCTYPE html>
-<html lang="th">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>เพิ่มการซ่อมบำรุงใหม่</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI'; background: #f5f5f5; padding: 20px; }
-        .container { max-width: 800px; margin: 0 auto; background: white; padding: 40px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        h1 { margin-bottom: 30px; color: #333; }
-        .form-group { margin-bottom: 20px; }
-        label { display: block; margin-bottom: 8px; font-weight: 600; color: #555; }
-        input, textarea, select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-family: 'Segoe UI'; font-size: 14px; }
-        input:focus, textarea:focus, select:focus { outline: none; border-color: #667eea; box-shadow: 0 0 5px rgba(102, 126, 234, 0.3); }
-        textarea { resize: vertical; min-height: 100px; }
-        .btn-group { display: flex; gap: 10px; margin-top: 30px; }
-        .btn { padding: 12px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; text-decoration: none; display: inline-block; }
-        .btn-submit { background: #667eea; color: white; }
-        .btn-submit:hover { background: #764ba2; }
-        .btn-cancel { background: #6c757d; color: white; }
-        .btn-cancel:hover { background: #5a6268; }
-        .error-message { color: #dc3545; font-size: 12px; margin-top: 5px; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>🔧 เพิ่มการซ่อมบำรุงใหม่</h1>
-        
-        @if ($errors->any())
-            <div style="background: #f8d7da; color: #721c24; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
-                @foreach ($errors->all() as $error)
-                    <div>{{ $error }}</div>
-                @endforeach
-            </div>
-        @endif
+@extends('layouts.app')
 
-        <form method="POST" action="{{ route('maintenances.store') }}">
-            @csrf
+@section('content')
+    <div class="container py-4">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-primary text-white py-3">
+                        <h5 class="mb-0"><i class="bi bi-tools"></i> แจ้งซ่อมบำรุงใหม่</h5>
+                    </div>
+                    <div class="card-body p-4">
 
-            <div class="form-group">
-                <label for="room_id">ห้อง *</label>
-                <select id="room_id" name="room_id" required>
-                    <option value="">-- เลือกห้อง --</option>
-                    @foreach($rooms as $room)
-                        <option value="{{ $room->id }}" {{ old('room_id') == $room->id ? 'selected' : '' }}>
-                            {{ $room->room_number }}
-                        </option>
-                    @endforeach
-                </select>
-                @error('room_id')
-                    <div class="error-message">{{ $message }}</div>
-                @enderror
-            </div>
+                        @if ($errors->any())
+                            <div class="alert alert-danger">
+                                @foreach ($errors->all() as $error)
+                                    <div>{{ $error }}</div>
+                                @endforeach
+                            </div>
+                        @endif
 
-            <div class="form-group">
-                <label for="issue_type">ประเภทปัญหา *</label>
-                <input type="text" id="issue_type" name="issue_type" value="{{ old('issue_type') }}" required>
-                @error('issue_type')
-                    <div class="error-message">{{ $message }}</div>
-                @enderror
-            </div>
+                        <form action="{{ route('maintenances.store') }}" method="POST" id="maintenanceForm">
+                            @csrf
 
-            <div class="form-group">
-                <label for="description">คำอธิบาย</label>
-                <textarea id="description" name="description">{{ old('description') }}</textarea>
-            </div>
+                            {{-- ── 1. เลือกห้องพัก (Lock ถ้ามาจาก facility) ── --}}
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">ห้องพัก <span class="text-danger">*</span></label>
+                                <select name="room_id" id="room_id"
+                                    class="form-select @error('room_id') is-invalid @enderror"
+                                    {{ $selectedFacilityId ? 'disabled' : '' }} required>
+                                    <option value="">-- เลือกห้องพัก --</option>
+                                    @foreach ($rooms as $room)
+                                        <option value="{{ $room->id }}"
+                                            {{ old('room_id', $selectedRoomId) == $room->id ? 'selected' : '' }}>
+                                            ห้อง {{ $room->room_number }} ({{ $room->room_type }})
+                                        </option>
+                                    @endforeach
+                                </select>
 
-            <div class="form-group">
-                <label for="reported_date">วันที่แจ้งซ่อม *</label>
-                <input type="date" id="reported_date" name="reported_date" value="{{ old('reported_date') }}" required>
-                @error('reported_date')
-                    <div class="error-message">{{ $message }}</div>
-                @enderror
-            </div>
+                                @if ($selectedFacilityId)
+                                    <small class="text-info d-block mt-2">
+                                        🔒 ล็อค: มาจากการแจ้งซ่อมจาก Facility
+                                    </small>
+                                @endif
 
-            <div class="form-group">
-                <label for="completed_date">วันที่เสร็จสิ้น</label>
-                <input type="date" id="completed_date" name="completed_date" value="{{ old('completed_date') }}">
-            </div>
+                                @error('room_id')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
 
-            <div class="form-group">
-                <label for="status">สถานะ *</label>
-                <select id="status" name="status" required>
-                    <option value="">-- เลือกสถานะ --</option>
-                    <option value="pending" {{ old('status') === 'pending' ? 'selected' : '' }}>รอดำเนินการ</option>
-                    <option value="in_progress" {{ old('status') === 'in_progress' ? 'selected' : '' }}>กำลังดำเนินการ</option>
-                    <option value="completed" {{ old('status') === 'completed' ? 'selected' : '' }}>เสร็จสิ้น</option>
-                    <option value="cancelled" {{ old('status') === 'cancelled' ? 'selected' : '' }}>ยกเลิก</option>
-                </select>
-                @error('status')
-                    <div class="error-message">{{ $message }}</div>
-                @enderror
-            </div>
+                            {{-- ── 2. สิ่งอำนวยความสะดวก — 6 ประเภทคงที่ ── --}}
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">สิ่งอำนวยความสะดวก / อุปกรณ์</label>
 
-            <div class="form-group">
-                <label for="assigned_to">ผู้รับผิดชอบ</label>
-                <input type="text" id="assigned_to" name="assigned_to" value="{{ old('assigned_to') }}">
-            </div>
+                                @if ($selectedFacilityId)
+                                    {{-- โหมด Lock: แสดงชื่อ facility ที่มาจากหน้า Facility --}}
+                                    <input type="text" class="form-control bg-light"
+                                        value="{{ $facilities->firstWhere('id', $selectedFacilityId)?->name ?? 'ไม่ระบุ' }}"
+                                        disabled>
+                                    <small class="text-info d-block mt-2">🔒 ล็อค: ตัวเลือกนี้ถูกตรึงแล้ว</small>
+                                @else
+                                    {{-- โหมดปกติ: dropdown 6 ประเภทคงที่ ไม่ซ้ำ ไม่ขึ้นกับ DB --}}
+                                    <select name="facility_type" id="facility_type" class="form-select">
+                                        <option value="">-- เลือกประเภทอุปกรณ์ (ถ้ามี) --</option>
+                                        <option value="bed" {{ old('facility_type') == 'bed' ? 'selected' : '' }}>🛏️
+                                            เตียง
+                                        </option>
+                                        <option value="mattress"
+                                            {{ old('facility_type') == 'mattress' ? 'selected' : '' }}>🛌 ที่นอน
+                                        </option>
+                                        <option value="wardrobe"
+                                            {{ old('facility_type') == 'wardrobe' ? 'selected' : '' }}>🚪 ตู้เสื้อผ้า
+                                        </option>
+                                        <option value="dressing_table"
+                                            {{ old('facility_type') == 'dressing_table' ? 'selected' : '' }}>💄
+                                            โต๊ะเครื่องแป้ง</option>
+                                        <option value="tv_stand"
+                                            {{ old('facility_type') == 'tv_stand' ? 'selected' : '' }}>📺 ชั้นวางทีวี
+                                        </option>
+                                        <option value="clothes_rack"
+                                            {{ old('facility_type') == 'clothes_rack' ? 'selected' : '' }}>👔 ราวแขวนผ้า
+                                        </option>
+                                    </select>
+                                    <div class="form-text text-muted">เลือกประเภทอุปกรณ์ที่ต้องการแจ้งซ่อม (ถ้ามี)</div>
+                                @endif
+                            </div>
 
-            <div class="form-group">
-                <label for="cost">ค่าใช้จ่าย</label>
-                <input type="number" id="cost" name="cost" value="{{ old('cost') }}" step="0.01">
-            </div>
+                            {{-- Hidden inputs เมื่อล็อคจาก Facility --}}
+                            @if ($selectedFacilityId)
+                                <input type="hidden" name="room_id" value="{{ $selectedRoomId }}">
+                                <input type="hidden" name="facility_id" value="{{ $selectedFacilityId }}">
+                            @endif
 
-            <div class="form-group">
-                <label for="notes">หมายเหตุ</label>
-                <textarea id="notes" name="notes">{{ old('notes') }}</textarea>
-            </div>
+                            {{-- ── 3. ประเภทงานซ่อม + ความเร่งด่วน ── --}}
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">ประเภทงานซ่อม <span
+                                            class="text-danger">*</span></label>
+                                    <select name="issue_type" id="issue_type"
+                                        class="form-select @error('issue_type') is-invalid @enderror" required>
+                                        <option value="">-- เลือกประเภท --</option>
+                                        <option value="ไฟฟ้า" {{ old('issue_type') == 'ไฟฟ้า' ? 'selected' : '' }}>
+                                            💡 ไฟฟ้า
+                                        </option>
+                                        <option value="ประปา/ท่อ" {{ old('issue_type') == 'ประปา/ท่อ' ? 'selected' : '' }}>
+                                            🚰
+                                            ประปา/ท่อ</option>
+                                        <option value="เครื่องปรับอากาศ"
+                                            {{ old('issue_type') == 'เครื่องปรับอากาศ' ? 'selected' : '' }}>❄️
+                                            เครื่องปรับอากาศ</option>
+                                        <option value="เฟอร์นิเจอร์"
+                                            {{ old('issue_type') == 'เฟอร์นิเจอร์' ? 'selected' : '' }}>🪑
+                                            เฟอร์นิเจอร์</option>
+                                        <option value="อื่นๆ" {{ old('issue_type') == 'อื่นๆ' ? 'selected' : '' }}>
+                                            🛠️
+                                            อื่นๆ</option>
+                                    </select>
+                                    @error('issue_type')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">ความเร่งด่วน</label>
+                                    <select name="priority" id="priority_select" class="form-select">
+                                        <option value="ทั่วไป" {{ old('priority') == 'ทั่วไป' ? 'selected' : '' }}>ทั่วไป
+                                        </option>
+                                        <option value="ด่วน" {{ old('priority') == 'ด่วน' ? 'selected' : '' }}>ด่วน
+                                        </option>
+                                        <option value="ด่วนมาก" {{ old('priority') == 'ด่วนมาก' ? 'selected' : '' }}>
+                                            ด่วนมาก</option>
+                                    </select>
+                                </div>
+                            </div>
 
-            <div class="btn-group">
-                <button type="submit" class="btn btn-submit">💾 บันทึก</button>
-                <a href="{{ route('maintenances.index') }}" class="btn btn-cancel">❌ ยกเลิก</a>
+                            {{-- ── 4. วันที่แจ้งซ่อม ── --}}
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">วันที่แจ้งซ่อม <span class="text-danger">*</span></label>
+                                <input type="date" name="reported_date"
+                                    class="form-control @error('reported_date') is-invalid @enderror"
+                                    value="{{ old('reported_date', date('Y-m-d')) }}" required>
+                                @error('reported_date')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            {{-- ── 5. รายละเอียดปัญหา ── --}}
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">รายละเอียดปัญหา <span class="text-danger">*</span></label>
+                                <textarea name="description" id="description" class="form-control @error('description') is-invalid @enderror"
+                                    rows="4" placeholder="กรุณาระบุรายละเอียดปัญหา..." required>{{ old('description') }}</textarea>
+                                @error('description')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            {{-- ── 6. สถานะ ── --}}
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">สถานะ <span class="text-danger">*</span></label>
+                                <select name="status" id="status"
+                                    class="form-select @error('status') is-invalid @enderror" required>
+                                    <option value="pending" {{ old('status', 'pending') == 'pending' ? 'selected' : '' }}>⏳
+                                        รอดำเนิน
+                                    </option>
+                                    <option value="in_progress" {{ old('status') == 'in_progress' ? 'selected' : '' }}>🔄
+                                        กำลังดำเนิน
+                                    </option>
+                                    <option value="completed" {{ old('status') == 'completed' ? 'selected' : '' }}>✅ สำเร็จ
+                                    </option>
+                                    <option value="cancelled" {{ old('status') == 'cancelled' ? 'selected' : '' }}>❌ ยกเลิก
+                                    </option>
+                                </select>
+                                @error('status')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            {{-- ── 7. หมายเหตุ ── --}}
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">หมายเหตุ</label>
+                                <textarea name="notes" id="notes" class="form-control" rows="3" placeholder="หมายเหตุเพิ่มเติม">{{ old('notes') }}</textarea>
+                            </div>
+
+                            {{-- ── ปุ่ม ── --}}
+                            <div class="d-flex justify-content-between mt-5">
+                                <a href="{{ route('maintenances.index') }}" class="btn btn-light px-4">ยกเลิก</a>
+                                <button type="submit" class="btn btn-primary px-5">ยืนยันการแจ้งซ่อม</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
             </div>
-        </form>
+        </div>
     </div>
-</body>
-</html>
+@endsection

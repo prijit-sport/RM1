@@ -1,160 +1,154 @@
-<!DOCTYPE html>
-<html lang="th">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>จัดการแขก</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #f5f5f5;
-        }
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        .header h1 {
-            color: #333;
-        }
-        .btn {
-            display: inline-block;
-            padding: 10px 20px;
-            background: #667eea;
-            color: white;
-            text-decoration: none;
-            border-radius: 5px;
-            border: none;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-        .btn:hover {
-            background: #764ba2;
-        }
-        .btn-secondary {
-            background: #6c757d;
-        }
-        .btn-secondary:hover {
-            background: #5a6268;
-        }
-        .btn-danger {
-            background: #dc3545;
-        }
-        .btn-danger:hover {
-            background: #c82333;
-        }
-        .table-container {
-            background: white;
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        th {
-            background: #667eea;
-            color: white;
-            padding: 15px;
-            text-align: left;
-            font-weight: 600;
-        }
-        td {
-            padding: 15px;
-            border-bottom: 1px solid #eee;
-        }
-        tr:hover {
-            background: #f9f9f9;
-        }
-        .actions {
-            display: flex;
-            gap: 10px;
-        }
-        .alert {
-            padding: 15px;
-            margin-bottom: 20px;
-            border-radius: 5px;
-        }
-        .alert-success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>👥 จัดการแขก</h1>
-            <a href="{{ route('guests.create') }}" class="btn">➕ เพิ่มแขกใหม่</a>
+@extends('layouts.app')
+ 
+@section('page-title', 'จัดการผู้เช่า')
+ 
+@section('content')
+<div class="container-fluid py-4">
+ 
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="fw-bold mb-0 text-dark">จัดการผู้เช่า</h4>
+        <div class="d-flex flex-wrap gap-2">
+            <a href="{{ route('guests.export') }}" class="btn btn-success btn-sm">
+                <i class="bi bi-download me-1"></i>Export
+            </a>
+            <a href="{{ route('guests.bulk-create') }}" class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-plus-circle me-1"></i>เพิ่มหลายคน
+            </a>
+            <a href="{{ route('guests.create') }}" class="btn btn-primary btn-sm">
+                <i class="bi bi-plus-lg me-1"></i>เพิ่มผู้เช่าใหม่
+            </a>
         </div>
-
-        @if (session('success'))
-            <div class="alert alert-success">
-                {{ session('success') }}
-            </div>
-        @endif
-
-        <div class="table-container">
-            <table>
-                <thead>
-                    <tr>
-                        <th>ชื่อ-นามสกุล</th>
-                        <th>อีเมล</th>
-                        <th>เบอร์โทร</th>
-                        <th>ID</th>
-                        <th>การกระทำ</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse ($guests as $guest)
+    </div>
+ 
+    <div class="card border-0 shadow-sm rounded-3">
+ 
+        {{-- Search --}}
+        <div class="card-header bg-white border-bottom py-3">
+            <form action="{{ route('guests.index') }}" method="GET">
+                <div class="row g-2">
+                    <div class="col-md-9">
+                        <div class="input-group">
+                            <span class="input-group-text bg-transparent border-end-0">
+                                <i class="bi bi-search"></i>
+                            </span>
+                            <input type="text" name="search"
+                                class="form-control border-start-0"
+                                placeholder="ค้นหาชื่อ, อีเมล, เบอร์โทร, เลขบัตร..."
+                                value="{{ request('search') }}">
+                        </div>
+                    </div>
+                    <div class="col-md-3 d-flex gap-2">
+                        <button type="submit" class="btn btn-primary flex-grow-1">ค้นหา</button>
+                        @if(request('search'))
+                            <a href="{{ route('guests.index') }}" class="btn btn-light border">ล้าง</a>
+                        @endif
+                    </div>
+                </div>
+            </form>
+        </div>
+ 
+        <div class="card-body p-0">
+            @if($guests->count() > 0)
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light" style="font-size:0.875rem;">
                         <tr>
-                            <td><strong>{{ $guest->first_name }} {{ $guest->last_name }}</strong></td>
-                            <td>{{ $guest->email }}</td>
-                            <td>{{ $guest->phone }}</td>
-                            <td>{{ $guest->id_number }}</td>
-                            <td>
-                                <div class="actions">
-                                    <a href="{{ route('guests.show', $guest) }}" class="btn btn-secondary">ดู</a>
-                                    <a href="{{ route('guests.edit', $guest) }}" class="btn btn-secondary">แก้ไข</a>
-                                    <form action="{{ route('guests.destroy', $guest) }}" method="POST" style="display:inline;">
+                            <th class="ps-4 py-3">ชื่อ-นามสกุล</th>
+                            <th class="py-3">เบอร์โทร</th>
+                            <th class="py-3">เลขบัตร</th>
+                            <th class="py-3">ห้องพัก</th>
+                            <th class="py-3">สถานะ</th>
+                            <th class="py-3 text-center pe-4">จัดการ</th>
+                        </tr>
+                    </thead>
+                    <tbody style="font-size:0.925rem;">
+                        @foreach($guests as $guest)
+                        @php
+                            $contract = $guest->contracts->where('status','active')->first();
+                            $room     = $contract?->room;
+                        @endphp
+                        <tr>
+                            <td class="ps-4 py-3 fw-semibold text-dark">
+                                {{ $guest->full_name }}
+                            </td>
+                            <td class="py-3 text-muted">{{ $guest->phone ?? '-' }}</td>
+                            <td class="py-3 text-muted" style="font-size:0.85rem;">
+                                {{ $guest->id_number ?? '-' }}
+                            </td>
+                            <td class="py-3">
+                                @if($room)
+                                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle">
+                                        <i class="bi bi-door-closed me-1"></i>{{ $room->room_number }}
+                                    </span>
+                                    @if($room->zone)
+                                        <small class="text-muted ms-1">โซน {{ $room->zone }}</small>
+                                    @endif
+                                @else
+                                    <span class="text-muted small">— ไม่มีห้อง</span>
+                                @endif
+                            </td>
+                            <td class="py-3">
+                                @if($contract)
+                                    <span class="badge bg-success bg-opacity-10 text-success border border-success-subtle">
+                                        <i class="bi bi-check-circle me-1"></i>ยืนยันแล้ว
+                                    </span>
+                                @else
+                                    <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary-subtle">
+                                        <i class="bi bi-dash-circle me-1"></i>ว่าง
+                                    </span>
+                                @endif
+                            </td>
+                            <td class="py-3 text-center pe-4">
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{{ route('guests.show', $guest->id) }}"
+                                       class="btn btn-outline-info" title="ดูรายละเอียด">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="{{ route('guests.edit', $guest->id) }}"
+                                       class="btn btn-outline-warning" title="แก้ไข">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <form action="{{ route('guests.destroy', $guest->id) }}"
+                                          method="POST" class="d-inline"
+                                          onsubmit="return confirm('ยืนยันการลบผู้เช่าท่านนี้?')">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="btn btn-danger" onclick="return confirm('แน่ใจหรือ?')">ลบ</button>
+                                        <button type="submit"
+                                                class="btn btn-outline-danger" title="ลบ">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
                                     </form>
                                 </div>
                             </td>
                         </tr>
-                    @empty
-                        <tr>
-                            <td colspan="5" style="text-align: center; padding: 30px;">
-                                ไม่มีข้อมูลแขก - <a href="{{ route('guests.create') }}">เพิ่มแขกใหม่</a>
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+ 
+            {{-- Pagination --}}
+            @if($guests->hasPages())
+            <div class="d-flex justify-content-between align-items-center px-4 py-3 border-top bg-light">
+                <small class="text-muted">
+                    แสดง {{ $guests->firstItem() }}–{{ $guests->lastItem() }}
+                    จาก {{ $guests->total() }} คน
+                </small>
+                {{ $guests->links('pagination::bootstrap-5') }}
+            </div>
+            @endif
+ 
+            @else
+            <div class="text-center py-5 text-muted">
+                <i class="bi bi-people fs-1 d-block mb-3 opacity-25"></i>
+                <p>ไม่พบข้อมูลผู้เช่า</p>
+                <a href="{{ route('guests.create') }}" class="btn btn-primary btn-sm">
+                    <i class="bi bi-plus-lg me-1"></i>เพิ่มผู้เช่าใหม่
+                </a>
+            </div>
+            @endif
         </div>
-
-        <div style="margin-top: 30px;">
-            <a href="/" class="btn btn-secondary">← กลับไปแดชบอร์ด</a>
-        </div>
+ 
     </div>
-</body>
-</html>
+</div>
+@endsection
+ 

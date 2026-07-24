@@ -8,84 +8,122 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI'; background: #f5f5f5; padding: 20px; }
         .container { max-width: 800px; margin: 0 auto; background: white; padding: 40px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        h1 { margin-bottom: 30px; color: #333; }
-        .detail-row { display: flex; border-bottom: 1px solid #eee; padding: 15px 0; }
-        .detail-label { font-weight: 600; color: #555; width: 200px; }
-        .detail-value { color: #333; flex: 1; }
-        .status-badge { display: inline-block; padding: 5px 15px; border-radius: 20px; font-size: 14px; font-weight: 600; }
-        .status-active { background: #d4edda; color: #155724; }
-        .status-inactive { background: #e2e3e5; color: #383d41; }
-        .status-maintenance { background: #fff3cd; color: #856404; }
-        .btn-group { display: flex; gap: 10px; margin-top: 30px; }
-        .btn { padding: 12px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; text-decoration: none; display: inline-block; }
-        .btn-edit { background: #ffc107; color: #333; }
-        .btn-edit:hover { background: #e0a800; }
-        .btn-delete { background: #dc3545; color: white; }
-        .btn-delete:hover { background: #c82333; }
+        h1 { margin-bottom: 30px; color: #333; display: flex; align-items: center; gap: 10px; }
+        .detail-group { margin-bottom: 25px; border-bottom: 1px solid #eee; padding-bottom: 15px; }
+        .detail-row { display: flex; margin-bottom: 10px; }
+        .detail-label { width: 200px; font-weight: 600; color: #555; }
+        .detail-value { flex: 1; color: #333; }
+        
+        /* Badge Styles */
+        .badge { padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; display: inline-block; }
+        .status-good { background: #d1fae5; color: #065f46; }
+        .status-fair { background: #e0f2fe; color: #0369a1; }
+        .status-repair { background: #fef3c7; color: #92400e; }
+        .status-maintenance { background: #e0e7ff; color: #4338ca; }
+        .status-damaged { background: #fee2e2; color: #991b1b; }
+        .status-retired { background: #f3f4f6; color: #374151; }
+
+        .btn-group { display: flex; gap: 10px; margin-top: 30px; flex-wrap: wrap; }
+        .btn { padding: 12px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; text-decoration: none; display: inline-block; text-align: center; transition: opacity 0.2s; }
+        .btn:hover { opacity: 0.85; }
+        
+        .btn-edit { background: #667eea; color: white; }
+        .btn-maintenance { background: #f59e0b; color: white; } /* สีส้มสำหรับแจ้งซ่อม */
         .btn-back { background: #6c757d; color: white; }
-        .btn-back:hover { background: #5a6268; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🏢 รายละเอียดสิ่งอำนวยความสะดวก</h1>
+        <h1>🔍 รายละเอียด: {{ $facility->name }}</h1>
 
-        <div class="detail-row">
-            <div class="detail-label">ชื่อ:</div>
-            <div class="detail-value">{{ $facility->name }}</div>
-        </div>
-
-        <div class="detail-row">
-            <div class="detail-label">ประเภท:</div>
-            <div class="detail-value">{{ $facility->type }}</div>
-        </div>
-
-        <div class="detail-row">
-            <div class="detail-label">ที่ตั้ง:</div>
-            <div class="detail-value">{{ $facility->location }}</div>
-        </div>
-
-        <div class="detail-row">
-            <div class="detail-label">คำอธิบาย:</div>
-            <div class="detail-value">{{ $facility->description ?? '-' }}</div>
-        </div>
-
-        <div class="detail-row">
-            <div class="detail-label">สถานะ:</div>
-            <div class="detail-value">
-                @if($facility->status === 'active')
-                    <span class="status-badge status-active">ใช้งาน</span>
-                @elseif($facility->status === 'inactive')
-                    <span class="status-badge status-inactive">ไม่ใช้งาน</span>
-                @elseif($facility->status === 'maintenance')
-                    <span class="status-badge status-maintenance">บำรุงรักษา</span>
-                @endif
+        <div class="detail-group">
+            <div class="detail-row">
+                <div class="detail-label">ชื่อ:</div>
+                <div class="detail-value">{{ $facility->name }}</div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">ประเภท:</div>
+                <div class="detail-value">
+                    @php
+                        $types = [
+                            'bed' => '🛏️ เตียง',
+                            'mattress' => '🛌 ที่นอน',
+                            'wardrobe' => '🚪 ตู้เสื้อผ้า',
+                            'dressing_table' => '💄 โต๊ะเครื่องแป้ง',
+                            'tv_stand' => '📺 ชั้นวางทีวี',
+                            'clothes_rack' => '👔 ราวแขวนผ้า'
+                        ];
+                    @endphp
+                    {{ $types[$facility->type] ?? $facility->type }}
+                </div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">ที่ตั้ง:</div>
+                <div class="detail-value">ห้อง {{ $facility->location }}</div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">สถานะ:</div>
+                <div class="detail-value">
+                    @php
+                        $statusClasses = [
+                            'good' => 'status-good',
+                            'fair' => 'status-fair',
+                            'needs_repair' => 'status-repair',
+                            'maintenance' => 'status-maintenance',
+                            'damaged' => 'status-damaged',
+                            'retired' => 'status-retired'
+                        ];
+                        $statusLabels = [
+                            'good' => '✅ ใช้งานได้',
+                            'fair' => '🟡 สภาพปานกลาง',
+                            'needs_repair' => '⚠️ ต้องซ่อม',
+                            'maintenance' => '🔧 กำลังซ่อมบำรุง',
+                            'damaged' => '❌ ชำรุด',
+                            'retired' => '🗑️ ปลดประจำการ'
+                        ];
+                    @endphp
+                    <span class="badge {{ $statusClasses[$facility->status] ?? 'status-retired' }}">
+                        {{ $statusLabels[$facility->status] ?? $facility->status }}
+                    </span>
+                </div>
             </div>
         </div>
 
-        <div class="detail-row">
-            <div class="detail-label">ตารางบำรุงรักษา:</div>
-            <div class="detail-value">{{ $facility->maintenance_schedule ?? '-' }}</div>
-        </div>
-
-        <div class="detail-row">
-            <div class="detail-label">วันที่บำรุงรักษาล่าสุด:</div>
-            <div class="detail-value">{{ $facility->last_maintenance_date ? $facility->last_maintenance_date->format('d/m/Y') : '-' }}</div>
-        </div>
-
-        <div class="detail-row">
-            <div class="detail-label">วันที่บำรุงรักษาครั้งถัดไป:</div>
-            <div class="detail-value">{{ $facility->next_maintenance_date ? $facility->next_maintenance_date->format('d/m/Y') : '-' }}</div>
+        <div class="detail-group">
+            <div class="detail-row">
+                <div class="detail-label">คำอธิบาย:</div>
+                <div class="detail-value">{{ $facility->description ?? '-' }}</div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">ตารางบำรุงรักษา:</div>
+                <div class="detail-value">{{ $facility->maintenance_schedule ?? '-' }}</div>
+            </div>
+            
+            <div class="detail-row">
+                <div class="detail-label">วันที่บำรุงรักษาล่าสุด:</div>
+                <div class="detail-value">
+                    {{ $facility->last_maintenance_date ? \Carbon\Carbon::parse($facility->last_maintenance_date)->format('d/m/Y') : '-' }}
+                </div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-label">วันที่บำรุงรักษาครั้งถัดไป:</div>
+                <div class="detail-value">
+                    {{ $facility->next_maintenance_date ? \Carbon\Carbon::parse($facility->next_maintenance_date)->format('d/m/Y') : '-' }}
+                </div>
+            </div>
         </div>
 
         <div class="btn-group">
-            <a href="{{ route('facilities.edit', $facility->id) }}" class="btn btn-edit">✏️ แก้ไข</a>
-            <form method="POST" action="{{ route('facilities.destroy', $facility->id) }}" style="display:inline;" onsubmit="return confirm('คุณแน่ใจหรือไม่ที่จะลบสิ่งอำนวยความสะดวกนี้?');">
-                @csrf
-                @method('DELETE')
-                <button type="submit" class="btn btn-delete">🗑️ ลบ</button>
-            </form>
-            <a href="{{ route('facilities.index') }}" class="btn btn-back">⬅️ กลับ</a>
+            {{-- ปุ่มแก้ไข --}}
+            <a href="{{ route('facilities.edit', $facility->id) }}" class="btn btn-edit">✏️ แก้ไขข้อมูล</a>
+
+            {{-- ปุ่มแจ้งส่งซ่อมบำรุง (ส่ง facility_id ไปด้วย) --}}
+            <a href="{{ route('maintenances.create', ['facility_id' => $facility->id]) }}" class="btn btn-maintenance">
+                🛠️ แจ้งส่งซ่อมบำรุง
+            </a>
+
+            {{-- ปุ่มย้อนกลับ --}}
+            <a href="{{ route('facilities.index') }}" class="btn btn-back">⬅️ กลับหน้ารวม</a>
         </div>
     </div>
 </body>

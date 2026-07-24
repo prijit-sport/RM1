@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="th">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,46 +11,55 @@
             padding: 0;
             box-sizing: border-box;
         }
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: #f5f5f5;
         }
+
         .container {
             max-width: 800px;
             margin: 50px auto;
             padding: 20px;
         }
+
         .card {
             background: white;
             border-radius: 10px;
             padding: 30px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
+
         h1 {
             color: #333;
             margin-bottom: 30px;
         }
+
         .info-group {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 20px;
             margin-bottom: 20px;
         }
+
         .info-item {
             padding: 15px;
             background: #f9f9f9;
             border-radius: 5px;
         }
+
         .info-label {
             color: #666;
             font-size: 0.9em;
             margin-bottom: 5px;
         }
+
         .info-value {
             color: #333;
             font-size: 1.1em;
             font-weight: 600;
         }
+
         .status {
             padding: 5px 10px;
             border-radius: 20px;
@@ -57,18 +67,22 @@
             font-weight: 600;
             display: inline-block;
         }
+
         .status.available {
             background: #d4edda;
             color: #155724;
         }
+
         .status.occupied {
             background: #f8d7da;
             color: #721c24;
         }
+
         .status.maintenance {
             background: #fff3cd;
             color: #856404;
         }
+
         .description {
             padding: 20px;
             background: #f9f9f9;
@@ -76,11 +90,13 @@
             margin-bottom: 20px;
             line-height: 1.6;
         }
+
         .btn-group {
             display: flex;
             gap: 10px;
             margin-top: 30px;
         }
+
         .btn {
             padding: 12px 20px;
             border: none;
@@ -92,27 +108,34 @@
             text-decoration: none;
             display: inline-block;
         }
+
         .btn-primary {
             background: #667eea;
             color: white;
         }
+
         .btn-primary:hover {
             background: #764ba2;
         }
+
         .btn-secondary {
             background: #6c757d;
             color: white;
         }
+
         .btn-secondary:hover {
             background: #5a6268;
         }
+
         .btn-danger {
             background: #dc3545;
             color: white;
         }
+
         .btn-danger:hover {
             background: #c82333;
         }
+
         @media (max-width: 600px) {
             .info-group {
                 grid-template-columns: 1fr;
@@ -120,6 +143,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <div class="card">
@@ -133,12 +157,12 @@
 
                 <div class="info-item">
                     <div class="info-label">ประเภทห้อง</div>
-                    <div class="info-value">{{ $room->room_type }}</div>
+                    <div class="info-value">{{ enum_bi('room_type', $room->room_type) }}</div>
                 </div>
 
                 <div class="info-item">
-                    <div class="info-label">ราคา/คืน</div>
-                    <div class="info-value">฿{{ number_format($room->price_per_night, 2) }}</div>
+                    <div class="info-label">ราคา/เดือน</div>
+                    <div class="info-value">฿{{ number_format($room->price_per_month, 2) }}</div>
                 </div>
 
                 <div class="info-item">
@@ -150,19 +174,15 @@
                     <div class="info-label">สถานะ</div>
                     <span class="status {{ $room->status }}">
                         @php
-                            $statusLabels = [
-                                'available' => 'ว่าง',
-                                'occupied' => 'ใช้งาน',
-                                'maintenance' => 'ซ่อมบำรุง',
-                            ];
                         @endphp
-                        {{ $statusLabels[$room->status] ?? $room->status }}
+                        {{ enum_th('room_status', $room->status) }}
                     </span>
                 </div>
 
                 <div class="info-item">
                     <div class="info-label">สร้างเมื่อ</div>
-                    <div class="info-value">{{ $room->created_at->format('d/m/Y H:i') }}</div>
+                    <div class="info-value">{{ optional($room->created_at)->format('d/m/Y H:i') ?? 'ไม่มีข้อมูล' }}
+                    </div>
                 </div>
             </div>
 
@@ -185,4 +205,5 @@
         </div>
     </div>
 </body>
+
 </html>

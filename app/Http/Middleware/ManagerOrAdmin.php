@@ -1,29 +1,47 @@
 <?php
-
+ 
 namespace App\Http\Middleware;
-
+ 
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
+
+use App\Models\Role;
 
 class ManagerOrAdmin
 {
-    /**
-     * Handle an incoming request.
-     *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
-     */
     public function handle(Request $request, Closure $next): Response
     {
-        if (!auth()->check()) {
-            return redirect('/login');
+        if (!Auth::check()) {
+            return redirect()->route('login')->with('error', 'กรุณาเข้าสู่ระบบก่อน');
         }
-
-        $user = auth()->user();
-        if (!$user->hasRole('Admin') && !$user->hasRole('Manager')) {
-            abort(403, 'Unauthorized - Manager or Admin access required');
+ 
+        $user = Auth::user();
+        $role = $user?->role;
+ 
+        if (!$role) {
+            Log::warning('Authorization denied', [
+                'route'   => $request->route()?->getName() ?? $request->path(),
+                'user_id' => $user->id,
+                'role'    => 'none',
+                'reason'  => 'missing_role',
+            ]);
+            abort(403, 'คุณไม่มีสิทธิ์เข้าถึงหน้านี้');
         }
-
+ 
+        if (!in_array($role->name, [Role::ADMIN, Role::STAFF], true)) {
+            Log::warning('Authorization denied', [
+                'route'   => $request->route()?->getName() ?? $request->path(),
+                'user_id' => $user->id,
+                'role'    => $role->name,
+                'reason'  => 'not_manager_or_admin',
+            ]);
+            abort(403);
+        }
+ 
         return $next($request);
     }
 }
+ 

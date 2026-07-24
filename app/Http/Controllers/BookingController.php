@@ -1,107 +1,219 @@
 <?php
-
+ 
 namespace App\Http\Controllers;
-
+ 
+use App\Http\Requests\StoreBookingRequest;
+use App\Http\Requests\UpdateBookingRequest;
 use App\Models\Booking;
-use App\Models\Room;
 use App\Models\Guest;
+use App\Models\Room;
+use App\Services\BookingService;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
-
+use Illuminate\Validation\ValidationException;
+ 
 class BookingController extends Controller
 {
-    /**
-     * Display a listing of the bookings.
-     */
-    public function index()
+    public function __construct(private readonly BookingService $bookingService) {}
+ 
+    // ─────────────────────────────────────────
+    //  LIST
+    // ─────────────────────────────────────────
+    public function index(Request $request)
     {
-        $bookings = Booking::with(['room', 'guest'])->paginate(10);
-        return view('bookings.index', compact('bookings'));
+        $this->authorize('viewAny', Booking::class);
+ 
+        $bookings = Booking::with(['room', 'guest'])
+            ->when($request->filled('status'), function (Builder $query) use ($request) {
+                $query->where('status', $request->string('status'));
+            })
+            ->when($request->filled('search'), function (Builder $query) use ($request) {
+                $search = trim($request->string('search'));
+                $query->where(function (Builder $subQuery) use ($search) {
+                    $subQuery->whereHas('guest', function (Builder $guestQuery) use ($search) {
+                        $guestQuery->where('first_name', 'like', "%{$search}%")
+                            ->orWhere('last_name', 'like', "%{$search}%");
+                    })->orWhereHas('room', function (Builder $roomQuery) use ($search) {
+                        $roomQuery->where('room_number', 'like', "%{$search}%");
+                    });
+                });
+            })
+            ->when($request->filled('room_type'), function (Builder $query) use ($request) {
+                $query->whereHas('room', function (Builder $roomQuery) use ($request) {
+                    $roomQuery->where('room_type', $request->string('room_type'));
+                });
+            })
+            ->latest('id')
+            ->paginate(config('rm1.items_per_page'))
+            ->withQueryString();
+ 
+        $fanTotal = Room::where('room_type', 'fan')->count();
+        $acTotal  = Room::where('room_type', 'air')->count();
+ 
+        $availableFanRooms = Room::where('room_type', 'fan')
+            ->where('status', 'available')
+            ->orderBy('room_number')
+            ->get(['id', 'room_number', 'price_per_month', 'zone']);
+ 
+        $availableAcRooms = Room::where('room_type', 'air')
+            ->where('status', 'available')
+            ->orderBy('room_number')
+            ->get(['id', 'room_number', 'price_per_month', 'zone']);
+ 
+        return view('bookings.index', compact(
+            'bookings',
+            'fanTotal',
+            'acTotal',
+            'availableFanRooms',
+            'availableAcRooms'
+        ));
     }
-
-    /**
-     * Show the form for creating a new booking.
-     */
+ 
+    // ─────────────────────────────────────────
+    //  CREATE FORM
+    // ─────────────────────────────────────────
     public function create()
     {
-        $rooms = Room::where('status', 'available')->get();
-        $guests = Guest::all();
+        $this->authorize('create', Booking::class);
+ 
+        $rooms = Room::where('status', 'available')
+            ->orderBy('zone')
+            ->orderBy('room_number')
+            ->get(['id', 'room_number', 'room_type', 'price_per_month', 'status', 'zone']);
+ 
+        $guests = Guest::orderBy('first_name')->get(['id', 'first_name', 'last_name']);
+ 
         return view('bookings.create', compact('rooms', 'guests'));
     }
-
-    /**
-     * Store a newly created booking in storage.
-     */
-    public function store(Request $request)
+ 
+    // ─────────────────────────────────────────
+    //  STORE
+    // ─────────────────────────────────────────
+    public function store(StoreBookingRequest $request)
     {
-        $validated = $request->validate([
-            'room_id' => 'required|exists:rooms,id',
-            'guest_id' => 'required|exists:guests,id',
-            'check_in_date' => 'required|date|after:today',
-            'check_out_date' => 'required|date|after:check_in_date',
-            'status' => 'required|in:pending,confirmed,checked_in,checked_out,cancelled',
-            'notes' => 'nullable|max:500',
-        ]);
-
-        // Calculate total price
-        $room = Room::find($validated['room_id']);
-        $checkInDate = new \DateTime($validated['check_in_date']);
-        $checkOutDate = new \DateTime($validated['check_out_date']);
-        $days = $checkOutDate->diff($checkInDate)->days;
-        $validated['total_price'] = $room->price_per_night * $days;
-
-        Booking::create($validated);
-        return redirect()->route('bookings.index')->with('success', 'การจองถูกสร้างสำเร็จ');
+        $this->authorize('create', Booking::class);
+ 
+        try {
+            $booking = $this->bookingService->create($request->validated());
+        } catch (ValidationException $e) {
+            return redirect()->back()->withErrors($e->errors())->withInput();
+        }
+ 
+        return redirect()
+            ->route('bookings.show', $booking)
+            ->with('success', __('ui.booking.created'));
     }
-
-    /**
-     * Display the specified booking.
-     */
+ 
+    // ─────────────────────────────────────────
+    //  SHOW
+    // ─────────────────────────────────────────
     public function show(Booking $booking)
     {
+        $this->authorize('view', $booking);
+ 
+        $booking->load(['room', 'guest', 'guest2', 'guest3']);
+ 
         return view('bookings.show', compact('booking'));
     }
-
-    /**
-     * Show the form for editing the specified booking.
-     */
+ 
+    // ─────────────────────────────────────────
+    //  CANCEL
+    // ✅ ให้ Service จัดการ room status เอง ไม่ update ซ้ำใน Controller
+    // ─────────────────────────────────────────
+    public function cancel(Booking $booking)
+    {
+        $this->authorize('cancel', $booking);
+ 
+        $this->bookingService->cancel($booking);
+ 
+        return redirect()
+            ->route('bookings.index')
+            ->with('success', 'ยกเลิกการจอง และคืนสถานะห้องกลับเป็นว่างเรียบร้อยแล้ว');
+    }
+ 
+    // ─────────────────────────────────────────
+    //  CONFIRM
+    // ✅ เพิ่ม try-catch สำหรับ ValidationException
+    // ─────────────────────────────────────────
+    public function confirm(Booking $booking)
+    {
+        $this->authorize('confirm', $booking);
+ 
+        try {
+            $this->bookingService->confirm($booking);
+        } catch (ValidationException $e) {
+            return redirect()->back()->withErrors($e->errors());
+        }
+ 
+        return redirect()
+            ->route('bookings.show', $booking)
+            ->with('success', __('ui.booking.confirmed'));
+    }
+ 
+    // ─────────────────────────────────────────
+    //  EDIT FORM
+    // ─────────────────────────────────────────
     public function edit(Booking $booking)
     {
-        $rooms = Room::all();
-        $guests = Guest::all();
-        return view('bookings.edit', compact('booking', 'rooms', 'guests'));
+        $this->authorize('update', $booking);
+ 
+        $booking->load(['room', 'guest', 'guest2', 'guest3']);
+        $guests = Guest::orderBy('first_name')->get(['id', 'first_name', 'last_name']);
+ 
+        return view('bookings.edit', compact('booking', 'guests'));
     }
-
-    /**
-     * Update the specified booking in storage.
-     */
-    public function update(Request $request, Booking $booking)
+ 
+    // ─────────────────────────────────────────
+    //  UPDATE
+    // ✅ เพิ่ม try-catch สำหรับ ValidationException
+    // ─────────────────────────────────────────
+    public function update(UpdateBookingRequest $request, Booking $booking)
     {
-        $validated = $request->validate([
-            'room_id' => 'required|exists:rooms,id',
-            'guest_id' => 'required|exists:guests,id',
-            'check_in_date' => 'required|date',
-            'check_out_date' => 'required|date|after:check_in_date',
-            'status' => 'required|in:pending,confirmed,checked_in,checked_out,cancelled',
-            'notes' => 'nullable|max:500',
-        ]);
-
-        // Recalculate total price
-        $room = Room::find($validated['room_id']);
-        $checkInDate = new \DateTime($validated['check_in_date']);
-        $checkOutDate = new \DateTime($validated['check_out_date']);
-        $days = $checkOutDate->diff($checkInDate)->days;
-        $validated['total_price'] = $room->price_per_night * $days;
-
-        $booking->update($validated);
-        return redirect()->route('bookings.show', $booking)->with('success', 'การจองถูกอัปเดตสำเร็จ');
+        $this->authorize('update', $booking);
+ 
+        try {
+            $this->bookingService->update($booking, $request->validated());
+        } catch (ValidationException $e) {
+            return redirect()->back()->withErrors($e->errors())->withInput();
+        }
+ 
+        return redirect()
+            ->route('bookings.show', $booking)
+            ->with('success', __('ui.booking.updated'));
     }
-
-    /**
-     * Remove the specified booking from storage.
-     */
-    public function destroy(Booking $booking)
+ 
+    // ─────────────────────────────────────────
+    //  EXPORT
+    // ─────────────────────────────────────────
+    public function export(Request $request)
     {
-        $booking->delete();
-        return redirect()->route('bookings.index')->with('success', 'การจองถูกลบสำเร็จ');
+        $this->authorize('export', Booking::class);
+ 
+        $filename = 'bookings_export_' . date('Y-m-d') . '.xlsx';
+ 
+        $rows = [['ID', 'ห้อง', 'โซน', 'ผู้เช่า', 'วันเข้าพัก', 'ค่าเช่า', 'มัดจำ', 'มิเตอร์ไฟ', 'มิเตอร์น้ำ', 'สถานะ', 'หมายเหตุ']];
+ 
+        Booking::with(['room', 'guest'])
+            ->orderBy('id')
+            ->chunk(500, function ($bookings) use (&$rows): void {
+                foreach ($bookings as $booking) {
+                    $rows[] = [
+                        $booking->id,
+                        $booking->room->room_number ?? '-',
+                        $booking->room->zone ?? '-',
+                        trim(($booking->guest->first_name ?? '') . ' ' . ($booking->guest->last_name ?? '')) ?: '-',
+                        optional($booking->check_in_date)->format('d/m/Y'),
+                        $booking->rent_amount ?? '-',
+                        $booking->deposit_amount ?? '-',
+                        $booking->electric_meter_start ?? '-',
+                        $booking->water_meter_start ?? '-',
+                        $booking->status_label,
+                        $booking->notes ?? '-',
+                    ];
+                }
+            });
+ 
+        return xlsx_download($filename, $rows);
     }
 }
+ 

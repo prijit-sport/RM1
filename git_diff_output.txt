@@ -1,0 +1,179 @@
+diff --git a/app/Http/Middleware/ManagerOrAdmin.php b/app/Http/Middleware/ManagerOrAdmin.php
+index 182f74d..8d0956c 100644
+--- a/app/Http/Middleware/ManagerOrAdmin.php
++++ b/app/Http/Middleware/ManagerOrAdmin.php
+@@ -31,7 +31,7 @@ public function handle(Request $request, Closure $next): Response
+             abort(403, 'คุณไม่มีสิทธิ์เข้าถึงหน้านี้');
+         }
+  
+-        if (!in_array($role->name, [Role::ADMIN, Role::MANAGER], true)) {
++        if (!in_array($role->name, [Role::ADMIN, Role::STAFF], true)) {
+             Log::warning('Authorization denied', [
+                 'route'   => $request->route()?->getName() ?? $request->path(),
+                 'user_id' => $user->id,
+diff --git a/app/Models/User.php b/app/Models/User.php
+index 13b914b..f1bb5d5 100644
+--- a/app/Models/User.php
++++ b/app/Models/User.php
+@@ -74,7 +74,7 @@ public function hasRole(string $role)
+      */
+     public function isManagerOrAdmin(): bool
+     {
+-        return $this->hasRole(Role::ADMIN) || $this->hasRole(Role::MANAGER);
++        return $this->hasRole(Role::ADMIN) || $this->hasRole(Role::STAFF);
+     }
+ 
+     /**
+diff --git a/app/Policies/BookingPolicy.php b/app/Policies/BookingPolicy.php
+index 20236ec..53fc29a 100644
+--- a/app/Policies/BookingPolicy.php
++++ b/app/Policies/BookingPolicy.php
+@@ -43,43 +43,38 @@ public function update(User $user, Booking $booking): bool
+     }
+  
+     /**
+-     * Admin, Manager, Staff ลบจองได้
++     * Admin หรือ Staff ลบจองได้
+      */
+     public function delete(User $user, Booking $booking): bool
+     {
+         return $user->hasRole(\App\Models\Role::ADMIN)
+-            || $user->hasRole(\App\Models\Role::MANAGER)
+             || $user->hasRole(\App\Models\Role::STAFF);
+     }
+  
+     /**
+-     * ✅ confirm ต้องเป็น Admin, Manager หรือ Staff เท่านั้น
+-     *    (test_confirm_requires_manager_or_admin_role ใช้ Manager → pass, User → 403)
++     * ✅ confirm ต้องเป็น Admin หรือ Staff เท่านั้น
+      */
+     public function confirm(User $user, Booking $booking): bool
+     {
+         return $user->hasRole(\App\Models\Role::ADMIN)
+-            || $user->hasRole(\App\Models\Role::MANAGER)
+             || $user->hasRole(\App\Models\Role::STAFF);
+     }
+  
+     /**
+-     * ✅ cancel ต้องเป็น Admin, Manager หรือ Staff เท่านั้น
++     * ✅ cancel ต้องเป็น Admin หรือ Staff เท่านั้น
+      */
+     public function cancel(User $user, Booking $booking): bool
+     {
+         return $user->hasRole(\App\Models\Role::ADMIN)
+-            || $user->hasRole(\App\Models\Role::MANAGER)
+             || $user->hasRole(\App\Models\Role::STAFF);
+     }
+  
+     /**
+-     * Admin, Manager, Staff export ได้
++     * Admin หรือ Staff export ได้
+      */
+     public function export(User $user): bool
+     {
+         return $user->hasRole(\App\Models\Role::ADMIN)
+-            || $user->hasRole(\App\Models\Role::MANAGER)
+             || $user->hasRole(\App\Models\Role::STAFF);
+     }
+ }
+diff --git a/app/Policies/InvoicePolicy.php b/app/Policies/InvoicePolicy.php
+index 1167bc2..cd4bae4 100644
+--- a/app/Policies/InvoicePolicy.php
++++ b/app/Policies/InvoicePolicy.php
+@@ -39,7 +39,7 @@ public function create(User $user): bool
+      */
+     public function update(User $user, Invoice $invoice): bool
+     {
+-        return $user->hasRole(Role::ADMIN) || $user->hasRole(Role::MANAGER);
++        return $user->hasRole(Role::ADMIN) || $user->hasRole(Role::STAFF);
+     }
+ 
+     /**
+@@ -47,7 +47,7 @@ public function update(User $user, Invoice $invoice): bool
+      */
+     public function delete(User $user, Invoice $invoice): bool
+     {
+-        return $user->hasRole(Role::ADMIN) || $user->hasRole(Role::MANAGER);
++        return $user->hasRole(Role::ADMIN) || $user->hasRole(Role::STAFF);
+     }
+ 
+     /**
+@@ -55,7 +55,7 @@ public function delete(User $user, Invoice $invoice): bool
+      */
+     public function restore(User $user, Invoice $invoice): bool
+     {
+-        return $user->hasRole(Role::ADMIN) || $user->hasRole(Role::MANAGER);
++        return $user->hasRole(Role::ADMIN) || $user->hasRole(Role::STAFF);
+     }
+ 
+     /**
+@@ -63,7 +63,7 @@ public function restore(User $user, Invoice $invoice): bool
+      */
+     public function forceDelete(User $user, Invoice $invoice): bool
+     {
+-        return $user->hasRole(Role::ADMIN) || $user->hasRole(Role::MANAGER);
++        return $user->hasRole(Role::ADMIN) || $user->hasRole(Role::STAFF);
+     }
+ }
+ 
+diff --git a/app/Policies/MaintenancePolicy.php b/app/Policies/MaintenancePolicy.php
+index a41da4f..76df401 100644
+--- a/app/Policies/MaintenancePolicy.php
++++ b/app/Policies/MaintenancePolicy.php
+@@ -10,47 +10,47 @@ class MaintenancePolicy
+ {
+     public function viewAny(User $user): bool
+     {
+-        return $user->hasRole(Role::ADMIN) || $user->hasRole(Role::MANAGER);
++        return $user->hasRole(Role::ADMIN) || $user->hasRole(Role::STAFF);
+     }
+ 
+     public function view(User $user, Maintenance $maintenance): bool
+     {
+-        return $user->hasRole(Role::ADMIN) || $user->hasRole(Role::MANAGER);
++        return $user->hasRole(Role::ADMIN) || $user->hasRole(Role::STAFF);
+     }
+ 
+     public function create(User $user): bool
+     {
+-        return $user->hasRole(Role::ADMIN) || $user->hasRole(Role::MANAGER);
++        return $user->hasRole(Role::ADMIN) || $user->hasRole(Role::STAFF);
+     }
+ 
+     public function update(User $user, Maintenance $maintenance): bool
+     {
+-        return $user->hasRole(Role::ADMIN) || $user->hasRole(Role::MANAGER);
++        return $user->hasRole(Role::ADMIN) || $user->hasRole(Role::STAFF);
+     }
+ 
+     public function delete(User $user, Maintenance $maintenance): bool
+     {
+-        return $user->hasRole(Role::ADMIN) || $user->hasRole(Role::MANAGER);
++        return $user->hasRole(Role::ADMIN) || $user->hasRole(Role::STAFF);
+     }
+ 
+     public function export(User $user): bool
+     {
+-        return $user->hasRole(Role::ADMIN) || $user->hasRole(Role::MANAGER);
++        return $user->hasRole(Role::ADMIN) || $user->hasRole(Role::STAFF);
+     }
+ 
+     public function startWork(User $user, Maintenance $maintenance): bool
+     {
+-        return $user->hasRole(Role::ADMIN) || $user->hasRole(Role::MANAGER);
++        return $user->hasRole(Role::ADMIN) || $user->hasRole(Role::STAFF);
+     }
+ 
+     public function completeWork(User $user, Maintenance $maintenance): bool
+     {
+-        return $user->hasRole(Role::ADMIN) || $user->hasRole(Role::MANAGER);
++        return $user->hasRole(Role::ADMIN) || $user->hasRole(Role::STAFF);
+     }
+ 
+     public function byRoom(User $user): bool
+     {
+-        return $user->hasRole(Role::ADMIN) || $user->hasRole(Role::MANAGER);
++        return $user->hasRole(Role::ADMIN) || $user->hasRole(Role::STAFF);
+     }
+ }
+ 

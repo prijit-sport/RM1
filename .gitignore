@@ -22,3 +22,13 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
+/storage/framework/sessions/*
+/storage/framework/cache/*
+/storage/framework/views/*
+!/storage/framework/views/.gitkeep
+/storage/logs/*
+ temp_*.txt 
+_ide_helper.php 
+_ide_helper_models.php 
+.phpstorm.meta.php 
+*.sql 

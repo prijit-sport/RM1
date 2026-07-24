@@ -1,112 +1,298 @@
-<!DOCTYPE html>
-<html lang="th">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>แก้ไขสัญญา</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI'; background: #f5f5f5; padding: 20px; }
-        .container { max-width: 800px; margin: 0 auto; background: white; padding: 40px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        h1 { margin-bottom: 30px; color: #333; }
-        .form-group { margin-bottom: 20px; }
-        label { display: block; margin-bottom: 8px; font-weight: 600; color: #555; }
-        input, textarea, select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-family: 'Segoe UI'; font-size: 14px; }
-        input:focus, textarea:focus, select:focus { outline: none; border-color: #667eea; box-shadow: 0 0 5px rgba(102, 126, 234, 0.3); }
-        textarea { resize: vertical; min-height: 100px; }
-        .btn-group { display: flex; gap: 10px; margin-top: 30px; }
-        .btn { padding: 12px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; text-decoration: none; display: inline-block; }
-        .btn-submit { background: #667eea; color: white; }
-        .btn-submit:hover { background: #764ba2; }
-        .btn-cancel { background: #6c757d; color: white; }
-        .btn-cancel:hover { background: #5a6268; }
-        .error-message { color: #dc3545; font-size: 12px; margin-top: 5px; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>✏️ แก้ไขสัญญา</h1>
-        
-        @if ($errors->any())
-            <div style="background: #f8d7da; color: #721c24; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
-                @foreach ($errors->all() as $error)
-                    <div>{{ $error }}</div>
-                @endforeach
+@extends('layouts.app')
+ 
+@php
+    /** @var \App\Models\Contract $contract */
+    /** @var \Illuminate\Support\Collection<\App\Models\Room> $rooms */
+    /** @var \Illuminate\Support\Collection<\App\Models\Guest> $guests */
+@endphp
+ 
+@section('content')
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-warning text-dark py-3">
+                    <h5 class="mb-0"><i class="bi bi-pencil-square"></i> แก้ไขสัญญาเช่า</h5>
+                </div>
+                <div class="card-body">
+                    <form action="{{ route('contracts.update', $contract->id) }}" method="POST">
+                        @csrf
+                        @method('PUT')
+                        
+                        <!-- ข้อมูลห้องและผู้เช่า -->
+                        <h6 class="section-title mt-0"><i class="bi bi-info-circle"></i> ข้อมูลการเช่า</h6>
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label required">ห้องพัก</label>
+                                <select name="room_id" class="form-select @error('room_id') is-invalid @enderror" required>
+                                    <option value="">-- เลือกห้องพัก --</option>
+                                    @foreach($rooms ?? [] as $room)
+                                        <option value="{{ $room->id }}" {{ $contract->room_id == $room->id ? 'selected' : '' }}>
+                                            {{ $room->room_number }} - {{ $room->room_type }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('room_id')
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label required">ผู้เช่า</label>
+                                <select name="guest_id" class="form-select @error('guest_id') is-invalid @enderror" required>
+                                    <option value="">-- เลือกผู้เช่า --</option>
+                                    @foreach($guests ?? [] as $guest)
+                                        <option value="{{ $guest->id }}" {{ $contract->guest_id == $guest->id ? 'selected' : '' }}>
+                                            {{ $guest->first_name }} {{ $guest->last_name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('guest_id')
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+ 
+                        <!-- ข้อมูลสัญญา -->
+                        <h6 class="section-title"><i class="bi bi-file-earmark-ruled"></i> ข้อมูลสัญญา</h6>
+                        <div class="row mb-4">
+                            <div class="col-md-4">
+                                <label class="form-label">เลขที่สัญญา</label>
+                                <input type="text" class="form-control" value="{{ old('contract_number', $contract->contract_number) }}" readonly>
+                                <small class="text-muted">ระบบสร้างอัตโนมัติ</small>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">ชื่อสัญญา</label>
+                                <input type="text" name="title" class="form-control @error('title') is-invalid @enderror" value="{{ old('title', $contract->title) }}">
+                                @error('title')
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">วันที่ทำสัญญา</label>
+                                <input type="date" name="contract_date" class="form-control @error('contract_date') is-invalid @enderror" value="{{ old('contract_date', $contract->contract_date) }}">
+                                @error('contract_date')
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+ 
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label required">สถานะ</label>
+                                <select name="status" class="form-select @error('status') is-invalid @enderror" required>
+                                    <option value="draft" {{ $contract->status == 'draft' ? 'selected' : '' }}>ร่าง</option>
+                                    <option value="pending" {{ $contract->status == 'pending' ? 'selected' : '' }}>รออนุมัติ</option>
+                                    <option value="active" {{ $contract->status == 'active' ? 'selected' : '' }}>ใช้งาน</option>
+                                    <option value="completed" {{ $contract->status == 'completed' ? 'selected' : '' }}>เสร็จสิ้น</option>
+                                    <option value="cancelled" {{ $contract->status == 'cancelled' ? 'selected' : '' }}>ยกเลิก</option>
+                                </select>
+                                @error('status')
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+ 
+                        <!-- ระยะเวลาเช่า -->
+                        <h6 class="section-title"><i class="bi bi-calendar-range"></i> ระยะเวลาเช่า</h6>
+                        <div class="row mb-4">
+                            <div class="col-md-4">
+                                <label class="form-label required">วันที่เริ่มเช่า</label>
+                                <input type="date" name="start_date" class="form-control @error('start_date') is-invalid @enderror" value="{{ old('start_date', $contract->start_date) }}" required>
+                                @error('start_date')
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label required">วันที่สิ้นสุด</label>
+                                <input type="date" name="end_date" class="form-control @error('end_date') is-invalid @enderror" value="{{ old('end_date', $contract->end_date) }}" required>
+                                @error('end_date')
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">ระยะเวลา (เดือน)</label>
+                                <input type="text" class="form-control" value="{{ old('duration', $contract->duration) }}" readonly>
+                                <small class="text-muted">คำนวณอัตโนมัติ</small>
+                            </div>
+                        </div>
+ 
+                        <!-- ค่าเช่าและค่าธรรมเนียม -->
+                        <h6 class="section-title"><i class="bi bi-currency-dollar"></i> ค่าเช่าและค่าธรรมเนียม</h6>
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label required">ค่าเช่าต่อเดือน (บาท)</label>
+                                <input type="number" name="monthly_rent" class="form-control @error('monthly_rent') is-invalid @enderror" value="{{ old('monthly_rent', $contract->monthly_rent) }}" required min="0" step="0.01">
+                                @error('monthly_rent')
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">ค่าเช่าเป็นตัวอักษร</label>
+                                <input type="text" name="monthly_rent_text" class="form-control" value="{{ old('monthly_rent_text', $contract->monthly_rent_text) }}">
+                            </div>
+                        </div>
+ 
+                        <div class="row mb-4">
+                            <div class="col-md-4">
+                                <label class="form-label">เงินประกัน (บาท)</label>
+                                <input type="number" name="deposit" class="form-control @error('deposit') is-invalid @enderror" min="0" step="0.01" value="{{ old('deposit', $contract->deposit ?? 0) }}">
+                                <small class="text-muted">หากไม่กรอก = ค่าเช่ารายเดือน</small>
+                                @error('deposit')
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">จ่ายล่วงหน้า (เดือน)</label>
+                                <input type="number" name="advance_payment_months" class="form-control @error('advance_payment_months') is-invalid @enderror" min="1" step="1" value="1" readonly>
+                                <small class="text-muted">💡 คิดแค่ 1 เดือนเท่านั้น (ระบบตั้งอัตโนมัติ)</small>
+                                @error('advance_payment_months')
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">จ่ายล่วงหน้า (บาท)</label>
+                                <input type="text" class="form-control" value="฿{{ number_format($contract->advance_payment ?? 0, 2) }}" readonly>
+                                <small class="text-muted">อ่านอย่างเดียว</small>
+                            </div>
+                        </div>
+ 
+                        <div class="row mb-4">
+                            <div class="col-md-4">
+                                <label class="form-label">ค่าไฟฟ้าต่อหน่วย (บาท)</label>
+                                <input type="number" name="electricity_rate" class="form-control @error('electricity_rate') is-invalid @enderror" min="0" step="0.01" value="{{ old('electricity_rate', $contract->electricity_rate ?? 0) }}">
+                                @error('electricity_rate')
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">ค่าน้ำต่อหน่วย (บาท)</label>
+                                <input type="number" name="water_rate" class="form-control @error('water_rate') is-invalid @enderror" min="0" step="0.01" value="{{ old('water_rate', $contract->water_rate ?? 0) }}">
+                                @error('water_rate')
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">ค่าปรับล่าช้า (%)</label>
+                                <input type="number" name="late_fee" class="form-control @error('late_fee') is-invalid @enderror" min="0" step="0.01" value="{{ old('late_fee', $contract->late_fee ?? 0) }}">
+                                @error('late_fee')
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+ 
+                        <div class="mb-4">
+                            <label class="form-label">ค่าธรรมเนียมอื่น ๆ</label>
+                            <input type="text" name="other_fees" class="form-control" value="{{ old('other_fees', $contract->other_fees) }}">
+                        </div>
+ 
+                        <!-- ข้อมูลผู้ให้เช่า -->
+                        <h6 class="section-title"><i class="bi bi-person-badge"></i> ข้อมูลผู้ให้เช่า</h6>
+                        <div class="row mb-4">
+                            <div class="col-md-4">
+                                <label class="form-label">ชื่อผู้ให้เช่า</label>
+                                <input type="text" name="landlord_name" class="form-control" value="{{ old('landlord_name', $contract->landlord_name) }}">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">เลขบัตรประชาชน</label>
+                                <input type="text" name="landlord_id_number" class="form-control" value="{{ old('landlord_id_number', $contract->landlord_id_number) }}">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">เบอร์โทร</label>
+                                <input type="text" name="landlord_phone" class="form-control" value="{{ old('landlord_phone', $contract->landlord_phone) }}">
+                            </div>
+                        </div>
+ 
+                        <div class="mb-4">
+                            <label class="form-label">ที่อยู่ผู้ให้เช่า</label>
+                            <textarea name="landlord_address" class="form-control" rows="2">{{ old('landlord_address', $contract->landlord_address) }}</textarea>
+                        </div>
+ 
+                        <!-- เงื่อนไขและลายเซ็น -->
+                        <h6 class="section-title"><i class="bi bi-pen"></i> เงื่อนไขและลายเซ็น</h6>
+                        <div class="mb-4">
+                            <label class="form-label">เงื่อนไขสัญญา</label>
+                            <textarea name="terms" class="form-control" rows="3">{{ old('terms', $contract->terms) }}</textarea>
+                        </div>
+ 
+                        <div class="row mb-4">
+                            <div class="col-md-4">
+                                <label class="form-label">ลายเซ็นผู้เช่า</label>
+                                <input type="text" name="tenant_signature" class="form-control" value="{{ old('tenant_signature', $contract->tenant_signature) }}">
+                                <small class="text-muted">วันที่ลงนาม</small>
+                                <input type="date" name="tenant_sign_date" class="form-control mt-2" value="{{ old('tenant_sign_date', $contract->tenant_sign_date) }}">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">ลายเซ็นผู้ให้เช่า</label>
+                                <input type="text" name="landlord_signature" class="form-control" value="{{ old('landlord_signature', $contract->landlord_signature) }}">
+                                <small class="text-muted">วันที่ลงนาม</small>
+                                <input type="date" name="landlord_sign_date" class="form-control mt-2" value="{{ old('landlord_sign_date', $contract->landlord_sign_date) }}">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">ลายเซ็นพยาน</label>
+                                <input type="text" name="witness_signature" class="form-control" value="{{ old('witness_signature', $contract->witness_signature) }}">
+                                <small class="text-muted">วันที่ลงนาม</small>
+                                <input type="date" name="witness_sign_date" class="form-control mt-2" value="{{ old('witness_sign_date', $contract->witness_sign_date) }}">
+                            </div>
+                        </div>
+ 
+                        <!-- หมายเหตุ -->
+                        <h6 class="section-title"><i class="bi bi-card-text"></i> หมายเหตุเพิ่มเติม</h6>
+                        <div class="mb-4">
+                            <label class="form-label">คำอธิบาย</label>
+                            <textarea name="description" class="form-control" rows="2">{{ old('description', $contract->description) }}</textarea>
+                        </div>
+ 
+                        <div class="mb-4">
+                            <label class="form-label">หมายเหตุ</label>
+                            <textarea name="notes" class="form-control" rows="3">{{ old('notes', $contract->notes) }}</textarea>
+                        </div>
+ 
+                        <!-- Buttons -->
+                        <div class="d-flex justify-content-between mt-4 pt-3 border-top">
+                            <a href="{{ route('contracts.index') }}" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> ยกเลิก
+                            </a>
+                            <button type="submit" class="btn btn-warning">
+                                <i class="bi bi-check-circle"></i> บันทึกการแก้ไข
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
-        @endif
-
-        <form method="POST" action="{{ route('contracts.update', $contract->id) }}">
-            @csrf
-            @method('PUT')
-
-            <div class="form-group">
-                <label for="contractor_name">ชื่อผู้รับเหมา *</label>
-                <input type="text" id="contractor_name" name="contractor_name" value="{{ old('contractor_name', $contract->contractor_name) }}" required>
-                @error('contractor_name')
-                    <div class="error-message">{{ $message }}</div>
-                @enderror
-            </div>
-
-            <div class="form-group">
-                <label for="contract_number">เลขที่สัญญา *</label>
-                <input type="text" id="contract_number" name="contract_number" value="{{ old('contract_number', $contract->contract_number) }}" required>
-                @error('contract_number')
-                    <div class="error-message">{{ $message }}</div>
-                @enderror
-            </div>
-
-            <div class="form-group">
-                <label for="description">คำอธิบาย</label>
-                <textarea id="description" name="description">{{ old('description', $contract->description) }}</textarea>
-            </div>
-
-            <div class="form-group">
-                <label for="start_date">วันที่เริ่มต้น *</label>
-                <input type="date" id="start_date" name="start_date" value="{{ old('start_date', $contract->start_date->format('Y-m-d')) }}" required>
-                @error('start_date')
-                    <div class="error-message">{{ $message }}</div>
-                @enderror
-            </div>
-
-            <div class="form-group">
-                <label for="end_date">วันที่สิ้นสุด *</label>
-                <input type="date" id="end_date" name="end_date" value="{{ old('end_date', $contract->end_date->format('Y-m-d')) }}" required>
-                @error('end_date')
-                    <div class="error-message">{{ $message }}</div>
-                @enderror
-            </div>
-
-            <div class="form-group">
-                <label for="amount">จำนวนเงิน *</label>
-                <input type="number" id="amount" name="amount" value="{{ old('amount', $contract->amount) }}" step="0.01" required>
-                @error('amount')
-                    <div class="error-message">{{ $message }}</div>
-                @enderror
-            </div>
-
-            <div class="form-group">
-                <label for="status">สถานะ *</label>
-                <select id="status" name="status" required>
-                    <option value="draft" {{ old('status', $contract->status) === 'draft' ? 'selected' : '' }}>ร่าง</option>
-                    <option value="active" {{ old('status', $contract->status) === 'active' ? 'selected' : '' }}>ใช้งาน</option>
-                    <option value="completed" {{ old('status', $contract->status) === 'completed' ? 'selected' : '' }}>เสร็จสิ้น</option>
-                    <option value="cancelled" {{ old('status', $contract->status) === 'cancelled' ? 'selected' : '' }}>ยกเลิก</option>
-                </select>
-                @error('status')
-                    <div class="error-message">{{ $message }}</div>
-                @enderror
-            </div>
-
-            <div class="form-group">
-                <label for="notes">หมายเหตุ</label>
-                <textarea id="notes" name="notes">{{ old('notes', $contract->notes) }}</textarea>
-            </div>
-
-            <div class="btn-group">
-                <button type="submit" class="btn btn-submit">💾 บันทึก</button>
-                <a href="{{ route('contracts.show', $contract->id) }}" class="btn btn-cancel">❌ ยกเลิก</a>
-            </div>
-        </form>
+        </div>
     </div>
-</body>
-</html>
+</div>
+ 
+<style>
+.section-title {
+    color: #1e3a5f;
+    font-weight: 600;
+    border-bottom: 2px solid #e9ecef;
+    padding-bottom: 8px;
+    margin-bottom: 16px;
+}
+ 
+.required::after {
+    content: ' *';
+    color: #dc3545;
+}
+ 
+.invalid-feedback {
+    display: none;
+    font-size: 0.875rem;
+    color: #dc3545;
+}
+ 
+.form-control.is-invalid,
+.form-select.is-invalid {
+    border-color: #dc3545;
+}
+ 
+.form-control.is-invalid:focus,
+.form-select.is-invalid:focus {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+}
+</style>
+@endsection
+ 

@@ -21,6 +21,7 @@
         .btn-cancel { background: #6c757d; color: white; }
         .btn-cancel:hover { background: #5a6268; }
         .error-message { color: #dc3545; font-size: 12px; margin-top: 5px; }
+        .required::after { content: ' *'; color: #dc3545; }
     </style>
 </head>
 <body>
@@ -34,67 +35,95 @@
                 @endforeach
             </div>
         @endif
-
+ 
         <form method="POST" action="{{ route('facilities.store') }}">
             @csrf
-
+ 
+            <!-- ห้องพัก (auto-select ถ้ามี room_id จาก query parameter) -->
             <div class="form-group">
-                <label for="name">ชื่อ *</label>
+                <label for="room_id">ห้องพัก <span class="required"></span></label>
+                <select name="room_id" id="room_id" required>
+                    <option value="">-- เลือกห้องพัก --</option>
+                    @foreach($rooms as $room)
+                        {{-- ✅ Auto-select ถ้า selectedRoomId ตรงกับ room->id --}}
+                        <option value="{{ $room->id }}" 
+                            {{ (old('room_id') ?? $selectedRoomId) == $room->id ? 'selected' : '' }}>
+                            ห้อง {{ $room->room_number }} ({{ $room->room_type }})
+                        </option>
+                    @endforeach
+                </select>
+                @error('room_id')
+                    <div class="error-message">{{ $message }}</div>
+                @enderror
+            </div>
+ 
+            <div class="form-group">
+                <label for="name">ชื่อ <span class="required"></span></label>
                 <input type="text" id="name" name="name" value="{{ old('name') }}" required>
                 @error('name')
                     <div class="error-message">{{ $message }}</div>
                 @enderror
             </div>
-
+ 
             <div class="form-group">
-                <label for="type">ประเภท *</label>
-                <input type="text" id="type" name="type" value="{{ old('type') }}" required>
+                <label for="type">ประเภท <span class="required"></span></label>
+                <select name="type" id="type" required>
+                    <option value="">-- เลือกประเภท --</option>
+                    <option value="bed"            {{ old('type', '') == 'bed'            ? 'selected' : '' }}>🛏️ เตียง</option>
+                    <option value="mattress"       {{ old('type', '') == 'mattress'       ? 'selected' : '' }}>🛌 ที่นอน</option>
+                    <option value="wardrobe"       {{ old('type', '') == 'wardrobe'       ? 'selected' : '' }}>🚪 ตู้เสื้อผ้า</option>
+                    <option value="dressing_table" {{ old('type', '') == 'dressing_table' ? 'selected' : '' }}>💄 โต๊ะเครื่องแป้ง</option>
+                    <option value="tv_stand"       {{ old('type', '') == 'tv_stand'       ? 'selected' : '' }}>📺 ชั้นวางทีวี</option>
+                    <option value="clothes_rack"   {{ old('type', '') == 'clothes_rack'   ? 'selected' : '' }}>👔 ราวแขวนผ้า</option>
+                </select>
                 @error('type')
                     <div class="error-message">{{ $message }}</div>
                 @enderror
             </div>
-
+ 
             <div class="form-group">
-                <label for="location">ที่ตั้ง *</label>
-                <input type="text" id="location" name="location" value="{{ old('location') }}" required>
+                <label for="location">ที่ตั้ง/หมายเหตุเพิ่มเติม <span class="required"></span></label>
+                <input type="text" id="location" name="location" value="{{ old('location') }}" placeholder="เช่น มุมซ้ายห้องนอน, ใกล้หน้าต่าง" required>
                 @error('location')
                     <div class="error-message">{{ $message }}</div>
                 @enderror
             </div>
-
+ 
             <div class="form-group">
                 <label for="description">คำอธิบาย</label>
                 <textarea id="description" name="description">{{ old('description') }}</textarea>
             </div>
-
+ 
             <div class="form-group">
-                <label for="status">สถานะ *</label>
-                <select id="status" name="status" required>
-                    <option value="">-- เลือกสถานะ --</option>
-                    <option value="active" {{ old('status') === 'active' ? 'selected' : '' }}>ใช้งาน</option>
-                    <option value="inactive" {{ old('status') === 'inactive' ? 'selected' : '' }}>ไม่ใช้งาน</option>
-                    <option value="maintenance" {{ old('status') === 'maintenance' ? 'selected' : '' }}>บำรุงรักษา</option>
+                <label for="status">สถานะ <span class="required"></span></label>
+                <select name="status" id="status" required>
+                    <option value="good"         {{ old('status', 'good') == 'good'         ? 'selected' : '' }}>✅ ใช้งานได้</option>
+                    <option value="fair"         {{ old('status', '')     == 'fair'         ? 'selected' : '' }}>🟡 สภาพปานกลาง</option>
+                    <option value="needs_repair" {{ old('status', '')     == 'needs_repair' ? 'selected' : '' }}>⚠️ ต้องซ่อม</option>
+                    <option value="maintenance"  {{ old('status', '')     == 'maintenance'  ? 'selected' : '' }}>🔧 กำลังซ่อมบำรุง</option>
+                    <option value="damaged"      {{ old('status', '')     == 'damaged'      ? 'selected' : '' }}>❌ ชำรุด</option>
+                    <option value="retired"      {{ old('status', '')     == 'retired'      ? 'selected' : '' }}>🗑️ ปลดประจำการ</option>
                 </select>
                 @error('status')
                     <div class="error-message">{{ $message }}</div>
                 @enderror
             </div>
-
+ 
             <div class="form-group">
                 <label for="maintenance_schedule">ตารางบำรุงรักษา</label>
-                <input type="text" id="maintenance_schedule" name="maintenance_schedule" value="{{ old('maintenance_schedule') }}">
+                <input type="text" id="maintenance_schedule" name="maintenance_schedule" value="{{ old('maintenance_schedule') }}" placeholder="เช่น ทุก 3 เดือน">
             </div>
-
+ 
             <div class="form-group">
                 <label for="last_maintenance_date">วันที่บำรุงรักษาล่าสุด</label>
                 <input type="date" id="last_maintenance_date" name="last_maintenance_date" value="{{ old('last_maintenance_date') }}">
             </div>
-
+ 
             <div class="form-group">
                 <label for="next_maintenance_date">วันที่บำรุงรักษาครั้งถัดไป</label>
                 <input type="date" id="next_maintenance_date" name="next_maintenance_date" value="{{ old('next_maintenance_date') }}">
             </div>
-
+ 
             <div class="btn-group">
                 <button type="submit" class="btn btn-submit">💾 บันทึก</button>
                 <a href="{{ route('facilities.index') }}" class="btn btn-cancel">❌ ยกเลิก</a>

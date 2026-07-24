@@ -1,79 +1,160 @@
-<!DOCTYPE html>
-<html lang="th">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>จัดการสัญญา</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI'; background: #f5f5f5; }
-        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
-        .header { display: flex; justify-content: space-between; margin-bottom: 30px; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .btn { display: inline-block; padding: 10px 20px; background: #667eea; color: white; text-decoration: none; border-radius: 5px; border: none; cursor: pointer; }
-        .btn:hover { background: #764ba2; }
-        .table-container { background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        table { width: 100%; border-collapse: collapse; }
-        th { background: #667eea; color: white; padding: 15px; text-align: left; }
-        td { padding: 15px; border-bottom: 1px solid #eee; }
-        tr:hover { background: #f9f9f9; }
-        .status { padding: 5px 10px; border-radius: 20px; font-size: 0.9em; font-weight: 600; }
-        .status.active { background: #d4edda; color: #155724; }
-        .status.inactive { background: #f8d7da; color: #721c24; }
-        .actions { display: flex; gap: 10px; }
-        .btn-secondary { background: #6c757d; }
-        .btn-secondary:hover { background: #5a6268; }
-        .btn-danger { background: #dc3545; }
-        .btn-danger:hover { background: #c82333; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>📜 จัดการสัญญา</h1>
-            <a href="{{ route('contracts.create') }}" class="btn">➕ เพิ่มสัญญา</a>
+@extends('layouts.app')
+ 
+@section('page-title', 'จัดการสัญญาเช่า')
+ 
+@section('content')
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="fw-bold mb-0 text-dark">จัดการสัญญาเช่า</h4>
+    </div>
+ 
+    <!-- Main Card -->
+    <div class="card border-0 shadow-sm rounded-3">
+        <!-- Card Header & Actions -->
+        <div class="card-header bg-white border-bottom py-3 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+            <h5 class="mb-0 fw-bold text-dark d-flex align-items-center">
+                <i class="bi bi-file-text me-2"></i> รายการสัญญาเช่า
+            </h5>
+            <div class="d-flex flex-wrap gap-2">
+                <a href="{{ route('contracts.expiring') }}" class="btn btn-outline-warning text-dark btn-sm d-flex align-items-center">
+                    <i class="bi bi-exclamation-triangle text-warning me-1"></i> สัญญาหมดอายุเร็ว
+                </a>
+                <a href="{{ route('contracts.export') }}" class="btn btn-success btn-sm d-flex align-items-center">
+                    <i class="bi bi-download me-1"></i> Export
+                </a>
+                <a href="{{ route('contracts.create') }}" class="btn btn-primary btn-sm d-flex align-items-center">
+                    <i class="bi bi-plus-lg me-1"></i> เพิ่มสัญญา
+                </a>
+            </div>
         </div>
-        <div class="table-container">
-            <table>
-                <thead>
-                    <tr>
-                        <th>เลขที่สัญญา</th>
-                        <th>ผู้รับเหมา</th>
-                        <th>วันเริ่มต้น</th>
-                        <th>วันสิ้นสุด</th>
-                        <th>จำนวนเงิน</th>
-                        <th>สถานะ</th>
-                        <th>การกระทำ</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse ($contracts as $contract)
-                        <tr>
-                            <td>{{ $contract->contract_number }}</td>
-                            <td>{{ $contract->contractor_name }}</td>
-                            <td>{{ optional($contract->start_date)->format('d/m/Y') }}</td>
-                            <td>{{ optional($contract->end_date)->format('d/m/Y') }}</td>
-                            <td>฿{{ number_format($contract->amount, 2) }}</td>
-                            <td><span class="status {{ $contract->status }}">{{ ucfirst($contract->status) }}</span></td>
-                            <td>
-                                <div class="actions">
-                                    <a href="{{ route('contracts.show', $contract) }}" class="btn btn-secondary">ดู</a>
-                                    <a href="{{ route('contracts.edit', $contract) }}" class="btn btn-secondary">แก้ไข</a>
-                                    <form action="{{ route('contracts.destroy', $contract) }}" method="POST" style="display:inline;">
-                                        @csrf @method('DELETE')
-                                        <button type="submit" class="btn btn-danger" onclick="return confirm('ลบ?')">ลบ</button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr><td colspan="7" style="text-align: center; padding: 30px;">ไม่มีข้อมูล</td></tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-        <div style="margin-top: 30px;">
-            <a href="/" class="btn btn-secondary">← กลับไปแดชบอร์ด</a>
+ 
+        <div class="card-body p-4">
+            <!-- Search & Filter Form -->
+            <form action="{{ route('contracts.index') }}" method="GET" class="mb-4">
+                <div class="row g-2">
+                    <div class="col-md-6 col-lg-5">
+                        <input type="text" name="search" class="form-control" placeholder="ค้นหาเลขที่สัญญา, ชื่อผู้เช่า, ห้องพัก..." value="{{ request('search') }}">
+                    </div>
+                    <div class="col-md-4 col-lg-3">
+                        <select name="status" class="form-select">
+                            <option value="">ทุกสถานะ</option>
+                            <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>ใช้งาน</option>
+                            <option value="expiring" {{ request('status') == 'expiring' ? 'selected' : '' }}>ใกล้หมดอายุ</option>
+                            <option value="expired" {{ request('status') == 'expired' ? 'selected' : '' }}>สิ้นสุด</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2 col-lg-2">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-search me-1"></i> Search
+                        </button>
+                    </div>
+                </div>
+            </form>
+ 
+            <!-- Data Table or Empty State -->
+            <div class="border rounded-3 overflow-hidden">
+                @if(isset($contracts) && $contracts->count() > 0)
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light text-muted" style="font-size: 0.9rem;">
+                                <tr>
+                                    <th scope="col" class="py-3 px-4 fw-medium border-bottom-0">เลขที่สัญญา</th>
+                                    <th scope="col" class="py-3 fw-medium border-bottom-0">ห้องพัก</th>
+                                    <th scope="col" class="py-3 fw-medium border-bottom-0">ผู้เช่า</th>
+                                    <th scope="col" class="py-3 fw-medium border-bottom-0">วันเริ่มต้น</th>
+                                    <th scope="col" class="py-3 fw-medium border-bottom-0">วันสิ้นสุด</th>
+                                    <th scope="col" class="py-3 fw-medium border-bottom-0">ค่าเช่า/เดือน</th>
+                                    <th scope="col" class="py-3 fw-medium text-center border-bottom-0">สถานะ</th>
+                                    <th scope="col" class="py-3 px-4 fw-medium text-center border-bottom-0">การกระทำ</th>
+                                </tr>
+                            </thead>
+                            <tbody style="font-size: 0.95rem;">
+                                @foreach($contracts as $contract)
+                                <tr>
+                                    <td class="px-4 py-3 text-primary fw-semibold">{{ $contract->contract_number }}</td>
+                                    <td class="py-3">
+                                        <span class="badge bg-light text-dark border"><i class="bi bi-door-closed me-1"></i> {{ $contract->room->room_number ?? '-' }}</span>
+                                    </td>
+                                    <td class="py-3">
+                                        <div class="d-flex align-items-center">
+                                            <div class="bg-secondary bg-gradient rounded-circle text-white d-flex justify-content-center align-items-center me-2 shadow-sm" style="width: 35px; height: 35px; font-size: 0.9rem;">
+                                                {{ mb_substr($contract->guest->first_name ?? '?', 0, 1) }}
+                                            </div>
+                                            <div>
+                                                <div class="fw-medium text-dark">{{ ($contract->guest->first_name ?? '') . ' ' . ($contract->guest->last_name ?? '') }}</div>
+                                                <div class="text-muted" style="font-size: 0.8rem;">{{ $contract->guest->phone ?? '-' }}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="py-3">{{ \Carbon\Carbon::parse($contract->start_date)->format('d/m/Y') }}</td>
+                                    <td class="py-3">{{ \Carbon\Carbon::parse($contract->end_date)->format('d/m/Y') }}</td>
+                                    <td class="py-3">฿{{ number_format($contract->monthly_rent, 2) }}</td>
+                                    <td class="py-3 text-center">
+                                        @if($contract->status == 'active')
+                                            <span class="badge bg-success bg-opacity-10 text-success border border-success"><i class="bi bi-check-circle-fill me-1"></i> ใช้งาน</span>
+                                        @elseif($contract->status == 'expiring')
+                                            <span class="badge bg-warning bg-opacity-10 text-warning border border-warning"><i class="bi bi-exclamation-triangle-fill me-1"></i> ใกล้หมดอายุ</span>
+                                        @else
+                                            <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary"><i class="bi bi-x-circle-fill me-1"></i> สิ้นสุด</span>
+                                        @endif
+                                    </td>
+                                    <td class="py-3 px-4 text-center">
+                                        <div class="btn-group" role="group">
+                                            <a href="{{ route('contracts.show', $contract->id) }}" class="btn btn-sm btn-outline-secondary" data-bs-toggle="tooltip" title="ดูรายละเอียด">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            <a href="{{ route('contracts.edit', $contract->id) }}" class="btn btn-sm btn-outline-primary" data-bs-toggle="tooltip" title="แก้ไข">
+                                                <i class="bi bi-pencil-square"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Pagination -->
+                    @if($contracts->hasPages())
+                    <div class="bg-light d-flex flex-column flex-md-row justify-content-between align-items-center py-3 px-4 border-top">
+                        <div class="text-muted mb-2 mb-md-0" style="font-size: 0.85rem;">
+                            แสดง {{ $contracts->firstItem() }} ถึง {{ $contracts->lastItem() }} จากทั้งหมด {{ $contracts->total() }} รายการ
+                        </div>
+                        <div>
+                            {{ $contracts->links('pagination::bootstrap-5') }}
+                        </div>
+                    </div>
+                    @endif
+ 
+                @else
+                    <!-- Empty State -->
+                    <div class="text-center py-5">
+                        <div class="mb-3">
+                            <i class="bi bi-inbox text-muted opacity-50" style="font-size: 4rem;"></i>
+                        </div>
+                        <h6 class="text-muted mb-3 fw-normal">ไม่มีข้อมูลสัญญาเช่าในระบบ หรือไม่พบผลลัพธ์การค้นหา</h6>
+                        <a href="{{ route('contracts.create') }}" class="btn btn-primary btn-sm px-4">
+                            <i class="bi bi-plus-lg me-1"></i> เพิ่มสัญญาเช่า
+                        </a>
+                    </div>
+                @endif
+            </div>
+            
         </div>
     </div>
-</body>
-</html>
+</div>
+ 
+<!-- Script สำหรับ Tooltip -->
+@push('scripts')
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        })
+    });
+</script>
+@endpush
+@endsection
+ 

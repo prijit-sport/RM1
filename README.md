@@ -1,59 +1,114 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# RM1 — Laravel Room & Billing System
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+ระบบจัดการห้องพัก การจอง ผู้เช่า สัญญา ใบแจ้งหนี้ มิเตอร์ และซ่อมบำรุง (Rental/Utility management)
 
-## About Laravel
+## คำอธิบายโปรเจค
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- จัดการข้อมูลห้อง (Rooms)
+- จัดการผู้เช่า (Guests)
+- จัดการการจอง/เช็คอิน/เช็คเอาท์ (Bookings)
+- จัดการสัญญา (Contracts)
+- จัดการใบแจ้งหนี้ (Invoices) แยกประเภทค่าเช่า / ค่าน้ำ-ค่าไฟ
+- คำนวณจากมิเตอร์ (Meter readings) เพื่อสร้าง/อัปเดตใบแจ้งหนี้ประเภท utility
+- จัดการซ่อมบำรุง (Maintenances)
+- แสดงรายงาน (Reports/ Dashboard)
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## ความต้องการของระบบ (System Requirements)
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- PHP **>= 8.2**
+- Laravel **12.x**
+- MySQL (สำหรับ production) หรือใช้ SQLite (สำหรับทดสอบ)
+- Composer
+- Node.js + npm (สำหรับ build asset)
 
-## Learning Laravel
+> หมายเหตุ: ค่า config การรัน test ถูกตั้งไว้ใน `phpunit.xml` ให้ใช้ `sqlite` ในหน่วยความจำ (`:memory:`)
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+## ขั้นตอนติดตั้ง (Installation)
+>
+> แนะนำให้ใช้ขั้นตอนนี้บนเครื่องเดียวกับที่ต้องการรัน dev/test
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+1. Clone โปรเจค
+2. ติดตั้ง Dependencies
 
-## Laravel Sponsors
+   ```bash
+   composer install
+   ```
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+3. เตรียมไฟล์ `.env`
+   - ถ้าไม่มี `.env` ให้คัดลอกจากตัวอย่าง
 
-### Premium Partners
+     ```bash
+     copy .env.example .env
+     ```
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+   - ตั้งค่าฐานข้อมูลใน `.env` (เช่น DB_CONNECTION, DB_HOST, DB_DATABASE, DB_USERNAME, DB_PASSWORD)
+4. สร้าง key
 
-## Contributing
+   ```bash
+   php artisan key:generate
+   ```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+5. รัน migration
 
-## Code of Conduct
+   ```bash
+   php artisan migrate
+   ```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+6. (ถ้าต้องการ) รัน seed
 
-## Security Vulnerabilities
+   ```bash
+   php artisan db:seed
+   ```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+7. ติดตั้ง/สร้าง asset
+
+   ```bash
+   npm install
+   npm run build
+   ```
+
+## การรัน dev server (Development)
+
+```bash
+php artisan serve
+```
+
+ถ้าต้องการรันแบบที่รวม queue/logs/vite ตามที่ระบุใน composer script:
+
+```bash
+composer run dev
+```
+
+## วิธีรัน Unit/Feature Test
+
+รันทุก test:
+
+```bash
+php artisan test
+```
+
+> โปรเจคมีชุดทดสอบใน `tests/Unit` และ `tests/Feature` และ `phpunit.xml` ถูกตั้งค่า environment สำหรับ test (เช่น `APP_ENV=testing`, `DB_CONNECTION=sqlite`, `SESSION_DRIVER=array`)
+
+## โครงสร้างไฟล์ที่เกี่ยวข้อง
+
+- Routes (Web): `routes/web.php`
+- Routes (API): `routes/api.php`
+- Controller: `app/Http/Controllers/`
+- Request validation: `app/Http/Requests/`
+- Models: `app/Models/`
+- Test: `tests/`
+
+## หมายเหตุด้านความปลอดภัย
+
+- route บางส่วนถูกจำกัดด้วย middleware เช่น `auth`, `admin_only`, `manager_or_admin` ตามที่กำหนดใน `routes/web.php`
 
 ## License
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+MIT (ตามที่ระบุใน `composer.json`)
+
+## การเตรียมพร้อมสำหรับ Production
+
+- ต้องเปลี่ยน APP_ENV=production และ APP_DEBUG=false ใน .env จริงก่อน deploy เสมอ
+- แนะนำตั้งค่า QUEUE_CONNECTION เป็น database หรือ redis (ปัจจุบันใช้ database อยู่แล้ว)
+- ต้องรัน php artisan config:cache, route:cache, view:cache หลัง deploy
+- ต้อง backup ฐานข้อมูลด้วย mysqldump ก่อนรัน migration บน production เสมอ

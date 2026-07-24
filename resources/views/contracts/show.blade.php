@@ -1,95 +1,166 @@
-<!DOCTYPE html>
-<html lang="th">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>รายละเอียดสัญญา</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI'; background: #f5f5f5; padding: 20px; }
-        .container { max-width: 800px; margin: 0 auto; background: white; padding: 40px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        h1 { margin-bottom: 30px; color: #333; }
-        .detail-row { display: flex; border-bottom: 1px solid #eee; padding: 15px 0; }
-        .detail-label { font-weight: 600; color: #555; width: 200px; }
-        .detail-value { color: #333; flex: 1; }
-        .status-badge { display: inline-block; padding: 5px 15px; border-radius: 20px; font-size: 14px; font-weight: 600; }
-        .status-draft { background: #e2e3e5; color: #383d41; }
-        .status-active { background: #d4edda; color: #155724; }
-        .status-completed { background: #cce5ff; color: #004085; }
-        .status-cancelled { background: #f8d7da; color: #721c24; }
-        .btn-group { display: flex; gap: 10px; margin-top: 30px; }
-        .btn { padding: 12px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; text-decoration: none; display: inline-block; }
-        .btn-edit { background: #ffc107; color: #333; }
-        .btn-edit:hover { background: #e0a800; }
-        .btn-delete { background: #dc3545; color: white; }
-        .btn-delete:hover { background: #c82333; }
-        .btn-back { background: #6c757d; color: white; }
-        .btn-back:hover { background: #5a6268; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>📄 รายละเอียดสัญญา</h1>
-
-        <div class="detail-row">
-            <div class="detail-label">ชื่อผู้รับเหมา:</div>
-            <div class="detail-value">{{ $contract->contractor_name }}</div>
-        </div>
-
-        <div class="detail-row">
-            <div class="detail-label">เลขที่สัญญา:</div>
-            <div class="detail-value">{{ $contract->contract_number }}</div>
-        </div>
-
-        <div class="detail-row">
-            <div class="detail-label">คำอธิบาย:</div>
-            <div class="detail-value">{{ $contract->description ?? '-' }}</div>
-        </div>
-
-        <div class="detail-row">
-            <div class="detail-label">วันที่เริ่มต้น:</div>
-            <div class="detail-value">{{ $contract->start_date->format('d/m/Y') }}</div>
-        </div>
-
-        <div class="detail-row">
-            <div class="detail-label">วันที่สิ้นสุด:</div>
-            <div class="detail-value">{{ $contract->end_date->format('d/m/Y') }}</div>
-        </div>
-
-        <div class="detail-row">
-            <div class="detail-label">จำนวนเงิน:</div>
-            <div class="detail-value">{{ number_format($contract->amount, 2) }} บาท</div>
-        </div>
-
-        <div class="detail-row">
-            <div class="detail-label">สถานะ:</div>
-            <div class="detail-value">
-                @if($contract->status === 'draft')
-                    <span class="status-badge status-draft">ร่าง</span>
-                @elseif($contract->status === 'active')
-                    <span class="status-badge status-active">ใช้งาน</span>
-                @elseif($contract->status === 'completed')
-                    <span class="status-badge status-completed">เสร็จสิ้น</span>
-                @elseif($contract->status === 'cancelled')
-                    <span class="status-badge status-cancelled">ยกเลิก</span>
-                @endif
+@extends('layouts.app')
+ 
+@section('title', 'รายละเอียดสัญญาเช่า')
+ 
+@section('page-title', 'จัดการสัญญาเช่า')
+ 
+@section('content')
+<div class="row">
+    <div class="col-12">
+        <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a href="{{ route('dashboard') }}"><i class="bi bi-house-door"></i> หน้าหลัก</a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a href="{{ route('contracts.index') }}">สัญญาเช่า</a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">รายละเอียด</li>
+            </ol>
+        </nav>
+ 
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4 class="mb-0">
+                <i class="bi bi-file-earmark-text me-2"></i>รายละเอียดสัญญาเช่า
+            </h4>
+            <div class="d-flex gap-2">
+                <a href="{{ route('contracts.edit', $contract) }}" class="btn btn-warning">
+                    <i class="bi bi-pencil me-1"></i>แก้ไข
+                </a>
+ 
+                <form method="POST" action="{{ route('contracts.destroy', $contract) }}" style="display:inline;" onsubmit="return confirm('คุณแน่ใจหรือไม่ที่จะลบสัญญานี้?');">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash me-1"></i>ลบ
+                    </button>
+                </form>
             </div>
         </div>
-
-        <div class="detail-row">
-            <div class="detail-label">หมายเหตุ:</div>
-            <div class="detail-value">{{ $contract->notes ?? '-' }}</div>
-        </div>
-
-        <div class="btn-group">
-            <a href="{{ route('contracts.edit', $contract->id) }}" class="btn btn-edit">✏️ แก้ไข</a>
-            <form method="POST" action="{{ route('contracts.destroy', $contract->id) }}" style="display:inline;" onsubmit="return confirm('คุณแน่ใจหรือไม่ที่จะลบสัญญานี้?');">
-                @csrf
-                @method('DELETE')
-                <button type="submit" class="btn btn-delete">🗑️ ลบ</button>
-            </form>
-            <a href="{{ route('contracts.index') }}" class="btn btn-back">⬅️ กลับ</a>
+ 
+        <div class="row">
+            <!-- Contract Details -->
+            <div class="col-lg-8">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-white py-3">
+                        <h5 class="mb-0">
+                            <i class="bi bi-info-circle me-2"></i>ข้อมูลสัญญา
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label text-muted">เลขที่สัญญา</label>
+                                <p class="fs-5 fw-bold">{{ $contract->contract_number }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted">สถานะ</label>
+                                <p>
+                                    @php
+                                        $statusClasses = [
+                                            'draft' => 'bg-secondary',
+                                            'pending' => 'bg-warning text-dark',
+                                            'active' => 'bg-success',
+                                            'completed' => 'bg-info',
+                                            'cancelled' => 'bg-danger',
+                                        ];
+                                        $statusLabels = [
+                                            'draft' => 'ร่างสัญญา',
+                                            'pending' => 'รออนุมัติ',
+                                            'active' => 'ใช้งาน',
+                                            'completed' => 'เสร็จสิ้น',
+                                            'cancelled' => 'ยกเลิก',
+                                        ];
+                                    @endphp
+                                    <span class="badge {{ $statusClasses[$contract->status] ?? 'bg-secondary' }} fs-6">
+                                        {{ $statusLabels[$contract->status] ?? $contract->status }}
+                                    </span>
+                                </p>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted">ห้องพัก</label>
+                                <p class="fs-5">
+                                    @if($contract->room)
+                                        <span class="badge bg-primary fs-6">{{ $contract->room->room_number }}</span>
+                                        <small class="text-muted">{{ $contract->room->room_type }}</small>
+                                    @else
+                                        <span class="text-muted">-</span>
+                                    @endif
+                                </p>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted">ผู้เช่า</label>
+                                <p class="fs-5">
+                                    @if($contract->guest)
+                                        {{ $contract->guest->first_name }} {{ $contract->guest->last_name }}
+                                    @else
+                                        <span class="text-muted">-</span>
+                                    @endif
+                                </p>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted">วันที่เริ่มต้น</label>
+                                <p class="fs-5">{{ optional($contract->start_date)->format('d/m/Y') }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-muted">วันที่สิ้นสุด</label>
+                                <p class="fs-5">{{ optional($contract->end_date)->format('d/m/Y') }}</p>
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label text-muted">รายละเอียด/คำอธิบาย</label>
+                                <p>{{ $contract->description ?? '-' }}</p>
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label text-muted">หมายเหตุ</label>
+                                <p>{{ $contract->notes ?? '-' }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+ 
+            <!-- Payment Info -->
+            <div class="col-lg-4">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-white py-3">
+                        <h5 class="mb-0">
+                            <i class="bi bi-credit-card me-2"></i>ข้อมูลการเงิน
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label text-muted">ค่าเช่ารายเดือน</label>
+                            <p class="fs-4 fw-bold text-success">฿{{ number_format($contract->monthly_rent, 2) }}</p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted">เงินประกัน</label>
+                            <p class="fs-5">฿{{ number_format($contract->deposit ?? 0, 2) }}</p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted">จ่ายล่วงหน้า</label>
+                            <p class="fs-5">฿{{ number_format($contract->advance_payment ?? 0, 2) }}</p>
+                        </div>
+                        <hr>
+                        <div class="mb-0">
+                            <label class="form-label text-muted">รวมทั้งหมด</label>
+                            <p class="fs-4 fw-bold text-primary">
+                                ฿{{ number_format(($contract->monthly_rent ?? 0) + ($contract->deposit ?? 0) + ($contract->advance_payment ?? 0), 2) }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+ 
+                <!-- Back Button -->
+                <div class="mt-3">
+                    <a href="{{ route('contracts.index') }}" class="btn btn-secondary w-100">
+                        <i class="bi bi-arrow-left me-1"></i>กลับไปหน้ารายการ
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
-</body>
-</html>
+</div>
+@endsection
+ 

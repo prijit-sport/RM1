@@ -1,0 +1,98 @@
+<?php
+
+return [
+    'export' => 'Export',
+    'search' => 'Search',
+    'common' => [
+    ],
+    'auth' => [
+        'inactive' => 'This account is inactive.',
+        'login_success' => 'Signed in successfully.',
+        'login_failed' => 'Invalid credentials.',
+        'logout_success' => 'Signed out successfully.',
+    ],
+    'notifications' => [
+        'overdue_invoices' => 'There are :count overdue invoices.',
+        'pending_maintenance' => 'There are :count maintenance tasks pending.',
+        'pending_bookings' => 'There are :count bookings waiting for confirmation.',
+        'expiring_contracts' => 'There are :count contracts expiring soon.',
+    ],
+    'account' => [
+        'profile_updated' => 'Profile updated successfully.',
+        'settings_updated' => 'Settings updated successfully.',
+    ],
+    'booking' => [
+        'created' => 'Booking created successfully.',
+        'updated' => 'Booking updated successfully.',
+        'deleted' => 'Booking deleted successfully.',
+        'confirmed' => 'Booking confirmed successfully.',
+        'cancelled' => 'Booking cancelled successfully.',
+        'overlap' => 'Selected room already has a booking in this date range.',
+        'invalid_transition' => 'Invalid booking status transition.',
+        'confirm_only_pending' => 'Only pending bookings can be confirmed.',
+        'cancel_not_allowed' => 'This booking cannot be cancelled.',
+        'invalid_initial_status' => 'Cannot create booking with checked-in or checked-out status.',
+        'check_out_after_check_in' => 'Check-out date must be after check-in date.',
+        'export_id' => 'Booking ID',
+        'export_room' => 'Room',
+        'export_guest' => 'Guest',
+        'export_check_in' => 'Check In',
+        'export_check_out' => 'Check Out',
+        'export_total' => 'Total Price',
+        'export_status' => 'Status',
+        'export_notes' => 'Notes',
+    ],
+    'contract' => [
+        'created' => 'Contract created successfully.',
+        'updated' => 'Contract updated successfully.',
+        'deleted' => 'Contract deleted successfully.',
+    ],
+    'facility' => [
+        'created' => 'Facility created successfully.',
+        'updated' => 'Facility updated successfully.',
+        'deleted' => 'Facility deleted successfully.',
+    ],
+    'guest' => [
+        'created' => 'Guest created successfully.',
+        'updated' => 'Guest updated successfully.',
+        'deleted' => 'Guest deleted successfully.',
+    ],
+    'maintenance' => [
+        'created' => 'Maintenance request created successfully.',
+        'updated' => 'Maintenance request updated successfully.',
+        'deleted' => 'Maintenance request deleted successfully.',
+        'started' => 'Maintenance work started successfully.',
+        'completed' => 'Maintenance work completed successfully.',
+    ],
+    'meter' => [
+        'created' => 'Meter created successfully.',
+        'updated' => 'Meter updated successfully.',
+        'deleted' => 'Meter deleted successfully.',
+    ],
+    'meter_reading' => [
+        'created' => 'Meter reading recorded successfully.',
+        'updated' => 'Meter reading updated successfully.',
+        'deleted' => 'Meter reading deleted successfully.',
+    ],
+    'role' => [
+        'created' => 'Role created successfully.',
+        'updated' => 'Role updated successfully.',
+        'deleted' => 'Role deleted successfully.',
+    ],
+    'room' => [
+        'created' => 'Room created successfully.',
+        'updated' => 'Room updated successfully.',
+        'deleted' => 'Room deleted successfully.',
+        'bulk_created' => 'Created :count rooms successfully.',
+    ],
+    'invoice' => [
+        'created' => 'Invoice created successfully.',
+        'updated' => 'Invoice updated successfully.',
+        'deleted' => 'Invoice deleted successfully.',
+        'marked_paid' => 'Invoice marked as paid.',
+        'mark_paid_only_sent_overdue' => 'Only sent or overdue invoices can be marked as paid.',
+        'bulk_created' => 'Created :count invoices successfully.',
+        'reminders_sent' => 'Sent reminders: :count',
+    ],
+];
+

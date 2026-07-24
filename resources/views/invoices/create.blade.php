@@ -1,131 +1,357 @@
-<!DOCTYPE html>
-<html lang="th">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>เพิ่มใบแจ้งหนี้ใหม่</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI'; background: #f5f5f5; padding: 20px; }
-        .container { max-width: 800px; margin: 0 auto; background: white; padding: 40px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        h1 { margin-bottom: 30px; color: #333; }
-        .form-group { margin-bottom: 20px; }
-        label { display: block; margin-bottom: 8px; font-weight: 600; color: #555; }
-        input, textarea, select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-family: 'Segoe UI'; font-size: 14px; }
-        input:focus, textarea:focus, select:focus { outline: none; border-color: #667eea; box-shadow: 0 0 5px rgba(102, 126, 234, 0.3); }
-        textarea { resize: vertical; min-height: 100px; }
-        .btn-group { display: flex; gap: 10px; margin-top: 30px; }
-        .btn { padding: 12px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; text-decoration: none; display: inline-block; }
-        .btn-submit { background: #667eea; color: white; }
-        .btn-submit:hover { background: #764ba2; }
-        .btn-cancel { background: #6c757d; color: white; }
-        .btn-cancel:hover { background: #5a6268; }
-        .error-message { color: #dc3545; font-size: 12px; margin-top: 5px; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>🧾 เพิ่มใบแจ้งหนี้ใหม่</h1>
-        
-        @if ($errors->any())
-            <div style="background: #f8d7da; color: #721c24; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
-                @foreach ($errors->all() as $error)
-                    <div>{{ $error }}</div>
-                @endforeach
-            </div>
-        @endif
+@extends('layouts.app')
 
-        <form method="POST" action="{{ route('invoices.store') }}">
-            @csrf
+@section('page-title', 'เพิ่มใบแจ้งหนี้ใหม่')
 
-            <div class="form-group">
-                <label for="booking_id">การจอง *</label>
-                <select id="booking_id" name="booking_id" required>
-                    <option value="">-- เลือกการจอง --</option>
-                    @foreach($bookings as $booking)
-                        <option value="{{ $booking->id }}" {{ old('booking_id') == $booking->id ? 'selected' : '' }}>
-                            การจอง #{{ $booking->id }} - {{ $booking->room->room_number ?? '-' }}
-                        </option>
-                    @endforeach
-                </select>
-                @error('booking_id')
-                    <div class="error-message">{{ $message }}</div>
-                @enderror
-            </div>
+@section('content')
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <!-- Header Section -->
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4 class="fw-bold text-dark mb-0">สร้างใบแจ้งหนี้ (Create Invoice)</h4>
+                    <a href="{{ route('invoices.index') }}" class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-arrow-left"></i> กลับสู่หน้ารายการ
+                    </a>
+                </div>
 
-            <div class="form-group">
-                <label for="invoice_number">เลขที่ใบแจ้งหนี้ *</label>
-                <input type="text" id="invoice_number" name="invoice_number" value="{{ old('invoice_number') }}" required>
-                @error('invoice_number')
-                    <div class="error-message">{{ $message }}</div>
-                @enderror
-            </div>
+                {{-- ✅ METER SUMMARY CARD — แสดงเฉพาะเมื่อมาจาก meter reading --}}
+                @if (isset($meterData) && !empty($meterData))
+                    <div class="card border-0 mb-4 shadow-sm rounded-3"
+                        style="border-left: 4px solid #4a90d9 !important; border-left-width: 4px !important;">
+                        <div class="card-body p-4">
+                            <div class="d-flex align-items-center gap-2 mb-3">
+                                <span class="badge bg-primary rounded-pill fs-6 px-3 py-2">
+                                    <i class="bi bi-lightning-charge-fill me-1"></i> มิเตอร์น้ำ / ไฟ
+                                </span>
+                                <span class="text-muted small">
+                                    ห้อง {{ $meterData['room'] ?? '-' }}
+                                    @if (!empty($meterData['tenant']))
+                                        · {{ $meterData['tenant'] }}
+                                    @endif
+                                    @if (!empty($meterData['period']))
+                                        · ประจำเดือน {{ $meterData['period'] }}
+                                    @endif
+                                </span>
+                            </div>
 
-            <div class="form-group">
-                <label for="amount">จำนวนเงิน *</label>
-                <input type="number" id="amount" name="amount" value="{{ old('amount') }}" step="0.01" required>
-                @error('amount')
-                    <div class="error-message">{{ $message }}</div>
-                @enderror
-            </div>
+                            <div class="row g-3">
+                                {{-- ค่าไฟ --}}
+                                @if (isset($meterData['electric']))
+                                    @php $e = $meterData['electric']; @endphp
+                                    <div class="col-md-6">
+                                        <div class="rounded-3 p-3 h-100"
+                                            style="background: #fffbeb; border: 1px solid #fde68a;">
+                                            <div class="d-flex align-items-center gap-2 mb-2">
+                                                <span style="font-size:1.4rem;">⚡</span>
+                                                <span class="fw-semibold text-warning-emphasis">ค่าไฟฟ้า</span>
+                                                <span
+                                                    class="badge bg-warning text-dark ms-auto">{{ $e['meter_number'] }}</span>
+                                            </div>
+                                            <div class="row g-2 text-sm">
+                                                <div class="col-6">
+                                                    <div class="text-muted small">เลขมิเตอร์ก่อนหน้า</div>
+                                                    <div class="fw-semibold">
+                                                        {{ $e['previous_value'] !== null ? number_format($e['previous_value'], 2) : '-' }}
+                                                    </div>
+                                                </div>
+                                                <div class="col-6">
+                                                    <div class="text-muted small">เลขมิเตอร์ปัจจุบัน</div>
+                                                    <div class="fw-semibold">{{ number_format($e['current_value'], 2) }}
+                                                    </div>
+                                                </div>
+                                                <div class="col-6">
+                                                    <div class="text-muted small">จำนวนหน่วย</div>
+                                                    <div class="fw-semibold">{{ number_format($e['usage'], 2) }} หน่วย</div>
+                                                </div>
+                                                <div class="col-6">
+                                                    <div class="text-muted small">อัตรา/หน่วย</div>
+                                                    <div class="fw-semibold">฿{{ number_format($e['rate'], 2) }}</div>
+                                                </div>
+                                            </div>
+                                            <hr class="my-2">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <span class="text-muted small">รวมค่าไฟ</span>
+                                                <span
+                                                    class="fw-bold text-warning-emphasis fs-5">฿{{ number_format($e['cost'], 2) }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endif
 
-            <div class="form-group">
-                <label for="tax">ภาษี *</label>
-                <input type="number" id="tax" name="tax" value="{{ old('tax') }}" step="0.01" required>
-                @error('tax')
-                    <div class="error-message">{{ $message }}</div>
-                @enderror
-            </div>
+                                {{-- ค่าน้ำ --}}
+                                @if (isset($meterData['water']))
+                                    @php $w = $meterData['water']; @endphp
+                                    <div class="col-md-6">
+                                        <div class="rounded-3 p-3 h-100"
+                                            style="background: #eff6ff; border: 1px solid #bfdbfe;">
+                                            <div class="d-flex align-items-center gap-2 mb-2">
+                                                <span style="font-size:1.4rem;">💧</span>
+                                                <span class="fw-semibold text-primary">ค่าน้ำประปา</span>
+                                                <span class="badge bg-primary ms-auto">{{ $w['meter_number'] }}</span>
+                                            </div>
+                                            <div class="row g-2 text-sm">
+                                                <div class="col-6">
+                                                    <div class="text-muted small">เลขมิเตอร์ก่อนหน้า</div>
+                                                    <div class="fw-semibold">
+                                                        {{ $w['previous_value'] !== null ? number_format($w['previous_value'], 2) : '-' }}
+                                                    </div>
+                                                </div>
+                                                <div class="col-6">
+                                                    <div class="text-muted small">เลขมิเตอร์ปัจจุบัน</div>
+                                                    <div class="fw-semibold">{{ number_format($w['current_value'], 2) }}
+                                                    </div>
+                                                </div>
+                                                <div class="col-6">
+                                                    <div class="text-muted small">จำนวนหน่วย</div>
+                                                    <div class="fw-semibold">{{ number_format($w['usage'], 2) }} หน่วย
+                                                    </div>
+                                                </div>
+                                                <div class="col-6">
+                                                    <div class="text-muted small">อัตรา/หน่วย</div>
+                                                    <div class="fw-semibold">฿{{ number_format($w['rate'], 2) }}</div>
+                                                </div>
+                                            </div>
+                                            <hr class="my-2">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <span class="text-muted small">รวมค่าน้ำ</span>
+                                                <span
+                                                    class="fw-bold text-primary fs-5">฿{{ number_format($w['cost'], 2) }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endif
+                            </div>
 
-            <div class="form-group">
-                <label for="total">ยอดรวม *</label>
-                <input type="number" id="total" name="total" value="{{ old('total') }}" step="0.01" required>
-                @error('total')
-                    <div class="error-message">{{ $message }}</div>
-                @enderror
-            </div>
+                            {{-- สรุปยอดรวมจากมิเตอร์ --}}
+                            @php
+                                $meterTotal =
+                                    ($meterData['electric']['cost'] ?? 0) + ($meterData['water']['cost'] ?? 0);
+                            @endphp
+                            <div class="mt-3 p-3 rounded-3 d-flex justify-content-between align-items-center"
+                                style="background: #f0f9ff; border: 1px solid #bae6fd;">
+                                <span class="fw-semibold text-primary">
+                                    <i class="bi bi-calculator me-1"></i>
+                                    รวมค่าน้ำ + ค่าไฟ (ดึงอัตโนมัติจากมิเตอร์)
+                                </span>
+                                <span class="fw-bold fs-4 text-primary">฿{{ number_format($meterTotal, 2) }}</span>
+                            </div>
 
-            <div class="form-group">
-                <label for="issue_date">วันที่ออกใบแจ้งหนี้ *</label>
-                <input type="date" id="issue_date" name="issue_date" value="{{ old('issue_date') }}" required>
-                @error('issue_date')
-                    <div class="error-message">{{ $message }}</div>
-                @enderror
-            </div>
+                            <div class="mt-2 text-muted small">
+                                <i class="bi bi-info-circle me-1"></i>
+                                ยอดข้างต้นถูกกรอกลงในช่อง "จำนวนเงินก่อนภาษี" โดยอัตโนมัติ
+                                — สามารถแก้ไขได้ก่อนบันทึก
+                            </div>
+                        </div>
+                    </div>
+                @endif
 
-            <div class="form-group">
-                <label for="due_date">วันที่ครบกำหนด *</label>
-                <input type="date" id="due_date" name="due_date" value="{{ old('due_date') }}" required>
-                @error('due_date')
-                    <div class="error-message">{{ $message }}</div>
-                @enderror
-            </div>
+                <div class="card border-0 shadow-sm rounded-3">
+                    <div class="card-body p-4 p-md-5">
+                        <form action="{{ route('invoices.store') }}" method="POST" id="invoiceForm">
+                            @csrf
 
-            <div class="form-group">
-                <label for="status">สถานะ *</label>
-                <select id="status" name="status" required>
-                    <option value="">-- เลือกสถานะ --</option>
-                    <option value="draft" {{ old('status') === 'draft' ? 'selected' : '' }}>ร่าง</option>
-                    <option value="sent" {{ old('status') === 'sent' ? 'selected' : '' }}>ส่งแล้ว</option>
-                    <option value="paid" {{ old('status') === 'paid' ? 'selected' : '' }}>ชำระแล้ว</option>
-                    <option value="overdue" {{ old('status') === 'overdue' ? 'selected' : '' }}>เกินกำหนด</option>
-                    <option value="cancelled" {{ old('status') === 'cancelled' ? 'selected' : '' }}>ยกเลิก</option>
-                </select>
-                @error('status')
-                    <div class="error-message">{{ $message }}</div>
-                @enderror
-            </div>
+                            {{-- ✅ hidden field: ถ้ามาจาก meter ให้ store() update draft แทน create ใหม่ --}}
+                            @if (isset($draftInvoice))
+                                <input type="hidden" name="draft_invoice_id" value="{{ $draftInvoice->id }}">
+                            @endif
 
-            <div class="form-group">
-                <label for="notes">หมายเหตุ</label>
-                <textarea id="notes" name="notes">{{ old('notes') }}</textarea>
-            </div>
+                            <!-- ส่วนที่ 1: ข้อมูลอ้างอิง -->
+                            <h6 class="text-uppercase text-muted fw-bold mb-3 border-bottom pb-2">
+                                <i class="bi bi-info-circle me-1"></i> ข้อมูลอ้างอิง (Reference Information)
+                            </h6>
+                            <div class="row g-4 mb-4">
+                                <div class="col-md-6">
+                                    <label for="booking_id" class="form-label fw-semibold required">รายการจองอ้างอิง</label>
+                                    <select id="booking_id" name="booking_id"
+                                        class="form-select @error('booking_id') is-invalid @enderror" required
+                                        {{ isset($draftInvoice) ? 'disabled' : '' }}>
+                                        <option value="">-- ระบุรายการจอง --</option>
+                                        @foreach ($bookings as $booking)
+                                            <option value="{{ $booking->id }}"
+                                                data-amount="{{ number_format($booking->total_price ?? 0, 2, '.', '') }}"
+                                                {{ (old('booking_id') ?: $draftInvoice->booking_id ?? null) == $booking->id ? 'selected' : '' }}>
+                                                ห้อง {{ $booking->room->room_number ?? '-' }} · ผู้เช่า:
+                                                {{ trim(($booking->guest->first_name ?? '') . ' ' . ($booking->guest->last_name ?? '')) ?: 'ไม่ระบุชื่อ' }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    {{-- ถ้า disabled ต้องส่ง hidden field แทน --}}
+                                    @if (isset($draftInvoice))
+                                        <input type="hidden" name="booking_id" value="{{ $draftInvoice->booking_id }}">
+                                    @endif
+                                    @error('booking_id')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="invoice_number"
+                                        class="form-label fw-semibold required">เลขที่ใบแจ้งหนี้</label>
+                                    <input type="text" id="invoice_number" name="invoice_number"
+                                        class="form-control @error('invoice_number') is-invalid @enderror"
+                                        value="{{ old('invoice_number', $draftInvoice->invoice_number ?? ($invoiceNumber ?? '')) }}"
+                                        placeholder="INV-YYYYMM-XXXX" required>
+                                    @error('invoice_number')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
 
-            <div class="btn-group">
-                <button type="submit" class="btn btn-submit">💾 บันทึก</button>
-                <a href="{{ route('invoices.index') }}" class="btn btn-cancel">❌ ยกเลิก</a>
+                            <!-- ส่วนที่ 2: รายละเอียดจำนวนเงิน -->
+                            <h6 class="text-uppercase text-muted fw-bold mb-3 border-bottom pb-2">
+                                <i class="bi bi-currency-dollar me-1"></i> รายละเอียดทางการเงิน (Financial Details)
+                            </h6>
+                            <div class="row g-4 mb-4 bg-light p-3 rounded border border-light-subtle mx-0">
+                                <div class="col-md-4">
+                                    <label for="amount" class="form-label fw-semibold required">จำนวนเงินก่อนภาษี
+                                        (THB)</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-white">฿</span>
+                                        <input id="amount" name="amount" type="number" min="0"
+                                            step="0.01"
+                                            class="form-control text-end @error('amount') is-invalid @enderror"
+                                            value="{{ old('amount', isset($meterData) ? ($meterData['electric']['cost'] ?? 0) + ($meterData['water']['cost'] ?? 0) : $draftInvoice->amount ?? '') }}"
+                                            placeholder="0.00" required>
+                                        @error('amount')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                    @if (isset($meterData) && !empty($meterData))
+                                        <div class="form-text text-primary">
+                                            <i class="bi bi-lightning-fill"></i> คำนวณจากค่าน้ำ+ค่าไฟอัตโนมัติ
+                                        </div>
+                                    @endif
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="tax" class="form-label fw-semibold required">ภาษีมูลค่าเพิ่ม
+                                        (THB)</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-white">฿</span>
+                                        <input id="tax" name="tax" type="number" min="0"
+                                            step="0.01"
+                                            class="form-control text-end @error('tax') is-invalid @enderror"
+                                            value="{{ old('tax', $draftInvoice->tax ?? '0.00') }}" placeholder="0.00"
+                                            required>
+                                        @error('tax')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="total"
+                                        class="form-label fw-semibold required text-primary">ยอดชำระสุทธิ (THB)</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-primary text-white border-primary">฿</span>
+                                        <input id="total" name="total" type="number" min="0"
+                                            step="0.01"
+                                            class="form-control text-end fw-bold bg-white @error('total') is-invalid @enderror"
+                                            value="{{ old('total', $draftInvoice->total ?? '') }}" placeholder="0.00"
+                                            required readonly>
+                                        @error('total')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- ส่วนที่ 3: กำหนดเวลาและสถานะ -->
+                            <h6 class="text-uppercase text-muted fw-bold mb-3 border-bottom pb-2">
+                                <i class="bi bi-calendar-check me-1"></i> กำหนดเวลาและเงื่อนไข (Schedule & Terms)
+                            </h6>
+                            <div class="row g-4 mb-4">
+                                <div class="col-md-4">
+                                    <label for="issue_date"
+                                        class="form-label fw-semibold required">วันที่ออกเอกสาร</label>
+                                    <input id="issue_date" name="issue_date" type="date"
+                                        class="form-control @error('issue_date') is-invalid @enderror"
+                                        value="{{ old('issue_date', isset($draftInvoice->issue_date) ? \Carbon\Carbon::parse($draftInvoice->issue_date)->format('Y-m-d') : '') }}"
+                                        required>
+                                    @error('issue_date')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="due_date" class="form-label fw-semibold required">วันครบกำหนดชำระ</label>
+                                    <input id="due_date" name="due_date" type="date"
+                                        class="form-control @error('due_date') is-invalid @enderror"
+                                        value="{{ old('due_date', isset($draftInvoice->due_date) ? \Carbon\Carbon::parse($draftInvoice->due_date)->format('Y-m-d') : '') }}"
+                                        required>
+                                    @error('due_date')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="status" class="form-label fw-semibold required">สถานะเอกสาร</label>
+                                    <select id="status" name="status"
+                                        class="form-select @error('status') is-invalid @enderror" required>
+                                        @php $currentStatus = old('status', $draftInvoice->status ?? 'draft'); @endphp
+                                        <option value="draft" {{ $currentStatus === 'draft' ? 'selected' : '' }}>ร่าง
+                                            (Draft)</option>
+                                        <option value="sent" {{ $currentStatus === 'sent' ? 'selected' : '' }}>
+                                            ส่งมอบแล้ว (Sent)</option>
+                                        <option value="paid" {{ $currentStatus === 'paid' ? 'selected' : '' }}>
+                                            ชำระเงินเรียบร้อย (Paid)</option>
+                                        <option value="overdue" {{ $currentStatus === 'overdue' ? 'selected' : '' }}>
+                                            เกินกำหนด (Overdue)</option>
+                                        <option value="cancelled" {{ $currentStatus === 'cancelled' ? 'selected' : '' }}>
+                                            ยกเลิก (Cancelled)</option>
+                                    </select>
+                                    @error('status')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+
+                            <!-- ส่วนที่ 4: หมายเหตุเพิ่มเติม -->
+                            <div class="row mb-5">
+                                <div class="col-12">
+                                    <label for="notes" class="form-label fw-semibold">หมายเหตุเพิ่มเติม
+                                        (Remarks)</label>
+                                    <textarea id="notes" name="notes" class="form-control bg-light" rows="3"
+                                        placeholder="ระบุเงื่อนไขการชำระเงิน หรือรายละเอียดเพิ่มเติมสำหรับเอกสารฉบับนี้...">{{ old('notes', $draftInvoice->notes ?? '') }}</textarea>
+                                </div>
+                            </div>
+
+                            <!-- Button Actions -->
+                            <div class="d-flex justify-content-end gap-2 pt-3 border-top">
+                                <button type="button" class="btn btn-light border px-4"
+                                    onclick="window.history.back();">
+                                    ยกเลิก
+                                </button>
+                                <button type="submit" class="btn btn-primary px-5">
+                                    <i class="bi bi-save me-1"></i>
+                                    {{ isset($draftInvoice) ? 'ยืนยันใบแจ้งหนี้' : 'บันทึกข้อมูล' }}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
             </div>
-        </form>
+        </div>
     </div>
-</body>
-</html>
+
+    @include('invoices._total-calculator')
+
+    {{-- ✅ ถ้ามาจาก meter: คำนวณ total อัตโนมัติตอน load --}}
+    @if (isset($meterData) && !empty($meterData))
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                // trigger การคำนวณ total ทันทีที่หน้าโหลด
+                const amountInput = document.getElementById('amount');
+                const taxInput = document.getElementById('tax');
+                const totalInput = document.getElementById('total');
+
+                function recalcTotal() {
+                    const amount = parseFloat(amountInput.value) || 0;
+                    const tax = parseFloat(taxInput.value) || 0;
+                    totalInput.value = (amount + tax).toFixed(2);
+                }
+
+                amountInput.addEventListener('input', recalcTotal);
+                taxInput.addEventListener('input', recalcTotal);
+
+                // คำนวณครั้งแรกเมื่อ load
+                recalcTotal();
+            });
+        </script>
+    @endif
+@endsection
