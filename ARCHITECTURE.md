@@ -7,6 +7,7 @@
 ## 1. Tech Stack
 
 | ส่วน | เทคโนโลยี | เวอร์ชัน |
+
 |---|---|---|
 | Backend Framework | Laravel | 12.x |
 | ภาษา | PHP | ^8.2 |
@@ -22,10 +23,8 @@
 
 ระบบใช้ **MVC + Service Layer + Policy-based Authorization**:
 
-```
 Route → Middleware (auth / role check) → Controller → FormRequest (validation)
       → Service (business logic) → Model (Eloquent) → Blade View
-```
 
 ### การแบ่งชั้นความรับผิดชอบ
 
@@ -48,6 +47,7 @@ Route → Middleware (auth / role check) → Controller → FormRequest (validat
 ระบบมี Role 2 ระดับ (`app/Models/Role.php`):
 
 | Role | Constant | คำอธิบาย |
+
 |---|---|---|
 | Admin | `Role::ADMIN` | ผู้ดูแลระบบสูงสุด เข้าถึงทุกส่วน |
 | Staff | `Role::STAFF` | พนักงาน จัดการงานประจำวันทั้งหมด รวมถึง Invoice, Maintenance, Reports, Contracts และสิทธิ์ที่เคยเป็นของ Manager เดิม |
@@ -62,6 +62,7 @@ Policy ตรวจสอบสิทธิ์แบบละเอียดต�
 ## 4. โมดูลหลักของระบบ
 
 | โมดูล | Controller | Model | ความสัมพันธ์หลัก |
+
 |---|---|---|---|
 | ห้องพัก | RoomController | Room | 1 ห้อง → หลาย Booking, Facility, Meter, Maintenance |
 | ผู้เช่า | GuestController | Guest | 1 ผู้เช่า → หลาย Booking, Contract |
@@ -80,26 +81,18 @@ Policy ตรวจสอบสิทธิ์แบบละเอียดต�
 
 ### Meter → Invoice (อัตโนมัติ)
 
-```
 บันทึกมิเตอร์ (HTTP POST) → MeterBillingService::recordMonthlyAndCreateInvoice()
   → สร้าง draft Invoice (invoice_type = utility) → redirect ไปหน้ายืนยัน
   → พนักงานกดยืนยัน → Invoice เปลี่ยนสถานะเป็น sent
-```
 
 ### Contract → Invoice (ด้วยมือ — ตัดสินใจแล้วว่าไม่ทำอัตโนมัติ)
 
-```
 สร้างสัญญา (Contract) → พนักงานสร้างใบแจ้งหนี้ค่าเช่าเองทุกเดือนผ่านหน้า Invoice
 (ไม่มีการเชื่อมต่ออัตโนมัติระหว่างสองโมดูลนี้โดยตั้งใจ)
-```
 
 ### Booking → Invoice (สร้างด้วยมือหรือ bulk-create)
 
-```
 BookingController → InvoiceController::bulkCreateFromBookings() หรือสร้างทีละใบ
-```
-
----
 
 ## 6. การจัดการ Cache
 
