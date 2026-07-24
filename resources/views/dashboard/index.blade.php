@@ -346,7 +346,6 @@
 @endsection
 
 @push('scripts')
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         const monthlyData = @json($monthlyBookings ?? []);
         const labels = monthlyData.map(d => d.label);

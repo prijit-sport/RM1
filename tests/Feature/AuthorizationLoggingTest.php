@@ -37,7 +37,7 @@ class AuthorizationLoggingTest extends TestCase
     public function test_admin_only_denied_when_not_admin(): void
     {
         // user with a non-admin role
-        $role = Role::firstOrCreate(['name' => 'User'], ['description' => 'Regular user']);
+        $role = Role::firstOrCreate(['name' => 'Staff'], ['description' => 'Staff user']);
         $user = User::factory()->create(['role_id' => $role->id]);
 
         Event::fake();
@@ -51,7 +51,7 @@ class AuthorizationLoggingTest extends TestCase
                 && $event->message === 'Authorization denied'
                 && $event->context['route'] === 'roles.index'
                 && $event->context['user_id'] === $user->id
-                && $event->context['role'] === 'User'
+                && $event->context['role'] === 'Staff'
                 && $event->context['reason'] === 'not_admin';
         });
     }

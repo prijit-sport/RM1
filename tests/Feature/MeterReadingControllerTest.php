@@ -35,7 +35,7 @@ class MeterReadingControllerTest extends TestCase
 
     public function test_index_returns_forbidden_for_non_admin(): void
     {
-        $this->actingAs($this->createUserWithRole('User'));
+        $this->actingAs($this->createUserWithRole('Staff'));
 
         $room = $this->createRoomForMeters('M202', 'E', 2);
         $meter = $this->createMeterForRoom($room, 'electric');

@@ -168,7 +168,7 @@ class RoomFacilityRelationshipTest extends TestCase
 
     public function test_non_admin_cannot_update_facility(): void
     {
-        $user = $this->createUserWithRole('User');
+        $user = User::factory()->create(['role_id' => null]);
         $this->actingAs($user);
 
         $room = Room::create([

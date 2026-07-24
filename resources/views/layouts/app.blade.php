@@ -25,6 +25,8 @@
             href="{{ asset('css/romar-theme.css?v=' . filemtime(public_path('css/romar-theme.css'))) }}">
     @endif
 
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+
     @stack('styles')
     <style>
         :root {

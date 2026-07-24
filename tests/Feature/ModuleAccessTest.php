@@ -13,7 +13,7 @@ class ModuleAccessTest extends TestCase
 
     public function test_manager_can_access_manager_level_modules(): void
     {
-        $this->actingAs($this->createUserWithRole('Manager'));
+        $this->actingAs($this->createUserWithRole('Staff'));
 
         $this->get(route('contracts.index'))->assertOk();
         $this->get(route('invoices.index'))->assertOk();
@@ -22,19 +22,19 @@ class ModuleAccessTest extends TestCase
 
     public function test_regular_user_cannot_access_manager_level_modules(): void
     {
-        $this->actingAs($this->createUserWithRole('User'));
+        $this->actingAs(User::factory()->create(['role_id' => null]));
 
         // Test that ManagerOrAdmin middleware blocks regular users
         // We verify that regular users do NOT have Manager or Admin role
         $user = auth()->user();
         
-        // Regular users should NOT have Manager or Admin role
-        $this->assertFalse($user->hasRole('Manager'));
+        // Regular users should NOT have Staff or Admin role
+        $this->assertFalse($user->hasRole('Staff'));
         $this->assertFalse($user->hasRole('Admin'));
         
         // ManagerOrAdmin middleware should deny access for regular users
         // This test verifies the role logic works correctly
-        $this->assertTrue($user->hasRole('User') || $user->role === null);
+        $this->assertTrue($user->role === null);
     }
 
     private function createUserWithRole(string $roleName): User
@@ -44,3 +44,4 @@ class ModuleAccessTest extends TestCase
         return User::factory()->create(['role_id' => $role->id]);
     }
 }
+

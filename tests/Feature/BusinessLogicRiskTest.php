@@ -29,7 +29,7 @@ class BusinessLogicRiskTest extends TestCase
 
     public function test_marking_invoice_as_paid_updates_payment_details(): void
     {
-        $user = $this->createUserWithRole('Manager');
+        $user = $this->createUserWithRole('Staff');
         $this->actingAs($user);
 
 
@@ -88,7 +88,7 @@ class BusinessLogicRiskTest extends TestCase
 
     public function test_record_monthly_and_create_invoice_stores_tax_separately_from_total(): void
     {
-        $user = $this->createUserWithRole('Manager');
+        $user = $this->createUserWithRole('Staff');
         $this->actingAs($user);
 
         $guest = Guest::create([

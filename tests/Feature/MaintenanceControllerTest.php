@@ -16,7 +16,7 @@ class MaintenanceControllerTest extends TestCase
 
     public function test_index_returns_ok_for_authenticated_manager(): void
     {
-        $this->actingAs($this->createUserWithRole('Manager'));
+        $this->actingAs($this->createUserWithRole('Staff'));
 
         $room = $this->createRoom('M102');
         $maintenance = $this->createMaintenance($room);
@@ -45,7 +45,7 @@ class MaintenanceControllerTest extends TestCase
 
     public function test_store_creates_maintenance_with_valid_data(): void
     {
-        $user = $this->createUserWithRole('Manager');
+        $user = $this->createUserWithRole('Staff');
         $room = $this->createRoom('M101');
 
         $response = $this->actingAs($user)
@@ -66,7 +66,7 @@ class MaintenanceControllerTest extends TestCase
 
     public function test_show_displays_existing_maintenance_details(): void
     {
-        $this->actingAs($this->createUserWithRole('Manager'));
+        $this->actingAs($this->createUserWithRole('Staff'));
 
         $room = $this->createRoom('M103');
         $maintenance = $this->createMaintenance($room);
@@ -80,7 +80,7 @@ class MaintenanceControllerTest extends TestCase
 
     public function test_unauthorized_user_gets_forbidden(): void
     {
-        $this->actingAs($this->createUserWithRole('User'));
+        $this->actingAs(User::factory()->create(['role_id' => null]));
 
         $response = $this->get(route('maintenances.index'));
 
@@ -89,7 +89,7 @@ class MaintenanceControllerTest extends TestCase
 
     public function test_store_rejects_payload_missing_issue_type_and_reported_date(): void
     {
-        $user = $this->createUserWithRole('Manager');
+        $user = $this->createUserWithRole('Staff');
         $room = $this->createRoom('M104');
 
         $response = $this->actingAs($user)
@@ -134,3 +134,4 @@ class MaintenanceControllerTest extends TestCase
         return User::factory()->create(['role_id' => $role->id]);
     }
 }
+

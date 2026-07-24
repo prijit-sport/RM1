@@ -17,7 +17,7 @@ class BookingFlowTest extends TestCase
 
     public function test_store_rejects_overlapping_booking_for_same_room(): void
     {
-        $this->actingAs($this->createUserWithRole('User'));
+        $this->actingAs(User::factory()->create(['role_id' => null]));
         $room = $this->createRoom('A101');
         $guestOne = $this->createGuest('John', 'Doe', 'john@example.com', 'ID-1001');
         $guestTwo = $this->createGuest('Jane', 'Smith', 'jane@example.com', 'ID-1002');
@@ -47,7 +47,7 @@ class BookingFlowTest extends TestCase
 
     public function test_confirm_changes_status_and_marks_room_occupied(): void
     {
-        $this->actingAs($this->createUserWithRole('Manager'));
+        $this->actingAs($this->createUserWithRole('Staff'));
         $room = $this->createRoom('A102');
         $guest = $this->createGuest('Mark', 'Stone', 'mark@example.com', 'ID-2001');
 
@@ -69,7 +69,7 @@ class BookingFlowTest extends TestCase
 
     public function test_confirm_is_rejected_when_status_is_not_pending(): void
     {
-        $this->actingAs($this->createUserWithRole('Manager'));
+        $this->actingAs($this->createUserWithRole('Staff'));
         $room = $this->createRoom('A103');
         $guest = $this->createGuest('Lina', 'Brown', 'lina@example.com', 'ID-3001');
 
@@ -89,7 +89,7 @@ class BookingFlowTest extends TestCase
 
     public function test_cancel_changes_status_and_releases_room_when_no_active_booking(): void
     {
-        $this->actingAs($this->createUserWithRole('Manager'));
+        $this->actingAs($this->createUserWithRole('Staff'));
         $room = $this->createRoom('A104', 'occupied');
         $guest = $this->createGuest('Paul', 'Green', 'paul@example.com', 'ID-4001');
 
@@ -111,7 +111,7 @@ class BookingFlowTest extends TestCase
 
     public function test_index_applies_status_and_search_filters(): void
     {
-        $this->actingAs($this->createUserWithRole('User'));
+        $this->actingAs(User::factory()->create(['role_id' => null]));
         $roomOne = $this->createRoom('B201');
         $roomTwo = $this->createRoom('B202');
         $guestOne = $this->createGuest('Alice', 'Target', 'alice@example.com', 'ID-5001');
@@ -145,7 +145,7 @@ class BookingFlowTest extends TestCase
 
     public function test_update_when_changing_room_syncs_old_and_new_room_statuses(): void
     {
-        $this->actingAs($this->createUserWithRole('User'));
+        $this->actingAs(User::factory()->create(['role_id' => null]));
         $oldRoom = $this->createRoom('C301', 'occupied');
         $newRoom = $this->createRoom('C302', 'available');
         $guest = $this->createGuest('Nina', 'Blue', 'nina@example.com', 'ID-6001');
@@ -179,7 +179,7 @@ class BookingFlowTest extends TestCase
 
     public function test_update_allows_edge_case_when_checkout_equals_other_checkin(): void
     {
-        $this->actingAs($this->createUserWithRole('User'));
+        $this->actingAs(User::factory()->create(['role_id' => null]));
         $room = $this->createRoom('C303');
         $guestOne = $this->createGuest('Tom', 'Edge', 'tom@example.com', 'ID-7001');
         $guestTwo = $this->createGuest('Sara', 'Edge', 'sara@example.com', 'ID-7002');
@@ -219,7 +219,7 @@ class BookingFlowTest extends TestCase
 
     public function test_update_rejects_invalid_status_transition(): void
     {
-        $this->actingAs($this->createUserWithRole('User'));
+        $this->actingAs(User::factory()->create(['role_id' => null]));
         $room = $this->createRoom('C304');
         $guest = $this->createGuest('Neo', 'Flow', 'neo@example.com', 'ID-8001');
 
@@ -247,7 +247,7 @@ class BookingFlowTest extends TestCase
 
     public function test_confirm_requires_manager_or_admin_role(): void
     {
-        $this->actingAs($this->createUserWithRole('User'));
+        $this->actingAs(User::factory()->create(['role_id' => null]));
         $room = $this->createRoom('C305');
         $guest = $this->createGuest('Jane', 'NoRole', 'norole@example.com', 'ID-8002');
 

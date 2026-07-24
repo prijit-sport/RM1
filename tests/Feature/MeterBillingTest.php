@@ -21,7 +21,7 @@ class MeterBillingTest extends TestCase
 
     public function test_record_monthly_creates_meter_reading(): void
     {
-        $this->actingAs($this->createUserWithRole('Manager'));
+        $this->actingAs($this->createUserWithRole('Staff'));
 
         $room = Room::create([
             'room_number' => 'A101',
@@ -97,7 +97,7 @@ class MeterBillingTest extends TestCase
 
     public function test_record_monthly_updates_existing_invoice(): void
     {
-        $this->actingAs($this->createUserWithRole('Manager'));
+        $this->actingAs($this->createUserWithRole('Staff'));
 
         $room = Room::create([
             'room_number' => 'A202',
@@ -171,7 +171,7 @@ class MeterBillingTest extends TestCase
 
     public function test_record_monthly_fails_without_active_booking(): void
     {
-        $this->actingAs($this->createUserWithRole('Manager'));
+        $this->actingAs($this->createUserWithRole('Staff'));
 
         $room = Room::create([
             'room_number' => 'A303',

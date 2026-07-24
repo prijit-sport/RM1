@@ -19,7 +19,7 @@ class ApiSmokeTest extends TestCase
 
     public function test_login_route_returns_200_for_valid_credentials(): void
     {
-        $user = $this->createUserWithRole('User');
+        $user = User::factory()->create(['role_id' => null]);
 
         // Ensure the user has a known password.
         // If factory password hashing differs, adjust here.

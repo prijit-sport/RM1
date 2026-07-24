@@ -14,7 +14,7 @@ class GuestControllerTest extends TestCase
  
     public function test_index_returns_view_for_authenticated_user(): void
     {
-        $this->actingAs($this->createUserWithRole('User'));
+        $this->actingAs(User::factory()->create(['role_id' => null]));
  
         Guest::create([
             'first_name' => 'Alice',
@@ -78,7 +78,7 @@ class GuestControllerTest extends TestCase
  
     public function test_show_displays_guest_details_for_existing_guest(): void
     {
-        $this->actingAs($this->createUserWithRole('User'));
+        $this->actingAs(User::factory()->create(['role_id' => null]));
  
         $guest = $this->createGuest();
  

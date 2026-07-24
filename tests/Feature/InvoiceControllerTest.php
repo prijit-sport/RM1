@@ -18,7 +18,7 @@ class InvoiceControllerTest extends TestCase
 
     public function test_index_returns_ok_for_authenticated_user(): void
     {
-        $this->actingAs($this->createUserWithRole('Manager'));
+        $this->actingAs($this->createUserWithRole('Staff'));
 
         $invoice = $this->createInvoice();
 
@@ -31,7 +31,7 @@ class InvoiceControllerTest extends TestCase
 
     public function test_show_displays_existing_invoice_details(): void
     {
-        $this->actingAs($this->createUserWithRole('Manager'));
+        $this->actingAs($this->createUserWithRole('Staff'));
 
         $invoice = $this->createInvoice();
 
@@ -81,7 +81,7 @@ class InvoiceControllerTest extends TestCase
 
     public function test_mark_as_paid_changes_invoice_status_to_paid(): void
     {
-        $this->actingAs($this->createUserWithRole('Manager'));
+        $this->actingAs($this->createUserWithRole('Staff'));
 
         $invoice = $this->createInvoice([
             'status' => 'sent',
@@ -100,7 +100,7 @@ class InvoiceControllerTest extends TestCase
 
     public function test_unauthorized_user_gets_forbidden(): void
     {
-        $user = $this->createUserWithRole('User');
+        $user = User::factory()->create(['role_id' => null]);
         $invoice = $this->createInvoice();
 
         $response = $this->actingAs($user)

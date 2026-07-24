@@ -31,7 +31,7 @@ class FacilityControllerTest extends TestCase
 
     public function test_index_returns_forbidden_for_non_admin(): void
     {
-        $this->actingAs($this->createUserWithRole('User'));
+        $this->actingAs($this->createUserWithRole('Staff'));
 
         $response = $this->get(route('facilities.index'));
         $response->assertStatus(403);

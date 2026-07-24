@@ -43,43 +43,38 @@ class BookingPolicy
     }
  
     /**
-     * Admin, Manager, Staff ลบจองได้
+     * Admin หรือ Staff ลบจองได้
      */
     public function delete(User $user, Booking $booking): bool
     {
         return $user->hasRole(\App\Models\Role::ADMIN)
-            || $user->hasRole(\App\Models\Role::MANAGER)
             || $user->hasRole(\App\Models\Role::STAFF);
     }
  
     /**
-     * ✅ confirm ต้องเป็น Admin, Manager หรือ Staff เท่านั้น
-     *    (test_confirm_requires_manager_or_admin_role ใช้ Manager → pass, User → 403)
+     * ✅ confirm ต้องเป็น Admin หรือ Staff เท่านั้น
      */
     public function confirm(User $user, Booking $booking): bool
     {
         return $user->hasRole(\App\Models\Role::ADMIN)
-            || $user->hasRole(\App\Models\Role::MANAGER)
             || $user->hasRole(\App\Models\Role::STAFF);
     }
  
     /**
-     * ✅ cancel ต้องเป็น Admin, Manager หรือ Staff เท่านั้น
+     * ✅ cancel ต้องเป็น Admin หรือ Staff เท่านั้น
      */
     public function cancel(User $user, Booking $booking): bool
     {
         return $user->hasRole(\App\Models\Role::ADMIN)
-            || $user->hasRole(\App\Models\Role::MANAGER)
             || $user->hasRole(\App\Models\Role::STAFF);
     }
  
     /**
-     * Admin, Manager, Staff export ได้
+     * Admin หรือ Staff export ได้
      */
     public function export(User $user): bool
     {
         return $user->hasRole(\App\Models\Role::ADMIN)
-            || $user->hasRole(\App\Models\Role::MANAGER)
             || $user->hasRole(\App\Models\Role::STAFF);
     }
 }

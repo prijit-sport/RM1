@@ -20,7 +20,7 @@ class ContractFlowTest extends TestCase
 
     public function test_create_contract_sets_room_to_occupied(): void
     {
-        $this->actingAs($this->createUserWithRole('Manager'));
+        $this->actingAs($this->createUserWithRole('Staff'));
 
         $room = $this->createRoom('R-101', 'available');
         $guest = $this->createGuest('John', 'Doe', 'john@example.com', 'ID-1001');
@@ -53,7 +53,7 @@ class ContractFlowTest extends TestCase
 
     public function test_terminate_contract_sets_room_to_available(): void
     {
-        $this->actingAs($this->createUserWithRole('Manager'));
+        $this->actingAs($this->createUserWithRole('Staff'));
 
         $room = $this->createRoom('R-102', 'occupied');
         $guest = $this->createGuest('Jane', 'Smith', 'jane@example.com', 'ID-1002');
@@ -88,7 +88,7 @@ class ContractFlowTest extends TestCase
 
     public function test_cannot_create_contract_for_occupied_room(): void
     {
-        $this->actingAs($this->createUserWithRole('Manager'));
+        $this->actingAs($this->createUserWithRole('Staff'));
 
         $room = $this->createRoom('R-103', 'occupied');
         $guest = $this->createGuest('Paul', 'Green', 'paul@example.com', 'ID-1003');
@@ -119,7 +119,7 @@ class ContractFlowTest extends TestCase
 
     public function test_contract_expiry_date_must_be_after_start_date(): void
     {
-        $this->actingAs($this->createUserWithRole('Manager'));
+        $this->actingAs($this->createUserWithRole('Staff'));
 
         $room = $this->createRoom('R-104', 'available');
         $guest = $this->createGuest('Neo', 'Flow', 'neo@example.com', 'ID-1004');

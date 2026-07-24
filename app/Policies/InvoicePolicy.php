@@ -39,7 +39,7 @@ class InvoicePolicy
      */
     public function update(User $user, Invoice $invoice): bool
     {
-        return $user->hasRole(Role::ADMIN) || $user->hasRole(Role::MANAGER);
+        return $user->hasRole(Role::ADMIN) || $user->hasRole(Role::STAFF);
     }
 
     /**
@@ -47,7 +47,7 @@ class InvoicePolicy
      */
     public function delete(User $user, Invoice $invoice): bool
     {
-        return $user->hasRole(Role::ADMIN) || $user->hasRole(Role::MANAGER);
+        return $user->hasRole(Role::ADMIN) || $user->hasRole(Role::STAFF);
     }
 
     /**
@@ -55,7 +55,7 @@ class InvoicePolicy
      */
     public function restore(User $user, Invoice $invoice): bool
     {
-        return $user->hasRole(Role::ADMIN) || $user->hasRole(Role::MANAGER);
+        return $user->hasRole(Role::ADMIN) || $user->hasRole(Role::STAFF);
     }
 
     /**
@@ -63,7 +63,7 @@ class InvoicePolicy
      */
     public function forceDelete(User $user, Invoice $invoice): bool
     {
-        return $user->hasRole(Role::ADMIN) || $user->hasRole(Role::MANAGER);
+        return $user->hasRole(Role::ADMIN) || $user->hasRole(Role::STAFF);
     }
 }
 

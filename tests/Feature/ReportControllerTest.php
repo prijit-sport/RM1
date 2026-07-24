@@ -16,7 +16,7 @@ class ReportControllerTest extends TestCase
 
     public function test_index_returns_ok_for_manager_or_admin(): void
     {
-        $this->actingAs($this->createUserWithRole('Manager'));
+        $this->actingAs($this->createUserWithRole('Staff'));
 
         $response = $this->get(route('reports.index'));
 
@@ -27,7 +27,7 @@ class ReportControllerTest extends TestCase
 
     public function test_index_returns_forbidden_for_non_manager_or_admin(): void
     {
-        $this->actingAs($this->createUserWithRole('User'));
+        $this->actingAs(User::factory()->create(['role_id' => null]));
 
         $response = $this->get(route('reports.index'));
 

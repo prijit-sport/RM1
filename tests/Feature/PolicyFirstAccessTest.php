@@ -14,7 +14,7 @@ class PolicyFirstAccessTest extends TestCase
 
     public function test_regular_user_is_denied_by_role_policy(): void
     {
-        $user = $this->createUserWithRole('User');
+        $user = User::factory()->create(['role_id' => null]);
 
         $this->assertTrue(Gate::forUser($user)->denies('viewAny', Role::class));
     }
@@ -28,7 +28,7 @@ class PolicyFirstAccessTest extends TestCase
 
     public function test_regular_user_cannot_access_roles_index_route(): void
     {
-        $user = $this->createUserWithRole('User');
+        $user = User::factory()->create(['role_id' => null]);
 
         $this->actingAs($user);
 
@@ -51,3 +51,4 @@ class PolicyFirstAccessTest extends TestCase
         return User::factory()->create(['role_id' => $role->id]);
     }
 }
+
