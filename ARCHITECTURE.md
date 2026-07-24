@@ -45,16 +45,16 @@ Route → Middleware (auth / role check) → Controller → FormRequest (validat
 
 ## 3. ระบบสิทธิ์ผู้ใช้งาน (Authorization)
 
-ระบบมี Role 4 ระดับ (`app/Models/Role.php`):
+ระบบมี Role 2 ระดับ (`app/Models/Role.php`):
 
 | Role | Constant | คำอธิบาย |
 |---|---|---|
 | Admin | `Role::ADMIN` | ผู้ดูแลระบบสูงสุด เข้าถึงทุกส่วน |
-| Manager | `Role::MANAGER` | ผู้จัดการ จัดการทรัพยากรส่วนใหญ่ได้ |
-| Staff | `Role::STAFF` | พนักงาน ทำงานประจำวัน (จอง, มิเตอร์, ซ่อมบำรุง) |
-| User | `Role::USER` | ผู้ใช้งานทั่วไป สิทธิ์จำกัด |
+| Staff | `Role::STAFF` | พนักงาน จัดการงานประจำวันทั้งหมด รวมถึง Invoice, Maintenance, Reports, Contracts และสิทธิ์ที่เคยเป็นของ Manager เดิม |
 
 Middleware ที่ใช้ตรวจสิทธิ์ (`routes/web.php`): `auth`, `manager_or_admin`, `admin_only`
+> **หมายเหตุ**: ชื่อ middleware `manager_or_admin` เป็นชื่อเดิมจากตอนที่ยังมี role Manager อยู่ แต่ปัจจุบัน middleware นี้ตรวจสอบสิทธิ์สำหรับ Admin และ Staff ทั้งคู่
+
 Policy ตรวจสอบสิทธิ์แบบละเอียดต่อ resource ผ่าน `$this->authorize()` ในทุก Controller
 
 ---
