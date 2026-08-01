@@ -54,6 +54,9 @@ jobs:
       - name: Build assets
         run: npm run build
 
+      - name: Check code style (Pint)
+        run: vendor/bin/pint --test
+
       - name: Run Laravel tests
         run: php artisan test
 
