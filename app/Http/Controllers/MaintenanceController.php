@@ -2,15 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreMaintenanceRequest;
+use App\Http\Requests\UpdateMaintenanceRequest;
 use App\Models\Facility;
 use App\Models\Maintenance;
 use App\Models\Room;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use App\Http\Requests\StoreMaintenanceRequest;
-use App\Http\Requests\UpdateMaintenanceRequest;
 use Illuminate\Support\Facades\Cache;
-
 
 /**
  * หมายเหตุ: โค้ดนี้เป็น Laravel (access model fields เป็น property)
@@ -26,7 +25,7 @@ class MaintenanceController extends Controller
     {
         $this->authorize('viewAny', Maintenance::class);
 
-        $pendingCount    = Maintenance::where('status', 'pending')->count();
+        $pendingCount = Maintenance::where('status', 'pending')->count();
 
         $inProgressCount = Maintenance::where('status', 'in_progress')->count();
 
@@ -54,8 +53,8 @@ class MaintenanceController extends Controller
             $query->where(function ($q) use ($search) {
                 $q->where('issue_type', 'like', "%{$search}%")
                     ->orWhere('description', 'like', "%{$search}%")
-                    ->orWhereHas('room', fn($r) => $r->where('room_number', 'like', "%{$search}%"))
-                    ->orWhereHas('facility', fn($f) => $f->where('name', 'like', "%{$search}%"));
+                    ->orWhereHas('room', fn ($r) => $r->where('room_number', 'like', "%{$search}%"))
+                    ->orWhereHas('facility', fn ($f) => $f->where('name', 'like', "%{$search}%"));
             });
         }
 
@@ -78,21 +77,19 @@ class MaintenanceController extends Controller
     {
         $this->authorize('create', Maintenance::class);
 
-        $rooms      = Room::orderBy('floor')->orderBy('zone')->orderBy('room_number')->get();
-
+        $rooms = Room::orderBy('floor')->orderBy('zone')->orderBy('room_number')->get();
 
         // ✅ แก้ไข: ส่ง facilities เฉพาะที่ต้องใช้ตอน Lock mode (มาจาก facility_id)
         $facilities = Cache::remember('facilities.all', now()->addHours(6), fn () => Facility::orderBy('id')->get());
 
-
-        $facilityId         = $request->input('facility_id');
-        $selectedRoomId     = null;
+        $facilityId = $request->input('facility_id');
+        $selectedRoomId = null;
         $selectedFacilityId = null;
 
         if ($facilityId) {
             $facility = Facility::find($facilityId);
             if ($facility && $facility->room_id) {
-                $selectedRoomId     = $facility->room_id;
+                $selectedRoomId = $facility->room_id;
                 $selectedFacilityId = $facilityId;
             }
         }
@@ -122,23 +119,21 @@ class MaintenanceController extends Controller
         // completed_date, status, assigned_to, cost, notes
         // ฟอร์มส่ง maintenance_type/request_date ให้ map ก่อน insert
         $data = [
-            'room_id'        => $validated['room_id'],
-            'issue_type'    => $validated['issue_type'],
-            'description'   => $validated['description'],
+            'room_id' => $validated['room_id'],
+            'issue_type' => $validated['issue_type'],
+            'description' => $validated['description'],
             'reported_date' => $validated['reported_date'],
-            'status'        => $validated['status'],
-            'assigned_to'   => $validated['assigned_to'] ?? null,
-            'cost'           => $validated['cost'] ?? null,
-            'notes'         => $validated['notes'] ?? null,
+            'status' => $validated['status'],
+            'assigned_to' => $validated['assigned_to'] ?? null,
+            'cost' => $validated['cost'] ?? null,
+            'notes' => $validated['notes'] ?? null,
         ];
-
 
         Maintenance::create($data);
 
         Cache::forget('facilities.all');
 
         return redirect()->route('maintenances.index')
-
 
             ->with('success', 'แจ้งซ่อมเรียบร้อยแล้ว');
     }
@@ -162,7 +157,7 @@ class MaintenanceController extends Controller
     {
         $this->authorize('update', $maintenance);
 
-        $rooms      = Room::orderBy('floor')->orderBy('zone')->orderBy('room_number')->get();
+        $rooms = Room::orderBy('floor')->orderBy('zone')->orderBy('room_number')->get();
 
         $facilities = Cache::remember('facilities.all', now()->addHours(6), fn () => Facility::orderBy('id')->get());
 
@@ -180,14 +175,14 @@ class MaintenanceController extends Controller
 
         // Map field ที่มาจากฟอร์มให้ตรงกับ schema
         $updateData = [
-            'room_id'        => $validated['room_id'] ?? $maintenance->room_id,
-            'issue_type'    => $validated['issue_type'] ?? $maintenance->issue_type,
-            'description'   => $validated['description'] ?? $maintenance->description,
+            'room_id' => $validated['room_id'] ?? $maintenance->room_id,
+            'issue_type' => $validated['issue_type'] ?? $maintenance->issue_type,
+            'description' => $validated['description'] ?? $maintenance->description,
             'reported_date' => $validated['reported_date'] ?? $maintenance->reported_date,
-            'status'        => $validated['status'] ?? $maintenance->status,
-            'assigned_to'   => $validated['assigned_to'] ?? $maintenance->assigned_to,
-            'cost'           => $validated['cost'] ?? $maintenance->cost,
-            'notes'         => $validated['notes'] ?? $maintenance->notes,
+            'status' => $validated['status'] ?? $maintenance->status,
+            'assigned_to' => $validated['assigned_to'] ?? $maintenance->assigned_to,
+            'cost' => $validated['cost'] ?? $maintenance->cost,
+            'notes' => $validated['notes'] ?? $maintenance->notes,
         ];
 
         $maintenance->update($updateData);
@@ -195,7 +190,7 @@ class MaintenanceController extends Controller
         if ($request->status === 'completed' && $maintenance->facility_id) {
 
             Facility::where('id', $maintenance->facility_id)->update([
-                'status'                => 'good',
+                'status' => 'good',
                 'last_maintenance_date' => now(),
             ]);
         }
@@ -226,10 +221,9 @@ class MaintenanceController extends Controller
 
         $maintenance->update(['status' => 'in_progress']);
 
-
         if ($maintenance->facility_id) {
             Facility::where('id', $maintenance->facility_id)->update([
-                'status' => 'maintenance'
+                'status' => 'maintenance',
             ]);
         }
 
@@ -245,10 +239,9 @@ class MaintenanceController extends Controller
 
         $maintenance->update(['status' => 'completed']);
 
-
         if ($maintenance->facility_id) {
             Facility::where('id', $maintenance->facility_id)->update([
-                'status'                => 'good',
+                'status' => 'good',
                 'last_maintenance_date' => now(),
             ]);
         }

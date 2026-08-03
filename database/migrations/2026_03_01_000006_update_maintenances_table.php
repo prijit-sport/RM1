@@ -11,10 +11,10 @@ return new class extends Migration
         Schema::table('maintenances', function (Blueprint $table) {
             // Add priority field
             $table->enum('priority', ['low', 'medium', 'high', 'urgent'])->default('medium')->after('cost');
-            
+
             // Add soft deletes
             $table->softDeletes();
-            
+
             // Add indexes
             $table->index(['room_id', 'status']);
             $table->index(['status', 'priority']);
@@ -27,7 +27,7 @@ return new class extends Migration
             $table->dropSoftDeletes();
             $table->dropIndex(['room_id', 'status']);
             $table->dropIndex(['status', 'priority']);
-            
+
             $table->dropColumn('priority');
         });
     }

@@ -2,13 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
-use App\Models\Room;
-use App\Models\Guest;
 use App\Models\Booking;
+use App\Models\Contract;
+use App\Models\Guest;
 use App\Models\Invoice;
 use App\Models\Maintenance;
-use App\Models\Contract;
+use App\Models\Room;
 use Carbon\Carbon;
 use Illuminate\View\View;
 
@@ -19,11 +18,11 @@ class DashboardController extends Controller
         // ══════════════════════════════════════
         //  KPI Data
         // ══════════════════════════════════════
-        $roomCount        = Room::count() ?: 0;
-        $guestCount       = Guest::count() ?: 0;
-        $bookingCount     = Booking::count() ?: 0;
-        $occupiedCount    = Room::where('status', 'occupied')->count() ?: 0;
-        $availableCount   = Room::where('status', 'available')->count() ?: 0;
+        $roomCount = Room::count() ?: 0;
+        $guestCount = Guest::count() ?: 0;
+        $bookingCount = Booking::count() ?: 0;
+        $occupiedCount = Room::where('status', 'occupied')->count() ?: 0;
+        $availableCount = Room::where('status', 'available')->count() ?: 0;
         $maintenanceCount = Room::where('status', 'maintenance')->count() ?: 0;
 
         // ══════════════════════════════════════
@@ -48,14 +47,14 @@ class DashboardController extends Controller
         //  Monthly Revenue
         // ══════════════════════════════════════
         $currentMonth = Carbon::now()->month;
-        $currentYear  = Carbon::now()->year;
+        $currentYear = Carbon::now()->year;
 
         $currentMonthRevenue = Invoice::where('status', 'paid')
             ->whereMonth('issue_date', $currentMonth)
             ->whereYear('issue_date', $currentYear)
             ->sum('total');
 
-        $lastMonth     = Carbon::now()->subMonth()->month;
+        $lastMonth = Carbon::now()->subMonth()->month;
         $lastMonthYear = Carbon::now()->subMonth()->year;
 
         $lastMonthRevenue = Invoice::where('status', 'paid')
@@ -90,7 +89,7 @@ class DashboardController extends Controller
         for ($i = 11; $i >= 0; $i--) {
             $date = Carbon::now()->subMonths($i);
             $monthlyBookings[] = [
-                'label' => $thaiMonths[$date->month] . ' ' . ($date->year + 543),
+                'label' => $thaiMonths[$date->month].' '.($date->year + 543),
                 'count' => Booking::whereYear('created_at', $date->year)
                     ->whereMonth('created_at', $date->month)
                     ->count(),
@@ -103,8 +102,8 @@ class DashboardController extends Controller
         $roomTypeStats = [];
         foreach (['fan', 'air'] as $type) {
             $roomTypeStats[$type] = [
-                'available'   => Room::where('room_type', $type)->where('status', 'available')->count(),
-                'occupied'    => Room::where('room_type', $type)->where('status', 'occupied')->count(),
+                'available' => Room::where('room_type', $type)->where('status', 'available')->count(),
+                'occupied' => Room::where('room_type', $type)->where('status', 'occupied')->count(),
                 'maintenance' => Room::where('room_type', $type)->where('status', 'maintenance')->count(),
             ];
         }
@@ -118,13 +117,14 @@ class DashboardController extends Controller
             ->get()
             ->map(function (Booking $b) {
                 $checkIn = $b->check_in_date;
+
                 return [
-                    'id'            => $b->id,
-                    'room_number'   => $b->room !== null ? ($b->room->room_number ?? '-') : '-',
-                    'room_id'       => $b->room !== null ? $b->room->id : null,
-                    'guest_name'    => $b->guest !== null ? ($b->guest->full_name ?? '-') : '-',
+                    'id' => $b->id,
+                    'room_number' => $b->room !== null ? ($b->room->room_number ?? '-') : '-',
+                    'room_id' => $b->room !== null ? $b->room->id : null,
+                    'guest_name' => $b->guest !== null ? ($b->guest->full_name ?? '-') : '-',
                     'check_in_date' => $checkIn instanceof Carbon ? $checkIn->format('d/m/Y') : ($checkIn ?? '-'),
-                    'status'        => $b->status ?? '-',
+                    'status' => $b->status ?? '-',
                 ];
             });
 
@@ -139,13 +139,14 @@ class DashboardController extends Controller
             ->map(function (Invoice $inv) {
                 $dueDate = $inv->due_date;
                 $booking = $inv->booking;
+
                 return [
-                    'id'             => $inv->id,
+                    'id' => $inv->id,
                     'invoice_number' => $inv->invoice_number ?? '-',
-                    'guest_name'     => ($booking !== null && $booking->guest !== null) ? ($booking->guest->full_name ?? '-') : '-',
-                    'total'          => $inv->total ?? 0,
-                    'due_date'       => $dueDate instanceof Carbon ? $dueDate->format('d/m/Y') : ($dueDate ?? '-'),
-                    'is_overdue'     => $dueDate instanceof Carbon && $dueDate->isPast(),
+                    'guest_name' => ($booking !== null && $booking->guest !== null) ? ($booking->guest->full_name ?? '-') : '-',
+                    'total' => $inv->total ?? 0,
+                    'due_date' => $dueDate instanceof Carbon ? $dueDate->format('d/m/Y') : ($dueDate ?? '-'),
+                    'is_overdue' => $dueDate instanceof Carbon && $dueDate->isPast(),
                 ];
             });
 

@@ -1,15 +1,13 @@
 <?php
- 
+
 namespace App\Policies;
- 
+
 use App\Models\Booking;
-use App\Models\User;
 use App\Models\Role;
- 
+use App\Models\User;
+
 class BookingPolicy
 {
-
-
     /**
      * ทุก role ที่ login แล้วดูรายการจองได้
      */
@@ -17,7 +15,7 @@ class BookingPolicy
     {
         return true;
     }
- 
+
     /**
      * ทุก role ที่ login แล้วดูรายละเอียดจองได้
      */
@@ -25,7 +23,7 @@ class BookingPolicy
     {
         return true;
     }
- 
+
     /**
      * ทุก role ที่ login แล้วสร้างจองได้
      */
@@ -33,7 +31,7 @@ class BookingPolicy
     {
         return true;
     }
- 
+
     /**
      * ทุก role ที่ login แล้วแก้ไขจองได้
      */
@@ -41,7 +39,7 @@ class BookingPolicy
     {
         return true;
     }
- 
+
     /**
      * Admin หรือ Staff ลบจองได้
      */
@@ -50,7 +48,7 @@ class BookingPolicy
         return $user->hasRole(\App\Models\Role::ADMIN)
             || $user->hasRole(\App\Models\Role::STAFF);
     }
- 
+
     /**
      * ✅ confirm ต้องเป็น Admin หรือ Staff เท่านั้น
      */
@@ -59,7 +57,7 @@ class BookingPolicy
         return $user->hasRole(\App\Models\Role::ADMIN)
             || $user->hasRole(\App\Models\Role::STAFF);
     }
- 
+
     /**
      * ✅ cancel ต้องเป็น Admin หรือ Staff เท่านั้น
      */
@@ -68,7 +66,7 @@ class BookingPolicy
         return $user->hasRole(\App\Models\Role::ADMIN)
             || $user->hasRole(\App\Models\Role::STAFF);
     }
- 
+
     /**
      * Admin หรือ Staff export ได้
      */
@@ -78,4 +76,3 @@ class BookingPolicy
             || $user->hasRole(\App\Models\Role::STAFF);
     }
 }
- 

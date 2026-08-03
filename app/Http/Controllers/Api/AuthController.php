@@ -31,23 +31,23 @@ class AuthController extends Controller
         );
 
         // Combined validation: user not found OR password mismatch
-        if (!$user || !$passwordValid) {
+        if (! $user || ! $passwordValid) {
             return response()->json([
-                'message' => 'Invalid credentials'
+                'message' => 'Invalid credentials',
             ], 401);
         }
 
         $isActive = $user->is_active ?? true;
-        if (!$isActive) {
+        if (! $isActive) {
             return response()->json([
-                'message' => 'Account is inactive'
+                'message' => 'Account is inactive',
             ], 401);
         }
 
         $token = $user->createToken('api-token')->plainTextToken;
 
         return new LoginResource([
-            'user'  => $user->load('role'),
+            'user' => $user->load('role'),
             'token' => $token,
         ]);
     }
@@ -57,7 +57,7 @@ class AuthController extends Controller
         $request->user()->currentAccessToken()->delete();
 
         return response()->json([
-            'message' => 'Logged out successfully'
+            'message' => 'Logged out successfully',
         ]);
     }
 

@@ -5,7 +5,6 @@ namespace App\Policies;
 use App\Models\Invoice;
 use App\Models\Role;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class InvoicePolicy
 {
@@ -66,4 +65,3 @@ class InvoicePolicy
         return $user->hasRole(Role::ADMIN) || $user->hasRole(Role::STAFF);
     }
 }
-

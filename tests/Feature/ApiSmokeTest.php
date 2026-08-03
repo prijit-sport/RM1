@@ -14,6 +14,7 @@ class ApiSmokeTest extends TestCase
     private function createUserWithRole(string $roleName): User
     {
         $role = Role::firstOrCreate(['name' => $roleName], ['description' => $roleName]);
+
         return User::factory()->create(['role_id' => $role->id]);
     }
 
@@ -38,7 +39,6 @@ class ApiSmokeTest extends TestCase
         ]);
     }
 
-
     public function test_dashboard_requires_auth_sanctum(): void
     {
         $response = $this->getJson('/api/dashboard');
@@ -51,4 +51,3 @@ class ApiSmokeTest extends TestCase
         $response->assertStatus(404); // no route in current routes/api.php; keep smoke test safe
     }
 }
-

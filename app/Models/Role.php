@@ -12,6 +12,7 @@ class Role extends Model
     use HasFactory;
 
     public const ADMIN = 'Admin';
+
     public const STAFF = 'Staff';
 
     protected $fillable = ['name', 'label', 'description'];
@@ -20,7 +21,7 @@ class Role extends Model
     {
         return $this->belongsToMany(Permission::class);
     }
-    
+
     public function users(): HasMany
     {
         return $this->hasMany(User::class);

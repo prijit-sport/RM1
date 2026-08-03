@@ -11,7 +11,7 @@ use Laravel\Sanctum\HasApiTokens;
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, HasApiTokens, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -62,10 +62,10 @@ class User extends Authenticatable
     public function hasRole(string $role)
     {
         // Ensure role is loaded
-        if (!$this->relationLoaded('role')) {
+        if (! $this->relationLoaded('role')) {
             $this->load('role');
         }
-        
+
         return $this->role && $this->role->name === $role;
     }
 
@@ -83,11 +83,11 @@ class User extends Authenticatable
     /**
      * Check if user has any of the given permissions.
      *
-     * @param array|string $permissions
+     * @param  array|string  $permissions
      */
     public function hasAnyPermission($permissions): bool
     {
-        if (!$this->role) {
+        if (! $this->role) {
             return false;
         }
 
@@ -123,5 +123,3 @@ class User extends Authenticatable
         $this->save();
     }
 }
-
-

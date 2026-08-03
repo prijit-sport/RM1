@@ -119,7 +119,7 @@ class InvoiceControllerTest extends TestCase
             'booking_id' => $booking->id,
             'guest_id' => $booking->guest_id,
             'room_id' => $booking->room_id,
-            'invoice_number' => 'INV-' . now()->format('Ym') . '-00001',
+            'invoice_number' => 'INV-'.now()->format('Ym').'-00001',
             'amount' => 1000,
             'tax' => 70,
             'total' => 1070,

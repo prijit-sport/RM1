@@ -24,7 +24,7 @@ class StoreInvoiceRequest extends FormRequest
     {
         return [
             'booking_id' => 'required|exists:bookings,id',
-'invoice_number' => [
+            'invoice_number' => [
                 'required',
                 'max:50',
                 Rule::unique('invoices')->ignore($this->input('draft_invoice_id')),

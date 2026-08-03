@@ -9,15 +9,15 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('meter_readings', function (Blueprint $table) {
-            if (!Schema::hasColumn('meter_readings', 'booking_id')) {
+            if (! Schema::hasColumn('meter_readings', 'booking_id')) {
                 $table->foreignId('booking_id')->nullable()->after('meter_id');
             }
 
-            if (!Schema::hasColumn('meter_readings', 'period_month')) {
+            if (! Schema::hasColumn('meter_readings', 'period_month')) {
                 $table->unsignedTinyInteger('period_month')->after('booking_id')->nullable();
             }
 
-            if (!Schema::hasColumn('meter_readings', 'period_year')) {
+            if (! Schema::hasColumn('meter_readings', 'period_year')) {
                 $table->unsignedSmallInteger('period_year')->after('period_month')->nullable();
             }
 
@@ -65,4 +65,3 @@ return new class extends Migration
         });
     }
 };
-

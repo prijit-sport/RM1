@@ -51,4 +51,3 @@ class PolicyFirstAccessTest extends TestCase
         return User::factory()->create(['role_id' => $role->id]);
     }
 }
-

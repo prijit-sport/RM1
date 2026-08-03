@@ -8,7 +8,7 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
-     * 
+     *
      * Enhanced contract fields to match Thai rental agreement requirements:
      * - contract_date: วันที่ทำสัญญา
      * - landlord_name: ชื่อผู้ให้เช่า
@@ -27,25 +27,25 @@ return new class extends Migration
         Schema::table('contracts', function (Blueprint $table) {
             // วันที่ทำสัญญา
             $table->date('contract_date')->nullable()->after('title');
-            
+
             // ข้อมูลผู้ให้เช่า
             $table->string('landlord_name')->nullable()->after('contract_date');
             $table->text('landlord_address')->nullable()->after('landlord_name');
-            
+
             // ราคาค่าเช่าและค่าบริการ
             $table->decimal('electricity_rate', 10, 2)->nullable()->after('advance_payment');
             $table->decimal('water_rate', 10, 2)->nullable()->after('electricity_rate');
             $table->decimal('late_fee', 10, 2)->nullable()->after('water_rate');
             $table->text('other_fees')->nullable()->after('late_fee');
-            
+
             // ข้อตกลง
             $table->text('terms')->nullable()->after('other_fees');
-            
+
             // ลายมือชื่อ
             $table->string('tenant_signature')->nullable()->after('terms');
             $table->string('landlord_signature')->nullable()->after('tenant_signature');
             $table->string('witness_signature')->nullable()->after('landlord_signature');
-            
+
             // ลงวันที่
             $table->date('tenant_sign_date')->nullable()->after('witness_signature');
             $table->date('landlord_sign_date')->nullable()->after('tenant_sign_date');
@@ -78,4 +78,3 @@ return new class extends Migration
         });
     }
 };
-

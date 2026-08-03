@@ -24,7 +24,7 @@ class DatabaseSeeder extends Seeder
 
         // Determine default passwords from .env, or generate if missing
         $adminPassword = env('ADMIN_DEFAULT_PASSWORD');
-        $userPassword  = env('USER_DEFAULT_PASSWORD');
+        $userPassword = env('USER_DEFAULT_PASSWORD');
 
         $generated = [];
 
@@ -39,7 +39,7 @@ class DatabaseSeeder extends Seeder
         }
 
         // Show generated passwords in console (only when random is used)
-        if (!empty($generated)) {
+        if (! empty($generated)) {
             $this->command->line('🔐 Generated default passwords (missing in .env):');
             foreach ($generated as $key => $value) {
                 $this->command->line(sprintf(' - %s=%s', $key, $value));
@@ -66,4 +66,3 @@ class DatabaseSeeder extends Seeder
         ]);
     }
 }
-

@@ -27,11 +27,11 @@ class ModuleAccessTest extends TestCase
         // Test that ManagerOrAdmin middleware blocks regular users
         // We verify that regular users do NOT have Manager or Admin role
         $user = auth()->user();
-        
+
         // Regular users should NOT have Staff or Admin role
         $this->assertFalse($user->hasRole('Staff'));
         $this->assertFalse($user->hasRole('Admin'));
-        
+
         // ManagerOrAdmin middleware should deny access for regular users
         // This test verifies the role logic works correctly
         $this->assertTrue($user->role === null);
@@ -44,4 +44,3 @@ class ModuleAccessTest extends TestCase
         return User::factory()->create(['role_id' => $role->id]);
     }
 }
-

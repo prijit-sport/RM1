@@ -70,7 +70,7 @@ class EnumLabel
         }
 
         $entry = self::MAP[$group][$value] ?? null;
-        if (!is_array($entry)) {
+        if (! is_array($entry)) {
             return $fallback ?? $value;
         }
 
@@ -81,7 +81,6 @@ class EnumLabel
             return $en;
         }
 
-        return $en . ' (' . $th . ')';
+        return $en.' ('.$th.')';
     }
 }
-

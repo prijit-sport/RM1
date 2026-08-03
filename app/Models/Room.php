@@ -2,30 +2,29 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Collection;
-use Carbon\Carbon;
 
 /**
  * Room Model
  *
- * @property int         $id
- * @property string      $room_number
+ * @property int $id
+ * @property string $room_number
  * @property string|null $room_type
  * @property string|null $zone
- * @property int|null    $floor
- * @property float|null  $price_per_month
- * @property int|null    $capacity
+ * @property int|null $floor
+ * @property float|null $price_per_month
+ * @property int|null $capacity
  * @property string|null $description
- * @property string      $status
+ * @property string $status
  * @property string|null $notes
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property Carbon|null $deleted_at
- *
  * @property-read Collection<int, Booking> $bookings
  * @property-read Collection<int, Meter> $meters
  * @property-read Booking|null $currentBooking
@@ -51,8 +50,8 @@ class Room extends Model
 
     protected $casts = [
         'price_per_month' => 'decimal:2',
-        'capacity'        => 'integer',
-        'floor'           => 'integer',
+        'capacity' => 'integer',
+        'floor' => 'integer',
     ];
 
     // ─────────────────────────────────────────
@@ -83,7 +82,6 @@ class Room extends Model
     {
         return $this->hasMany(Booking::class);
     }
-
 
     public function meters(): HasMany
     {

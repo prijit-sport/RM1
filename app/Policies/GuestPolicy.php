@@ -37,4 +37,3 @@ class GuestPolicy
         return true;
     }
 }
-

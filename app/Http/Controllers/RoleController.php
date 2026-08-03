@@ -14,9 +14,9 @@ class RoleController extends Controller
         $this->authorize('viewAny', Role::class);
 
         $roles = Role::paginate(10);
+
         return view('roles.index', compact('roles'));
     }
-
 
     public function create()
     {
@@ -27,7 +27,6 @@ class RoleController extends Controller
         return view('roles.create', compact('permissions'));
 
     }
-
 
     public function store(Request $request)
     {
@@ -60,16 +59,15 @@ class RoleController extends Controller
         return view('roles.show', compact('role'));
     }
 
-
     public function edit(Role $role)
     {
         $this->authorize('update', $role);
 
         $permissions = Cache::remember('permissions.all', now()->addHours(6), fn () => Permission::orderBy('name')->get());
+
         return view('roles.edit', compact('role', 'permissions'));
 
     }
-
 
     public function update(Request $request, Role $role)
     {
@@ -77,7 +75,7 @@ class RoleController extends Controller
 
         $validated = $request->validate([
 
-            'name' => 'required|unique:roles,name,' . $role->id . '|max:50',
+            'name' => 'required|unique:roles,name,'.$role->id.'|max:50',
             'description' => 'nullable|max:255',
             'permissions' => 'array',
             'permissions.*' => 'exists:permissions,id',
@@ -108,11 +106,10 @@ class RoleController extends Controller
 
     }
 
-
     public function export(Request $request)
     {
         $roles = Role::with('permissions')->orderBy('id', 'desc')->get();
-        $filename = 'roles_export_' . date('Y-m-d') . '.xlsx';
+        $filename = 'roles_export_'.date('Y-m-d').'.xlsx';
 
         $rows = [];
         $rows[] = ['Name', 'Description', 'Permissions'];
@@ -128,5 +125,3 @@ class RoleController extends Controller
         return xlsx_download($filename, $rows);
     }
 }
-
-

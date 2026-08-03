@@ -37,4 +37,3 @@ class RoomPolicy
         return true;
     }
 }
-

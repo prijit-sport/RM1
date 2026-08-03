@@ -3,8 +3,8 @@
 namespace Tests\Feature;
 
 use App\Models\Meter;
-use App\Models\Room;
 use App\Models\Role;
+use App\Models\Room;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -25,7 +25,7 @@ class MeterControllerTest extends TestCase
 
         $response->assertOk();
         $response->assertViewIs('meters.index');
-        $response->assertSeeText('ห้อง ' . $room->room_number);
+        $response->assertSeeText('ห้อง '.$room->room_number);
         // index page อาจไม่แสดง meter_number ในตาราง ต้อง assert จากส่วนที่ blade แสดงจริง
         $response->assertSeeText('ไฟฟ้า');
     }
@@ -77,7 +77,7 @@ class MeterControllerTest extends TestCase
         $response->assertOk();
         $response->assertViewIs('meters.show');
         $response->assertSeeText($meter->meter_number);
-        $response->assertSeeText('ห้อง ' . $room->room_number);
+        $response->assertSeeText('ห้อง '.$room->room_number);
         $response->assertSeeText('น้ำ');
     }
 
@@ -107,7 +107,7 @@ class MeterControllerTest extends TestCase
         return Meter::create([
             'room_id' => $room->id,
             'type' => $type,
-            'meter_number' => 'MTR-' . $room->room_number . '-' . $type,
+            'meter_number' => 'MTR-'.$room->room_number.'-'.$type,
             'unit' => $type === 'electric' ? 'kWh' : 'Unit',
             'installed_at' => '2026-01-01',
             'is_active' => true,
@@ -117,4 +117,3 @@ class MeterControllerTest extends TestCase
         ]);
     }
 }
-

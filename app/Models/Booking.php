@@ -2,11 +2,11 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Carbon\Carbon;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * Booking Model
@@ -38,9 +38,10 @@ class Booking extends Model
 
     // Status constants
     const STATUS_PENDING = 'pending';
-    const STATUS_CONFIRMED = 'confirmed';
-    const STATUS_CANCELLED = 'cancelled';
 
+    const STATUS_CONFIRMED = 'confirmed';
+
+    const STATUS_CANCELLED = 'cancelled';
 
     protected $fillable = [
         'guest_id',
@@ -59,15 +60,15 @@ class Booking extends Model
     ];
 
     protected $casts = [
-        'check_in_date'        => 'date',
-        'check_out_date'       => 'date',
-        'rent_amount'          => 'decimal:2',
-        'deposit_amount'       => 'decimal:2',
-        'total_price'          => 'decimal:2',
+        'check_in_date' => 'date',
+        'check_out_date' => 'date',
+        'rent_amount' => 'decimal:2',
+        'deposit_amount' => 'decimal:2',
+        'total_price' => 'decimal:2',
         'electric_meter_start' => 'integer',
-        'water_meter_start'    => 'integer',
+        'water_meter_start' => 'integer',
     ];
- 
+
     // ═══════════════════════════════════════════════════════════════
     //  RELATIONSHIPS
     // ═══════════════════════════════════════════════════════════════
@@ -117,49 +118,43 @@ class Booking extends Model
     {
         return $this->hasMany(Invoice::class);
     }
- 
+
     // ═══════════════════════════════════════════════════════════════
     //  ACCESSORS / MUTATORS
     // ═══════════════════════════════════════════════════════════════
 
     /**
      * Get status label in Thai
-     *
-     * @return string
      */
     public function getStatusLabelAttribute(): string
     {
         return match ($this->status) {
-            self::STATUS_PENDING   => 'รอยืนยัน',
+            self::STATUS_PENDING => 'รอยืนยัน',
             self::STATUS_CONFIRMED => 'ยืนยันแล้ว',
             self::STATUS_CANCELLED => 'ยกเลิก',
-            default                => 'รอยืนยัน',
+            default => 'รอยืนยัน',
         };
     }
 
     /**
      * Get status badge color for Bootstrap
-     *
-     * @return string
      */
     public function getStatusBadgeAttribute(): string
     {
         return match ($this->status) {
-            self::STATUS_PENDING   => 'warning',
+            self::STATUS_PENDING => 'warning',
             self::STATUS_CONFIRMED => 'success',
             self::STATUS_CANCELLED => 'danger',
-            default                => 'secondary',
+            default => 'secondary',
         };
     }
- 
+
     // ═══════════════════════════════════════════════════════════════
     //  HELPER METHODS
     // ═══════════════════════════════════════════════════════════════
 
     /**
      * Check if booking is active (confirmed and not cancelled)
-     *
-     * @return bool
      */
     public function isActive(): bool
     {
@@ -168,8 +163,6 @@ class Booking extends Model
 
     /**
      * Check if booking is cancelled
-     *
-     * @return bool
      */
     public function isCancelled(): bool
     {
@@ -178,12 +171,11 @@ class Booking extends Model
 
     /**
      * Get booking duration in days
-     *
-     * @return int
      */
     public function getDurationInDays(): int
     {
         $endDate = $this->check_out_date ?? now();
+
         return (int) $this->check_in_date->diffInDays($endDate);
     }
 }

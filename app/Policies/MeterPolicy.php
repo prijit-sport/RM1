@@ -38,4 +38,3 @@ class MeterPolicy
         return $user->hasRole(Role::ADMIN);
     }
 }
-

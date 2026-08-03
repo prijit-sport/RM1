@@ -56,4 +56,3 @@ class AuthorizationLoggingTest extends TestCase
         });
     }
 }
-

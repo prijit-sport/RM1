@@ -2,15 +2,13 @@
 
 namespace App\Services;
 
-use App\Models\Invoice;
-use App\Models\Contract;
 use App\Models\Booking;
-use App\Models\Guest;
+use App\Models\Contract;
+use App\Models\Invoice;
 use Illuminate\Support\Facades\Log;
 
 class NotificationService
 {
-
     /**
      * Send invoice reminder email
      */
@@ -18,11 +16,12 @@ class NotificationService
     {
         try {
             $invoice->load(['guest', 'room', 'booking']);
-            
-            if (!$invoice->guest || !$invoice->guest->email) {
+
+            if (! $invoice->guest || ! $invoice->guest->email) {
                 Log::warning('[Notification] Invoice reminder failed: No guest email', [
                     'invoice_id' => $invoice->id,
                 ]);
+
                 return false;
             }
 
@@ -37,7 +36,8 @@ class NotificationService
 
             return true;
         } catch (\Exception $e) {
-            Log::error('[Notification] Invoice reminder failed: ' . $e->getMessage());
+            Log::error('[Notification] Invoice reminder failed: '.$e->getMessage());
+
             return false;
         }
     }
@@ -49,11 +49,12 @@ class NotificationService
     {
         try {
             $contract->load(['guest', 'room']);
-            
-            if (!$contract->guest || !$contract->guest->email) {
+
+            if (! $contract->guest || ! $contract->guest->email) {
                 Log::warning('[Notification] Contract notification failed: No guest email', [
                     'contract_id' => $contract->id,
                 ]);
+
                 return false;
             }
 
@@ -65,7 +66,8 @@ class NotificationService
 
             return true;
         } catch (\Exception $e) {
-            Log::error('[Notification] Contract notification failed: ' . $e->getMessage());
+            Log::error('[Notification] Contract notification failed: '.$e->getMessage());
+
             return false;
         }
     }
@@ -77,8 +79,8 @@ class NotificationService
     {
         try {
             $booking->load(['guest', 'room']);
-            
-            if (!$booking->guest || !$booking->guest->email) {
+
+            if (! $booking->guest || ! $booking->guest->email) {
                 return false;
             }
 
@@ -89,7 +91,8 @@ class NotificationService
 
             return true;
         } catch (\Exception $e) {
-            Log::error('[Notification] Booking confirmation failed: ' . $e->getMessage());
+            Log::error('[Notification] Booking confirmation failed: '.$e->getMessage());
+
             return false;
         }
     }

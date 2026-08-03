@@ -18,7 +18,7 @@ class RoomController extends Controller
 
         // 1. กรองตามหมายเลขห้อง
         if ($request->filled('search')) {
-            $query->where('room_number', 'like', '%' . $request->search . '%');
+            $query->where('room_number', 'like', '%'.$request->search.'%');
         }
 
         // 2. กรองตามสถานะ
@@ -52,7 +52,6 @@ class RoomController extends Controller
             ->orderBy('room_number')
             ->pluck('room_number');
 
-
         // ดึงข้อมูลแสดงในตารางพร้อม Pagination
         $rooms = $query->orderBy('floor')->orderBy('zone')->orderBy('room_number')->paginate(30)->withQueryString();
 
@@ -72,6 +71,7 @@ class RoomController extends Controller
     public function create()
     {
         $this->authorize('create', Room::class); // ✅ แก้ไข: เพิ่ม authorization
+
         return view('rooms.create');
     }
 
@@ -83,16 +83,16 @@ class RoomController extends Controller
         $this->authorize('create', Room::class); // ✅ แก้ไข: เพิ่ม authorization
 
         $validated = $request->validate([
-            'room_number'     => 'required|unique:rooms,room_number|max:10',
-            'room_type'       => 'required|in:fan,air',
+            'room_number' => 'required|unique:rooms,room_number|max:10',
+            'room_type' => 'required|in:fan,air',
             'price_per_month' => 'required|numeric|min:0',
-            'capacity'        => 'required|integer|min:1|max:3',
-            'status'          => 'required|in:available,occupied,maintenance',
-            'description'     => 'nullable|max:500',
-            'floor'           => 'nullable|integer|min:1|max:5',
-            'zone'            => 'nullable|in:A,B',
+            'capacity' => 'required|integer|min:1|max:3',
+            'status' => 'required|in:available,occupied,maintenance',
+            'description' => 'nullable|max:500',
+            'floor' => 'nullable|integer|min:1|max:5',
+            'zone' => 'nullable|in:A,B',
         ], [
-            'room_number.unique' => 'หมายเลขห้องนี้มีอยู่ในระบบแล้ว กรุณาตรวจสอบอีกครั้ง'
+            'room_number.unique' => 'หมายเลขห้องนี้มีอยู่ในระบบแล้ว กรุณาตรวจสอบอีกครั้ง',
         ]);
 
         Room::create($validated);
@@ -106,6 +106,7 @@ class RoomController extends Controller
     public function show(Room $room)
     {
         $this->authorize('view', $room); // ✅ แก้ไข: เพิ่ม authorization
+
         return view('rooms.show', compact('room'));
     }
 
@@ -115,6 +116,7 @@ class RoomController extends Controller
     public function edit(Room $room)
     {
         $this->authorize('update', $room); // ✅ แก้ไข: เพิ่ม authorization
+
         return view('rooms.edit', compact('room'));
     }
 
@@ -126,14 +128,14 @@ class RoomController extends Controller
         $this->authorize('update', $room); // ✅ แก้ไข: เพิ่ม authorization
 
         $validated = $request->validate([
-            'room_number'     => 'required|max:10|unique:rooms,room_number,' . $room->id,
-            'room_type'       => 'required|in:fan,air',
+            'room_number' => 'required|max:10|unique:rooms,room_number,'.$room->id,
+            'room_type' => 'required|in:fan,air',
             'price_per_month' => 'required|numeric|min:0',
-            'capacity'        => 'required|integer|min:1|max:3',
-            'status'          => 'required|in:available,occupied,maintenance',
-            'description'     => 'nullable|max:500',
-            'floor'           => 'nullable|integer|min:1|max:5',
-            'zone'            => 'nullable|in:A,B',
+            'capacity' => 'required|integer|min:1|max:3',
+            'status' => 'required|in:available,occupied,maintenance',
+            'description' => 'nullable|max:500',
+            'floor' => 'nullable|integer|min:1|max:5',
+            'zone' => 'nullable|in:A,B',
         ]);
 
         $room->update($validated);
@@ -148,6 +150,7 @@ class RoomController extends Controller
     {
         $this->authorize('delete', $room); // ✅ แก้ไข: เพิ่ม authorization ที่ขาดไป
         $room->delete();
+
         return redirect()->route('rooms.index')->with('success', 'ลบห้องเรียบร้อยแล้ว');
     }
 
@@ -157,6 +160,7 @@ class RoomController extends Controller
     public function bulkCreate()
     {
         $this->authorize('create', Room::class); // ✅ แก้ไข: เพิ่ม authorization
+
         return view('rooms.bulk-create');
     }
 
@@ -168,36 +172,37 @@ class RoomController extends Controller
         $this->authorize('create', Room::class); // ✅ แก้ไข: เพิ่ม authorization
 
         $validated = $request->validate([
-            'prefix'          => 'nullable|string|max:5',
-            'start_number'    => 'required|integer|min:1',
-            'end_number'      => 'required|integer|gte:start_number',
-            'floor'           => 'nullable|integer|min:1|max:5',
-            'zone'            => 'nullable|in:A,B',
-            'room_type'       => 'required|in:fan,air',
+            'prefix' => 'nullable|string|max:5',
+            'start_number' => 'required|integer|min:1',
+            'end_number' => 'required|integer|gte:start_number',
+            'floor' => 'nullable|integer|min:1|max:5',
+            'zone' => 'nullable|in:A,B',
+            'room_type' => 'required|in:fan,air',
             'price_per_month' => 'required|numeric|min:0',
-            'capacity'        => 'required|integer|min:1|max:3',
-            'status'          => 'required|in:available,occupied,maintenance',
+            'capacity' => 'required|integer|min:1|max:3',
+            'status' => 'required|in:available,occupied,maintenance',
         ]);
 
         $created = 0;
         $skipped = 0;
 
         for ($i = $validated['start_number']; $i <= $validated['end_number']; $i++) {
-            $roomNumber = ($validated['prefix'] ?? '') . $i;
+            $roomNumber = ($validated['prefix'] ?? '').$i;
 
             if (Room::where('room_number', $roomNumber)->exists()) {
                 $skipped++;
+
                 continue;
             }
 
             Room::create([
-                'room_number'     => $roomNumber,
-                'room_type'       => $validated['room_type'],
+                'room_number' => $roomNumber,
+                'room_type' => $validated['room_type'],
                 'price_per_month' => $validated['price_per_month'],
-                'capacity'        => $validated['capacity'],
-                'status'          => $validated['status'],
-                'floor'           => $validated['floor'] ?? null,
-                'zone'            => $validated['zone'] ?? null,
+                'capacity' => $validated['capacity'],
+                'status' => $validated['status'],
+                'floor' => $validated['floor'] ?? null,
+                'zone' => $validated['zone'] ?? null,
             ]);
             $created++;
         }
@@ -218,7 +223,7 @@ class RoomController extends Controller
         $this->authorize('export', Room::class); // ✅ แก้ไข: เพิ่ม authorization
 
         $rooms = Room::orderBy('floor')->orderBy('zone')->orderBy('room_number')->get();
-        $filename = 'rooms_export_' . date('Y-m-d') . '.xlsx';
+        $filename = 'rooms_export_'.date('Y-m-d').'.xlsx';
 
         $rows = [];
         $rows[] = ['หมายเลขห้อง', 'โซน', 'ชั้น', 'ประเภท', 'ราคา/เดือน', 'ความจุ', 'สถานะ', 'หมายเหตุ'];
@@ -226,16 +231,16 @@ class RoomController extends Controller
         foreach ($rooms as $room) {
             $rows[] = [
                 $room->room_number,
-                $room->zone  ?? '-',
+                $room->zone ?? '-',
                 $room->floor ?? '-',
                 $room->room_type === 'air' ? 'แอร์' : 'พัดลม',
                 $room->price_per_month,
                 $room->capacity,
                 match ($room->status) {
-                    'available'   => 'ว่าง',
-                    'occupied'    => 'ใช้งานอยู่',
+                    'available' => 'ว่าง',
+                    'occupied' => 'ใช้งานอยู่',
                     'maintenance' => 'ซ่อมบำรุง',
-                    default       => $room->status,
+                    default => $room->status,
                 },
                 $room->description ?? '-',
             ];

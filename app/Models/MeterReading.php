@@ -2,9 +2,9 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Carbon\Carbon;
 
 /**
  * MeterReading Model
@@ -20,7 +20,6 @@ use Carbon\Carbon;
  * @property string|null $notes
  * @property Carbon $created_at
  * @property Carbon $updated_at
- *
  * @property-read Meter $meter
  * @property-read User|null $recorder
  * @property-read User|null $recordedBy
@@ -39,7 +38,7 @@ class MeterReading extends Model
     ];
 
     protected $casts = [
-        'reading_date'  => 'date',
+        'reading_date' => 'date',
         'reading_value' => 'decimal:2',
     ];
 

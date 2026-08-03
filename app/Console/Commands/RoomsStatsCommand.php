@@ -23,11 +23,12 @@ class RoomsStatsCommand extends Command
         $rooms = $query->get(['room_number', 'floor']);
 
         $total = $rooms->count();
-        $a = $rooms->filter(fn($r) => str_starts_with((string) $r->room_number, 'A'))->count();
-        $b = $rooms->filter(fn($r) => str_starts_with((string) $r->room_number, 'B'))->count();
+        $a = $rooms->filter(fn ($r) => str_starts_with((string) $r->room_number, 'A'))->count();
+        $b = $rooms->filter(fn ($r) => str_starts_with((string) $r->room_number, 'B'))->count();
 
         if ($floor !== null && $floor !== '') {
             $this->info("floor={$floor} total={$total} zoneA={$a} zoneB={$b}");
+
             return self::SUCCESS;
         }
 
@@ -35,8 +36,8 @@ class RoomsStatsCommand extends Command
         foreach ([1, 2, 3, 4, 5] as $f) {
             $floorRooms = $rooms->where('floor', $f);
             $ft = $floorRooms->count();
-            $fa = $floorRooms->filter(fn($r) => str_starts_with((string) $r->room_number, 'A'))->count();
-            $fb = $floorRooms->filter(fn($r) => str_starts_with((string) $r->room_number, 'B'))->count();
+            $fa = $floorRooms->filter(fn ($r) => str_starts_with((string) $r->room_number, 'A'))->count();
+            $fb = $floorRooms->filter(fn ($r) => str_starts_with((string) $r->room_number, 'B'))->count();
             if ($ft === 0) {
                 continue;
             }
@@ -45,7 +46,7 @@ class RoomsStatsCommand extends Command
 
         // Also show distinct floors present
         $distinctFloors = Room::query()->distinct()->orderBy('floor')->pluck('floor')->filter();
-        $this->line('distinct floors: ' . $distinctFloors->implode(','));
+        $this->line('distinct floors: '.$distinctFloors->implode(','));
 
         return self::SUCCESS;
     }

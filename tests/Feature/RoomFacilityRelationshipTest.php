@@ -201,6 +201,7 @@ class RoomFacilityRelationshipTest extends TestCase
     private function createUserWithRole(string $roleName): User
     {
         $role = Role::firstOrCreate(['name' => $roleName], ['description' => $roleName]);
+
         return User::factory()->create(['role_id' => $role->id]);
     }
 }

@@ -2,12 +2,12 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
-use Illuminate\Database\Eloquent\Collection;
-use Carbon\Carbon;
 
 /**
  * Meter Model
@@ -24,7 +24,6 @@ use Carbon\Carbon;
  * @property float|null $tax_rate
  * @property Carbon $created_at
  * @property Carbon $updated_at
- *
  * @property-read Room $room
  * @property-read Collection<int, MeterReading> $readings
  * @property-read MeterReading|null $latestReading
@@ -46,10 +45,10 @@ class Meter extends Model
     ];
 
     protected $casts = [
-        'installed_at'  => 'date',
-        'is_active'     => 'boolean',
+        'installed_at' => 'date',
+        'is_active' => 'boolean',
         'rate_per_unit' => 'decimal:2',
-        'tax_rate'      => 'decimal:2',
+        'tax_rate' => 'decimal:2',
     ];
 
     // ─────────────────────────────────────────
@@ -78,9 +77,9 @@ class Meter extends Model
     public function getTypeLabelAttribute(): string
     {
         return match ($this->type) {
-            'water'    => 'น้ำ',
+            'water' => 'น้ำ',
             'electric' => 'ไฟฟ้า',
-            default    => $this->type,
+            default => $this->type,
         };
     }
 

@@ -12,10 +12,10 @@ return new class extends Migration
             // Add actual check-in/check-out timestamps
             $table->timestamp('actual_check_in')->nullable()->after('check_out_date');
             $table->timestamp('actual_check_out')->nullable()->after('actual_check_in');
-            
+
             // Add soft deletes
             $table->softDeletes();
-            
+
             // Add indexes
             $table->index(['status', 'check_in_date']);
             $table->index(['room_id', 'status']);
@@ -30,7 +30,7 @@ return new class extends Migration
             $table->dropIndex(['status', 'check_in_date']);
             $table->dropIndex(['room_id', 'status']);
             $table->dropIndex(['guest_id', 'status']);
-            
+
             $table->dropColumn([
                 'actual_check_in',
                 'actual_check_out',

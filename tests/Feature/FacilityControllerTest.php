@@ -3,8 +3,8 @@
 namespace Tests\Feature;
 
 use App\Models\Facility;
-use App\Models\Room;
 use App\Models\Role;
+use App\Models\Room;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -110,9 +110,9 @@ class FacilityControllerTest extends TestCase
     {
         return Facility::create([
             'room_id' => $room->id,
-            'name' => 'Facility ' . $room->room_number,
+            'name' => 'Facility '.$room->room_number,
             'type' => 'bed',
-            'location' => 'ชั้น ' . ($room->floor ?? 1),
+            'location' => 'ชั้น '.($room->floor ?? 1),
             'description' => 'desc',
             'status' => $status,
             'maintenance_schedule' => 'ทุก 3 เดือน',
@@ -121,4 +121,3 @@ class FacilityControllerTest extends TestCase
         ]);
     }
 }
-

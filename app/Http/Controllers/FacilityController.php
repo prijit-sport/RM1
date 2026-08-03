@@ -41,15 +41,15 @@ class FacilityController extends Controller
         }
 
         if ($request->filled('location')) {
-            $query->where('location', 'like', '%' . $request->location . '%');
+            $query->where('location', 'like', '%'.$request->location.'%');
         }
 
-        $cacheKey = 'facilities.list.' . md5(json_encode([
-            'search'   => $request->search,
-            'type'     => $request->type,
-            'status'   => $request->status,
+        $cacheKey = 'facilities.list.'.md5(json_encode([
+            'search' => $request->search,
+            'type' => $request->type,
+            'status' => $request->status,
             'location' => $request->location,
-            'page'     => $request->get('page', 1),
+            'page' => $request->get('page', 1),
         ]));
 
         $facilities = Cache::remember($cacheKey, now()->addMinutes(5), function () use ($query) {
@@ -58,21 +58,20 @@ class FacilityController extends Controller
 
         // ✅ นับสถิติ รวม 'active' เข้ากับ 'good'
 
-
         $statusCounts = Facility::selectRaw('status, COUNT(*) as cnt')
             ->groupBy('status')
             ->pluck('cnt', 'status')
             ->toArray();
 
         $stats = [
-            'total'        => Facility::count(),
+            'total' => Facility::count(),
             // รวม active + good เข้าด้วยกัน
-            'good'         => ($statusCounts['good']         ?? 0) + ($statusCounts['active'] ?? 0),
-            'fair'         => $statusCounts['fair']         ?? 0,
+            'good' => ($statusCounts['good'] ?? 0) + ($statusCounts['active'] ?? 0),
+            'fair' => $statusCounts['fair'] ?? 0,
             'needs_repair' => $statusCounts['needs_repair'] ?? 0,
-            'maintenance'  => $statusCounts['maintenance']  ?? 0,
-            'damaged'      => $statusCounts['damaged']      ?? 0,
-            'retired'      => $statusCounts['retired']      ?? 0,
+            'maintenance' => $statusCounts['maintenance'] ?? 0,
+            'damaged' => $statusCounts['damaged'] ?? 0,
+            'retired' => $statusCounts['retired'] ?? 0,
         ];
 
         $locations = Facility::select('location')
@@ -80,8 +79,6 @@ class FacilityController extends Controller
             ->whereNotNull('location')
             ->orderBy('location')
             ->pluck('location');
-
-
 
         return view('facilities.index', compact('facilities', 'stats', 'locations'));
     }
@@ -111,13 +108,13 @@ class FacilityController extends Controller
         $this->authorize('create', Facility::class);
 
         $validated = $request->validate([
-            'room_id'               => 'nullable|exists:rooms,id',
-            'name'                  => 'required|max:255',
-            'type'                  => 'required|in:bed,mattress,wardrobe,dressing_table,tv_stand,clothes_rack',
-            'location'              => 'required|max:255',
-            'description'           => 'nullable|max:1000',
-            'status'                => 'required|in:good,fair,needs_repair,maintenance,damaged,retired',
-            'maintenance_schedule'  => 'nullable|max:255',
+            'room_id' => 'nullable|exists:rooms,id',
+            'name' => 'required|max:255',
+            'type' => 'required|in:bed,mattress,wardrobe,dressing_table,tv_stand,clothes_rack',
+            'location' => 'required|max:255',
+            'description' => 'nullable|max:1000',
+            'status' => 'required|in:good,fair,needs_repair,maintenance,damaged,retired',
+            'maintenance_schedule' => 'nullable|max:255',
             'last_maintenance_date' => 'nullable|date',
             'next_maintenance_date' => 'nullable|date|after_or_equal:last_maintenance_date',
         ]);
@@ -137,6 +134,7 @@ class FacilityController extends Controller
         $this->authorize('view', $facility);
 
         $facility->load('room');
+
         return view('facilities.show', compact('facility'));
     }
 
@@ -148,6 +146,7 @@ class FacilityController extends Controller
         $this->authorize('update', $facility);
 
         $rooms = Room::orderBy('room_number')->get();
+
         return view('facilities.edit', compact('facility', 'rooms'));
     }
 
@@ -159,13 +158,13 @@ class FacilityController extends Controller
         $this->authorize('update', $facility);
 
         $validated = $request->validate([
-            'room_id'               => 'nullable|exists:rooms,id',
-            'name'                  => 'required|max:255',
-            'type'                  => 'required|in:bed,mattress,wardrobe,dressing_table,tv_stand,clothes_rack',
-            'location'              => 'required|max:255',
-            'description'           => 'nullable|max:1000',
-            'status'                => 'required|in:good,fair,needs_repair,maintenance,damaged,retired',
-            'maintenance_schedule'  => 'nullable|max:255',
+            'room_id' => 'nullable|exists:rooms,id',
+            'name' => 'required|max:255',
+            'type' => 'required|in:bed,mattress,wardrobe,dressing_table,tv_stand,clothes_rack',
+            'location' => 'required|max:255',
+            'description' => 'nullable|max:1000',
+            'status' => 'required|in:good,fair,needs_repair,maintenance,damaged,retired',
+            'maintenance_schedule' => 'nullable|max:255',
             'last_maintenance_date' => 'nullable|date',
             'next_maintenance_date' => 'nullable|date|after_or_equal:last_maintenance_date',
         ]);
@@ -199,41 +198,41 @@ class FacilityController extends Controller
         $this->authorize('export', Facility::class);
 
         $facilities = Facility::with('room')->orderBy('id', 'desc')->get(); // ✅ เพิ่ม with('room')
-        $filename   = 'facilities_export_' . date('Y-m-d') . '.xlsx';
+        $filename = 'facilities_export_'.date('Y-m-d').'.xlsx';
 
         $typeLabels = [
-            'bed'            => 'เตียง',
-            'mattress'       => 'ที่นอน',
-            'wardrobe'       => 'ตู้เสื้อผ้า',
+            'bed' => 'เตียง',
+            'mattress' => 'ที่นอน',
+            'wardrobe' => 'ตู้เสื้อผ้า',
             'dressing_table' => 'โต๊ะเครื่องแป้ง',
-            'tv_stand'       => 'ชั้นวางทีวี',
-            'clothes_rack'   => 'ราวแขวนผ้า',
+            'tv_stand' => 'ชั้นวางทีวี',
+            'clothes_rack' => 'ราวแขวนผ้า',
         ];
 
         $statusLabels = [
-            'active'       => 'ใช้งานได้',
-            'good'         => 'ใช้งานได้',
-            'fair'         => 'สภาพปานกลาง',
+            'active' => 'ใช้งานได้',
+            'good' => 'ใช้งานได้',
+            'fair' => 'สภาพปานกลาง',
             'needs_repair' => 'ต้องซ่อม',
-            'maintenance'  => 'กำลังซ่อมบำรุง',
-            'damaged'      => 'ชำรุด',
-            'retired'      => 'ปลดประจำการ',
+            'maintenance' => 'กำลังซ่อมบำรุง',
+            'damaged' => 'ชำรุด',
+            'retired' => 'ปลดประจำการ',
         ];
 
-        $rows   = [];
+        $rows = [];
         $rows[] = ['ชื่อ', 'ประเภท', 'ที่ตั้ง', 'ห้องพัก', 'ชั้น', 'โซน', 'คำอธิบาย', 'สถานะ', 'ตารางซ่อม', 'ซ่อมล่าสุด', 'ซ่อมครั้งต่อไป']; // ✅ เพิ่ม ชั้น โซน
 
         foreach ($facilities as $f) {
             $rows[] = [
                 $f->name,
-                $typeLabels[$f->type]     ?? $f->type,
+                $typeLabels[$f->type] ?? $f->type,
                 $f->location,
                 $f->room?->room_number ?? '-',
                 $f->room?->floor ?? '-', // ✅ เพิ่ม floor
                 $f->room?->zone ?? '-',  // ✅ เพิ่ม zone
-                $f->description           ?? '-',
+                $f->description ?? '-',
                 $statusLabels[$f->status] ?? $f->status,
-                $f->maintenance_schedule  ?? '-',
+                $f->maintenance_schedule ?? '-',
                 optional($f->last_maintenance_date)->format('d/m/Y') ?? '-',
                 optional($f->next_maintenance_date)->format('d/m/Y') ?? '-',
             ];

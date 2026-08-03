@@ -7,12 +7,10 @@ use App\Models\Guest;
 use App\Models\Role;
 use App\Models\Room;
 use App\Models\User;
+use App\Services\ContractService;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
-use App\Services\ContractService;
-use Illuminate\Validation\ValidationException;
 
 class ContractFlowTest extends TestCase
 {
@@ -75,7 +73,7 @@ class ContractFlowTest extends TestCase
             'guest_id' => $guest->id,
         ]);
 
-        $service = new ContractService();
+        $service = new ContractService;
         $service->cancel($contract);
 
         $this->assertSame('available', $room->fresh()->status);
@@ -177,7 +175,7 @@ class ContractFlowTest extends TestCase
     private function createUserWithRole(string $roleName): User
     {
         $role = Role::firstOrCreate(['name' => $roleName], ['description' => $roleName]);
+
         return User::factory()->create(['role_id' => $role->id]);
     }
 }
-

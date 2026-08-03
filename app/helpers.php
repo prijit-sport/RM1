@@ -2,21 +2,21 @@
 
 use App\Support\EnumLabel;
 
-if (!function_exists('enum_th')) {
+if (! function_exists('enum_th')) {
     function enum_th(string $group, $value, ?string $fallback = null): string
     {
         return EnumLabel::th($group, $value !== null ? (string) $value : null, $fallback);
     }
 }
 
-if (!function_exists('enum_bi')) {
+if (! function_exists('enum_bi')) {
     function enum_bi(string $group, $value, ?string $fallback = null): string
     {
         return EnumLabel::bi($group, $value !== null ? (string) $value : null, $fallback);
     }
 }
 
-if (!function_exists('csv_sanitize_text')) {
+if (! function_exists('csv_sanitize_text')) {
     function csv_sanitize_text($value): string
     {
         $text = (string) $value;
@@ -27,7 +27,7 @@ if (!function_exists('csv_sanitize_text')) {
     }
 }
 
-if (!function_exists('xlsx_download')) {
+if (! function_exists('xlsx_download')) {
     function xlsx_download(string $filename, array $rows)
     {
         $safeRows = array_map(static function ($row): array {
@@ -91,12 +91,12 @@ XML;
             abort(500, 'ไม่สามารถสร้างไฟล์ชั่วคราวได้');
         }
 
-        if (!class_exists('ZipArchive')) {
+        if (! class_exists('ZipArchive')) {
             @unlink($tempPath);
             abort(500, 'ZipArchive class not found. PHP zip extension may be missing/enabled incorrectly.');
         }
 
-        $zip = new \ZipArchive();
+        $zip = new \ZipArchive;
         if ($zip->open($tempPath, \ZipArchive::OVERWRITE) !== true) {
             @unlink($tempPath);
             abort(500, 'ไม่สามารถสร้างไฟล์ Export ได้');
@@ -111,7 +111,7 @@ XML;
         $zip->addFromString('docProps/app.xml', $appXml);
         $zip->close();
 
-        $downloadName = preg_replace('/\.xlsx$/i', '', $filename) . '.xlsx';
+        $downloadName = preg_replace('/\.xlsx$/i', '', $filename).'.xlsx';
 
         return response()->download(
             $tempPath,
@@ -121,7 +121,7 @@ XML;
     }
 }
 
-if (!function_exists('build_xlsx_sheet_xml')) {
+if (! function_exists('build_xlsx_sheet_xml')) {
     function build_xlsx_sheet_xml(array $rows): string
     {
         $lines = [];
@@ -131,12 +131,12 @@ if (!function_exists('build_xlsx_sheet_xml')) {
 
         foreach ($rows as $rowIndex => $row) {
             $rowNumber = $rowIndex + 1;
-            $lines[] = '<row r="' . $rowNumber . '">';
+            $lines[] = '<row r="'.$rowNumber.'">';
 
             foreach (array_values($row) as $colIndex => $value) {
                 $cellRef = xlsx_cell_ref($colIndex + 1, $rowNumber);
                 $escaped = htmlspecialchars((string) $value, ENT_XML1 | ENT_QUOTES, 'UTF-8');
-                $lines[] = '<c r="' . $cellRef . '" t="inlineStr"><is><t>' . $escaped . '</t></is></c>';
+                $lines[] = '<c r="'.$cellRef.'" t="inlineStr"><is><t>'.$escaped.'</t></is></c>';
             }
 
             $lines[] = '</row>';
@@ -149,10 +149,10 @@ if (!function_exists('build_xlsx_sheet_xml')) {
     }
 }
 
-if (!function_exists('csv_stream_download')) {
+if (! function_exists('csv_stream_download')) {
     function csv_stream_download(string $filename, array $headers, callable $rowProducer)
     {
-        $downloadName = preg_replace('/\.csv$/i', '', $filename) . '.csv';
+        $downloadName = preg_replace('/\.csv$/i', '', $filename).'.csv';
 
         return response()->streamDownload(function () use ($headers, $rowProducer) {
             $out = fopen('php://output', 'w');
@@ -172,7 +172,7 @@ if (!function_exists('csv_stream_download')) {
     }
 }
 
-if (!function_exists('csv_download')) {
+if (! function_exists('csv_download')) {
     function csv_download(string $filename, array $rows)
     {
         $safeRows = array_map(static function ($row): array {
@@ -181,7 +181,7 @@ if (!function_exists('csv_download')) {
             }, is_array($row) ? $row : [$row]);
         }, $rows);
 
-        $downloadName = preg_replace('/\.csv$/i', '', $filename) . '.csv';
+        $downloadName = preg_replace('/\.csv$/i', '', $filename).'.csv';
 
         return response()->streamDownload(function () use ($safeRows): void {
             $out = fopen('php://output', 'w');
@@ -200,16 +200,16 @@ if (!function_exists('csv_download')) {
     }
 }
 
-if (!function_exists('xlsx_cell_ref')) {
+if (! function_exists('xlsx_cell_ref')) {
     function xlsx_cell_ref(int $column, int $row): string
     {
         $letters = '';
         while ($column > 0) {
             $remainder = ($column - 1) % 26;
-            $letters = chr(65 + $remainder) . $letters;
+            $letters = chr(65 + $remainder).$letters;
             $column = (int) floor(($column - 1) / 26);
         }
 
-        return $letters . $row;
+        return $letters.$row;
     }
 }

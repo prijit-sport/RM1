@@ -3,7 +3,6 @@
 namespace App\Http\Middleware;
 
 use App\Models\Role;
-
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -25,10 +24,10 @@ class AdminOnly
 
         if (! $user->role) {
             Log::warning('Authorization denied', [
-                'route'   => $request->route()?->getName() ?? $request->path(),
+                'route' => $request->route()?->getName() ?? $request->path(),
                 'user_id' => $user->id,
-                'role'    => 'none',
-                'reason'  => 'missing_role',
+                'role' => 'none',
+                'reason' => 'missing_role',
             ]);
 
             abort(403, 'คุณไม่มีสิทธิ์เข้าถึงหน้านี้');
@@ -36,10 +35,10 @@ class AdminOnly
 
         if ($user->role?->name !== Role::ADMIN) {
             Log::warning('Authorization denied', [
-                'route'   => $request->route()?->getName() ?? $request->path(),
+                'route' => $request->route()?->getName() ?? $request->path(),
                 'user_id' => $user->id,
-                'role'    => $user->role?->name ?? 'unknown',
-                'reason'  => 'not_admin',
+                'role' => $user->role?->name ?? 'unknown',
+                'reason' => 'not_admin',
             ]);
 
             abort(403);

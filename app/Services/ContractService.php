@@ -1,36 +1,35 @@
 <?php
- 
+
 namespace App\Services;
- 
+
 use App\Models\Contract;
 use App\Models\Room;
-use App\Models\Guest;
 use App\Support\AuditLogger;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
- 
+
 /**
  * ═══════════════════════════════════════════════════════════════════════════
  * ContractService - FIXED VERSION
- * 
+ *
  * ✅ FIXES APPLIED:
  * 1. ✓ advance_payment คำนวณจาก monthly_rent × 1 เดือน เท่านั้น (ไม่คูณด้วย months)
  * 2. ✓ deposit auto default เป็น monthly_rent ถ้าว่าง
  * 3. ✓ Allow override deposit manually
  * 4. ✓ advance_payment_months เก็บค่าได้ แต่ไม่ใช้ในการคำนวณ advance_payment
- * 
+ *
  * ═══════════════════════════════════════════════════════════════════════════
  */
 class ContractService
 {
     private const STATUSES = ['draft', 'pending', 'active', 'completed', 'cancelled'];
- 
+
     /**
      * Create a new contract
-     * 
+     *
      * LOGIC:
      * 1. Generate contract number (auto)
      * 2. Validate dates (end > start)
@@ -42,18 +41,17 @@ class ContractService
     public function create(array $validated): Contract
     {
 
- 
         // ─── Step 1: Auto-generate contract number ───────────────────────
         if (empty($validated['contract_number'] ?? null)) {
-            
+
             $validated['contract_number'] = $this->generateContractNumber();
         }
- 
+
         // ─── Step 2: Validate dates ───────────────────────────────────────
         if (isset($validated['start_date']) && isset($validated['end_date'])) {
             $startDate = Carbon::parse($validated['start_date']);
             $endDate = Carbon::parse($validated['end_date']);
- 
+
             if ($endDate->isBefore($startDate)) {
                 \Log::warning('❌ Invalid date range', [
                     'start' => $startDate->format('Y-m-d'),
@@ -64,39 +62,39 @@ class ContractService
                 ]);
             }
         }
- 
+
         // ─── Step 3: Calculate advance_payment ───────────────────────────
         // ✅ KEY FIX: advance_payment = monthly_rent × 1 เดือน เท่านั้น
         if (isset($validated['monthly_rent'])) {
-            $monthly_rent = (float)$validated['monthly_rent'];
+            $monthly_rent = (float) $validated['monthly_rent'];
             $calculated_advance = $monthly_rent * 1;  // ← คิดแค่ 1 เดือนเสมอ
-            
+
             $validated['advance_payment'] = $calculated_advance;
         } else {
             // If no data, set to 0
             $validated['advance_payment'] = 0;
         }
- 
+
         // ─── Step 4: Default deposit to monthly_rent ──────────────────────
         // ✅ KEY FIX: If deposit is empty, auto = monthly_rent (1 เดือน)
         $original_deposit = $validated['deposit'] ?? null;
-        
-        if (!isset($validated['deposit']) || $validated['deposit'] === null || $validated['deposit'] === '') {
-            $validated['deposit'] = (float)($validated['monthly_rent'] ?? 0);
+
+        if (! isset($validated['deposit']) || $validated['deposit'] === null || $validated['deposit'] === '') {
+            $validated['deposit'] = (float) ($validated['monthly_rent'] ?? 0);
         } else {
-            $validated['deposit'] = (float)$validated['deposit'];
+            $validated['deposit'] = (float) $validated['deposit'];
         }
- 
+
         // ─── Step 5: Ensure advance_payment_months is set ──────────────────
-        if (!isset($validated['advance_payment_months'])) {
+        if (! isset($validated['advance_payment_months'])) {
             $validated['advance_payment_months'] = 1;
         } else {
-            $validated['advance_payment_months'] = (int)$validated['advance_payment_months'];
+            $validated['advance_payment_months'] = (int) $validated['advance_payment_months'];
         }
- 
+
         // ─── Step 6: Check room status ────────────────────────────────────
         $shouldOccupied = isset($validated['status']) && $validated['status'] === 'active';
- 
+
         // ─── Step 7: Save to database (transaction) ──────────────────────
         $contract = DB::transaction(function () use ($validated, $shouldOccupied) {
             $contract = Contract::create($validated);
@@ -105,24 +103,24 @@ class ContractService
                 'id' => $contract->id,
                 'number' => $contract->contract_number,
             ]);
- 
+
             // Update room status if active
             if ($shouldOccupied && $contract->room_id) {
                 $contract->room->update(['status' => 'occupied']);
             }
- 
+
             // Audit log
             AuditLogger::log('contract.created', $contract);
- 
+
             return $contract;
         });
- 
+
         return $contract;
     }
- 
+
     /**
      * Update an existing contract
-     * 
+     *
      * SAME LOGIC AS CREATE
      * But also handles room status transitions
      */
@@ -130,45 +128,45 @@ class ContractService
     {
         $oldStatus = $contract->status;
         $oldRoomId = $contract->room_id;
- 
+
         // ─── Validate dates ──────────────────────────────────────────────
         if (isset($validated['start_date']) && isset($validated['end_date'])) {
             $startDate = Carbon::parse($validated['start_date']);
             $endDate = Carbon::parse($validated['end_date']);
- 
+
             if ($endDate->isBefore($startDate)) {
                 throw ValidationException::withMessages([
                     'end_date' => 'วันสิ้นสุดต้องหลังจากวันเริ่มต้น',
                 ]);
             }
         }
- 
+
         // ─── Calculate advance_payment ───────────────────────────────────
         // ✅ KEY FIX: advance_payment = monthly_rent × 1 เดือน เท่านั้น
         if (isset($validated['monthly_rent'])) {
-            $monthly_rent = (float)$validated['monthly_rent'];
+            $monthly_rent = (float) $validated['monthly_rent'];
             $calculated_advance = $monthly_rent * 1;  // ← คิดแค่ 1 เดือนเสมอ
-            
+
             $validated['advance_payment'] = $calculated_advance;
         }
- 
+
         // ─── Default deposit ─────────────────────────────────────────────
-        if (!isset($validated['deposit']) || $validated['deposit'] === null || $validated['deposit'] === '') {
-            $validated['deposit'] = (float)($validated['monthly_rent'] ?? 0);
+        if (! isset($validated['deposit']) || $validated['deposit'] === null || $validated['deposit'] === '') {
+            $validated['deposit'] = (float) ($validated['monthly_rent'] ?? 0);
         } else {
-            $validated['deposit'] = (float)$validated['deposit'];
+            $validated['deposit'] = (float) $validated['deposit'];
         }
- 
+
         // ─── Ensure advance_payment_months ──────────────────────────────
-        if (!isset($validated['advance_payment_months'])) {
+        if (! isset($validated['advance_payment_months'])) {
             $validated['advance_payment_months'] = 1;
         } else {
-            $validated['advance_payment_months'] = (int)$validated['advance_payment_months'];
+            $validated['advance_payment_months'] = (int) $validated['advance_payment_months'];
         }
- 
+
         $newStatus = $validated['status'] ?? $oldStatus;
         $newRoomId = $validated['room_id'] ?? $oldRoomId;
- 
+
         // ─── Save to database (transaction) ──────────────────────────────
         $contract = DB::transaction(function () use ($contract, $validated, $oldStatus, $newStatus, $oldRoomId, $newRoomId) {
             $contract->update($validated);
@@ -176,26 +174,26 @@ class ContractService
                 'id' => $contract->id,
                 'new_status' => $newStatus,
             ]);
- 
+
             // Handle room status changes
             if ($oldStatus === 'active' && $newStatus !== 'active' && $oldRoomId) {
                 $this->updateRoomStatus($oldRoomId, 'available');
                 \Log::info('🏠 Room freed', ['room_id' => $oldRoomId]);
             }
- 
+
             if ($newStatus === 'active' && $newRoomId) {
                 $this->updateRoomStatus($newRoomId, 'occupied');
                 \Log::info('🏠 Room occupied', ['room_id' => $newRoomId]);
             }
- 
+
             AuditLogger::log('contract.updated', $contract);
- 
+
             return $contract->fresh();
         });
- 
+
         return $contract;
     }
- 
+
     /**
      * Activate a contract
      */
@@ -206,22 +204,22 @@ class ContractService
                 'status' => 'เฉพาะสัญญาร่างหรือรออนุมัติเท่านั้นที่สามารถเปิดใช้งานได้',
             ]);
         }
- 
+
         $contract = DB::transaction(function () use ($contract) {
             $contract->update(['status' => 'active']);
- 
+
             if ($contract->room_id) {
                 $this->updateRoomStatus($contract->room_id, 'occupied');
             }
- 
+
             AuditLogger::log('contract.activated', $contract);
- 
+
             return $contract->fresh();
         });
- 
+
         return $contract;
     }
- 
+
     /**
      * Cancel a contract
      */
@@ -232,22 +230,22 @@ class ContractService
                 'status' => 'ไม่สามารถยกเลิกสัญญานี้ได้',
             ]);
         }
- 
+
         $contract = DB::transaction(function () use ($contract) {
             $contract->update(['status' => 'cancelled']);
- 
+
             if ($contract->room_id) {
                 $this->updateRoomStatus($contract->room_id, 'available');
             }
- 
+
             AuditLogger::log('contract.cancelled', $contract);
- 
+
             return $contract->fresh();
         });
- 
+
         return $contract;
     }
- 
+
     /**
      * Complete a contract
      */
@@ -258,22 +256,22 @@ class ContractService
                 'status' => 'เฉพาะสัญญาที่ใช้งานเท่านั้นที่สามารถจบได้',
             ]);
         }
- 
+
         $contract = DB::transaction(function () use ($contract) {
             $contract->update(['status' => 'completed']);
- 
+
             if ($contract->room_id) {
                 $this->updateRoomStatus($contract->room_id, 'available');
             }
- 
+
             AuditLogger::log('contract.completed', $contract);
- 
+
             return $contract->fresh();
         });
- 
+
         return $contract;
     }
- 
+
     /**
      * Renew a contract
      */
@@ -284,14 +282,14 @@ class ContractService
                 $this->complete($contract);
             }
         }
- 
+
         $newData['room_id'] = $newData['room_id'] ?? $contract->room_id;
         $newData['guest_id'] = $newData['guest_id'] ?? $contract->guest_id;
         $newData['contract_number'] = $this->generateContractNumber();
- 
+
         return $this->create($newData);
     }
- 
+
     /**
      * Get expiring contracts (within 30 days)
      */
@@ -304,7 +302,7 @@ class ContractService
             ->orderBy('end_date', 'asc')
             ->paginate(10);
     }
- 
+
     /**
      * Get active contract for a specific room
      */
@@ -316,7 +314,7 @@ class ContractService
             ->whereDate('end_date', '>=', Carbon::today())
             ->first();
     }
- 
+
     /**
      * Generate unique contract number
      * Format: CNT0001, CNT0002, ...
@@ -325,18 +323,18 @@ class ContractService
     {
         $prefix = 'CNT';
         $year = now()->format('Y');
- 
+
         $lastContract = Contract::whereYear('created_at', now()->year)
             ->orderByDesc('id')
             ->first();
- 
+
         $sequence = $lastContract
             ? (intval(substr($lastContract->contract_number, -4)) + 1)
             : 1;
- 
+
         return sprintf('%s%04d', $prefix, $sequence);
     }
- 
+
     /**
      * Update room status
      * (Don't change if room is in maintenance)
@@ -348,7 +346,7 @@ class ContractService
             $room->update(['status' => $status]);
         }
     }
- 
+
     /**
      * Calculate contract duration in months
      */
@@ -356,10 +354,10 @@ class ContractService
     {
         $start = Carbon::parse($contract->start_date);
         $end = Carbon::parse($contract->end_date);
- 
+
         return $start->diffInMonths($end);
     }
- 
+
     /**
      * Format contracts for Excel export
      */
@@ -377,23 +375,23 @@ class ContractService
                 'สถานะ',
             ],
         ];
- 
+
         foreach ($contracts as $contract) {
             $rows[] = [
                 $contract->contract_number ?? '-',
                 $contract->room?->room_number ?? '-',
                 trim(
-                    ($contract->guest?->first_name ?? '') . ' ' .
+                    ($contract->guest?->first_name ?? '').' '.
                     ($contract->guest?->last_name ?? '')
                 ) ?: '-',
                 optional($contract->start_date)->format('d/m/Y') ?? '-',
                 optional($contract->end_date)->format('d/m/Y') ?? '-',
-                number_format((float)($contract->monthly_rent ?? 0), 2),
-                number_format((float)($contract->deposit ?? 0), 2),
+                number_format((float) ($contract->monthly_rent ?? 0), 2),
+                number_format((float) ($contract->deposit ?? 0), 2),
                 $contract->status ?? '-',
             ];
         }
- 
+
         return $rows;
     }
 }

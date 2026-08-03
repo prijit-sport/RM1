@@ -76,4 +76,3 @@ class UpdateContractRequest extends FormRequest
         ];
     }
 }
-

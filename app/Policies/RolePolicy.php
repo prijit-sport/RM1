@@ -37,6 +37,3 @@ class RolePolicy
         return $user->hasRole(Role::ADMIN);
     }
 }
-
-
-

@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\DB;
 
 class SetRoomsStatusCommand extends Command
 {
-    /** @inheritDoc */
+    /** {@inheritDoc} */
     // (kept for IDE / php-doc parity)
     /** @var string */
     protected $signature = 'rooms:set-status {--floor= : Set only rooms with floor = N} {--status=available : available|occupied|maintenance} {--all : Alias for updating all rooms}';
@@ -23,6 +23,7 @@ class SetRoomsStatusCommand extends Command
 
         if (! in_array($status, ['available', 'occupied', 'maintenance'], true)) {
             $this->error('Invalid --status. Use available|occupied|maintenance');
+
             return self::FAILURE;
         }
 
@@ -44,4 +45,3 @@ class SetRoomsStatusCommand extends Command
         return self::SUCCESS;
     }
 }
-

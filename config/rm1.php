@@ -9,4 +9,3 @@ return [
     // Contract expiry warning window (days)
     'contract_expiry_warning_days' => env('CONTRACT_EXPIRY_DAYS', 30),
 ];
-

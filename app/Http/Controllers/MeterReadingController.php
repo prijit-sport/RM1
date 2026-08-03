@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Booking;
 use App\Models\Meter;
 use App\Models\MeterReading;
 use App\Services\MeterBillingService;
@@ -35,11 +34,11 @@ class MeterReadingController extends Controller
         }
 
         if ($request->filled('search')) {
-            $query->where('notes', 'like', '%' . $request->search . '%');
+            $query->where('notes', 'like', '%'.$request->search.'%');
         }
 
         $readings = $query->latest('reading_date')->paginate(15);
-        $billing  = $this->billingService->summarize($meter);
+        $billing = $this->billingService->summarize($meter);
 
         return response()
             ->view('meter_readings.index', compact('meter', 'readings', 'billing'))
@@ -54,6 +53,7 @@ class MeterReadingController extends Controller
         $this->authorize('update', $meter);
 
         $meter->load('room');
+
         return view('meter_readings.create', compact('meter'));
     }
 
@@ -65,18 +65,18 @@ class MeterReadingController extends Controller
         $this->authorize('update', $meter);
 
         $validated = $request->validate([
-            'reading_date'  => [
+            'reading_date' => [
                 'required',
                 'date',
                 Rule::unique('meter_readings')->where(
-                    fn($q) => $q->where('meter_id', $meter->id)
+                    fn ($q) => $q->where('meter_id', $meter->id)
                 ),
             ],
             'reading_value' => ['required', 'numeric', 'min:0'],
-            'notes'         => ['nullable', 'max:500'],
+            'notes' => ['nullable', 'max:500'],
         ]);
 
-        $validated['meter_id']    = $meter->id;
+        $validated['meter_id'] = $meter->id;
         $validated['recorded_by'] = Auth::id();
 
         MeterReading::create($validated);
@@ -96,10 +96,10 @@ class MeterReadingController extends Controller
         $this->authorize('update', $meter);
 
         $validated = $request->validate([
-            'period_month'  => ['required', 'integer', 'min:1', 'max:12'],
-            'period_year'   => ['required', 'integer', 'min:2000', 'max:2100'],
+            'period_month' => ['required', 'integer', 'min:1', 'max:12'],
+            'period_year' => ['required', 'integer', 'min:2000', 'max:2100'],
             'reading_value' => ['required', 'numeric', 'min:0'],
-            'notes'         => ['nullable', 'max:500'],
+            'notes' => ['nullable', 'max:500'],
         ]);
 
         try {
@@ -111,7 +111,7 @@ class MeterReadingController extends Controller
                 $validated['notes'] ?? null
             );
 
-            if (!$result['success']) {
+            if (! $result['success']) {
                 return redirect()
                     ->back()
                     ->withInput()
@@ -140,13 +140,13 @@ class MeterReadingController extends Controller
         } catch (\Exception $e) {
             \Log::error('MeterReading storeMonthlyAndGenerateInvoice failed', [
                 'meter_id' => $meter->id,
-                'error'    => $e->getMessage(),
+                'error' => $e->getMessage(),
             ]);
 
             return redirect()
                 ->back()
                 ->withInput()
-                ->with('error', 'เกิดข้อผิดพลาด: ' . $e->getMessage());
+                ->with('error', 'เกิดข้อผิดพลาด: '.$e->getMessage());
         }
     }
 
@@ -159,6 +159,7 @@ class MeterReadingController extends Controller
 
         abort_unless($reading->meter_id === $meter->id, 404);
         $meter->load('room');
+
         return view('meter_readings.edit', compact('meter', 'reading'));
     }
 
@@ -172,15 +173,15 @@ class MeterReadingController extends Controller
         abort_unless($reading->meter_id === $meter->id, 404);
 
         $validated = $request->validate([
-            'reading_date'  => [
+            'reading_date' => [
                 'required',
                 'date',
                 Rule::unique('meter_readings')
-                    ->where(fn($q) => $q->where('meter_id', $meter->id))
+                    ->where(fn ($q) => $q->where('meter_id', $meter->id))
                     ->ignore($reading->id),
             ],
             'reading_value' => ['required', 'numeric', 'min:0'],
-            'notes'         => ['nullable', 'max:500'],
+            'notes' => ['nullable', 'max:500'],
         ]);
 
         $validated['recorded_by'] = Auth::id();
@@ -221,13 +222,13 @@ class MeterReadingController extends Controller
         }
 
         if ($request->filled('search')) {
-            $query->where('notes', 'like', '%' . $request->search . '%');
+            $query->where('notes', 'like', '%'.$request->search.'%');
         }
 
         $readings = $query->latest('reading_date')->get();
-        $filename = 'meter_readings_' . $meter->meter_number . '_' . date('Ymd_His') . '.xlsx';
+        $filename = 'meter_readings_'.$meter->meter_number.'_'.date('Ymd_His').'.xlsx';
 
-        $rows   = [];
+        $rows = [];
         $rows[] = ['วันที่', 'เลขมิเตอร์', 'บันทึกโดย', 'หมายเหตุ'];
 
         foreach ($readings as $reading) {

@@ -2,10 +2,10 @@
 
 namespace Tests\Feature;
 
-use App\Models\User;
 use App\Models\Role;
-use Tests\TestCase;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
 
 class RouteTest extends TestCase
 {
@@ -27,7 +27,7 @@ class RouteTest extends TestCase
     {
         // Create role and user
         $role = Role::firstOrCreate(['name' => 'Admin'], ['label' => 'Administrator']);
-        
+
         $user = User::factory()->create([
             'role_id' => $role->id,
             'is_active' => true,
@@ -41,7 +41,7 @@ class RouteTest extends TestCase
     {
         // Create role and user
         $role = Role::firstOrCreate(['name' => 'Admin'], ['label' => 'Administrator']);
-        
+
         $user = User::factory()->create([
             'role_id' => $role->id,
             'is_active' => true,
@@ -56,7 +56,7 @@ class RouteTest extends TestCase
             'capacity' => 2,
         ]);
 
-        $response = $this->actingAs($user)->get('/rooms/' . $room->id);
+        $response = $this->actingAs($user)->get('/rooms/'.$room->id);
         $response->assertStatus(200);
     }
 
@@ -110,4 +110,3 @@ class RouteTest extends TestCase
         $response->assertViewIs('auth.login');
     }
 }
-

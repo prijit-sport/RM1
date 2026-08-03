@@ -4,11 +4,12 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class extends Migration
+{
     public function up(): void
     {
         Schema::table('rooms', function (Blueprint $table) {
-            if (!Schema::hasColumn('rooms', 'building')) {
+            if (! Schema::hasColumn('rooms', 'building')) {
                 $table->string('building')->nullable()->after('floor');
 
                 // If floor/building indexes are expected, create building in a safe way.
@@ -27,4 +28,3 @@ return new class extends Migration {
         });
     }
 };
-

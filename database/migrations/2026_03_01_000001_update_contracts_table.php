@@ -2,8 +2,8 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
@@ -29,10 +29,9 @@ return new class extends Migration
         }
     }
 
-
     public function down(): void
     {
-        DB::statement("ALTER TABLE contracts DROP CONSTRAINT CHK_contracts_status");
+        DB::statement('ALTER TABLE contracts DROP CONSTRAINT CHK_contracts_status');
 
         Schema::table('contracts', function (Blueprint $table) {
             $table->dropForeign(['room_id']);

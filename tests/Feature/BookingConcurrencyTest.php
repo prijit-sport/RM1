@@ -183,4 +183,3 @@ class BookingConcurrencyTest extends TestCase
         $this->assertSame([(int) $roomOne->id, (int) $roomTwo->id], $ids);
     }
 }
-

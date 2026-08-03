@@ -12,10 +12,10 @@ return new class extends Migration
             // Add new fields
             $table->string('floor')->nullable()->after('description');
             $table->string('building')->nullable()->after('floor');
-            
+
             // Add soft deletes
             $table->softDeletes();
-            
+
             // Add indexes
             $table->index(['status', 'room_type']);
             $table->index(['floor', 'building']);
@@ -28,7 +28,7 @@ return new class extends Migration
             $table->dropSoftDeletes();
             $table->dropIndex(['status', 'room_type']);
             $table->dropIndex(['floor', 'building']);
-            
+
             $table->dropColumn([
                 'floor',
                 'building',

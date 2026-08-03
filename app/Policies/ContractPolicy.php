@@ -42,4 +42,3 @@ class ContractPolicy
         return true;
     }
 }
-

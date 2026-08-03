@@ -33,8 +33,6 @@ class UpdateMaintenanceRequest extends FormRequest
             'priority' => ['sometimes', 'nullable'],
             'facility_id' => ['sometimes', 'nullable', 'exists:facilities,id'],
 
-
         ];
     }
 }
-

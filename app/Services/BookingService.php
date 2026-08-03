@@ -2,14 +2,13 @@
 
 namespace App\Services;
 
-use Illuminate\Support\Facades\Cache;
-
 use App\Models\Booking;
 use App\Models\Meter;
 use App\Models\MeterReading;
 use App\Models\Room;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -20,11 +19,11 @@ class BookingService
     // ─────────────────────────────────────────
     public function create(array $data): Booking
     {
-        $data['rent_amount']    = $data['rent_amount'] ?? 0;
+        $data['rent_amount'] = $data['rent_amount'] ?? 0;
         $data['deposit_amount'] = $data['deposit_amount'] ?? 0;
-        $data['total_price']    = (float) $data['rent_amount'] + (float) $data['deposit_amount'];
+        $data['total_price'] = (float) $data['rent_amount'] + (float) $data['deposit_amount'];
 
-        $checkIn  = $data['check_in_date'] ?? null;
+        $checkIn = $data['check_in_date'] ?? null;
         $checkOut = $data['check_out_date'] ?? null;
 
         return DB::transaction(function () use ($data, $checkIn, $checkOut) {
@@ -86,13 +85,13 @@ class BookingService
             $newStatus = $data['status'] ?? $oldStatus;
 
             $allowedTransitions = [
-                Booking::STATUS_PENDING   => [Booking::STATUS_CONFIRMED, Booking::STATUS_CANCELLED],
+                Booking::STATUS_PENDING => [Booking::STATUS_CONFIRMED, Booking::STATUS_CANCELLED],
                 Booking::STATUS_CONFIRMED => [Booking::STATUS_CANCELLED],
                 Booking::STATUS_CANCELLED => [],
             ];
 
             $allowedNext = $allowedTransitions[$oldStatus] ?? [];
-            if ($oldStatus !== $newStatus && !in_array($newStatus, $allowedNext, true)) {
+            if ($oldStatus !== $newStatus && ! in_array($newStatus, $allowedNext, true)) {
                 throw ValidationException::withMessages([
                     'status' => ['Invalid status transition'],
                 ]);
@@ -100,10 +99,10 @@ class BookingService
 
             if (
                 $oldRoomId !== $newRoomId ||
-                ($booking->check_in_date  !== ($data['check_in_date']  ?? $booking->check_in_date)) ||
+                ($booking->check_in_date !== ($data['check_in_date'] ?? $booking->check_in_date)) ||
                 ($booking->check_out_date !== ($data['check_out_date'] ?? $booking->check_out_date))
             ) {
-                $checkIn  = $data['check_in_date']  ?? $booking->check_in_date;
+                $checkIn = $data['check_in_date'] ?? $booking->check_in_date;
                 $checkOut = $data['check_out_date'] ?? $booking->check_out_date;
 
                 // ล็อกห้อง (ทั้งห้องเดิมและห้องใหม่ ถ้าเปลี่ยน) ตามลำดับ id น้อย→มาก เสมอ
@@ -172,11 +171,11 @@ class BookingService
             $this->lockRoom($booking->room_id);
 
             $electricRate = (float) ($rates['electric_rate'] ?? 0);
-            $waterRate    = (float) ($rates['water_rate']    ?? 0);
-            $taxRate      = (float) ($rates['tax_rate']      ?? 0);
+            $waterRate = (float) ($rates['water_rate'] ?? 0);
+            $taxRate = (float) ($rates['tax_rate'] ?? 0);
 
             $electricMeter = $this->ensureMeter($booking->room_id, 'electric', $electricRate, $taxRate);
-            $waterMeter    = $this->ensureMeter($booking->room_id, 'water',    $waterRate,    $taxRate);
+            $waterMeter = $this->ensureMeter($booking->room_id, 'water', $waterRate, $taxRate);
 
             $checkInDate = $booking->check_in_date
                 ? Carbon::parse($booking->check_in_date)->toDateString()
@@ -238,7 +237,7 @@ class BookingService
      * ล็อกแถวห้องตามลำดับ id จากน้อยไปมาก (ascending order)
      * เพื่อป้องกัน deadlock เมื่อมี 2 transactions พยายามล็อกห้องชุดเดียวกันสลับลำดับ
      *
-     * @param array<int> $roomIds
+     * @param  array<int>  $roomIds
      */
     private function lockRooms(array $roomIds): void
     {
@@ -279,24 +278,25 @@ class BookingService
         if ($meter instanceof Meter) {
             $meter->update([
                 'rate_per_unit' => $ratePerUnit,
-                'tax_rate'      => $taxRate,
-                'is_active'     => true,
+                'tax_rate' => $taxRate,
+                'is_active' => true,
             ]);
+
             return $meter;
         }
 
-        $roomNumber  = Room::find($roomId)?->room_number ?? (string) $roomId;
-        $meterNumber = strtoupper($type[0]) . '-' . $roomNumber . '-' . now()->format('ymd');
+        $roomNumber = Room::find($roomId)?->room_number ?? (string) $roomId;
+        $meterNumber = strtoupper($type[0]).'-'.$roomNumber.'-'.now()->format('ymd');
 
         return Meter::create([
-            'room_id'       => $roomId,
-            'type'          => $type,
-            'meter_number'  => $meterNumber,
-            'unit'          => $type === 'electric' ? 'kWh' : 'หน่วย',
+            'room_id' => $roomId,
+            'type' => $type,
+            'meter_number' => $meterNumber,
+            'unit' => $type === 'electric' ? 'kWh' : 'หน่วย',
             'rate_per_unit' => $ratePerUnit,
-            'tax_rate'      => $taxRate,
-            'is_active'     => true,
-            'installed_at'  => now()->toDateString(),
+            'tax_rate' => $taxRate,
+            'is_active' => true,
+            'installed_at' => now()->toDateString(),
         ]);
     }
 
@@ -306,9 +306,9 @@ class BookingService
         float $initialValue,
         string $readingDate
     ): void {
-        $date        = Carbon::parse($readingDate);
+        $date = Carbon::parse($readingDate);
         $periodMonth = (int) $date->format('m');
-        $periodYear  = (int) $date->format('Y');
+        $periodYear = (int) $date->format('Y');
 
         $exists = MeterReading::where('meter_id', $meter->id)
             ->where('booking_id', $booking->id)
@@ -321,15 +321,14 @@ class BookingService
         }
 
         MeterReading::create([
-            'meter_id'      => $meter->id,
-            'booking_id'    => $booking->id,
-            'period_month'  => $periodMonth,
-            'period_year'   => $periodYear,
-            'reading_date'  => $readingDate,
+            'meter_id' => $meter->id,
+            'booking_id' => $booking->id,
+            'period_month' => $periodMonth,
+            'period_year' => $periodYear,
+            'reading_date' => $readingDate,
             'reading_value' => $initialValue,
-            'recorded_by'   => Auth::id(),
-            'notes'         => 'เลขมิเตอร์เริ่มต้น (เช็คอิน)',
+            'recorded_by' => Auth::id(),
+            'notes' => 'เลขมิเตอร์เริ่มต้น (เช็คอิน)',
         ]);
     }
 }
-

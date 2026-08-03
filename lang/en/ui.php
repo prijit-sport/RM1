@@ -95,4 +95,3 @@ return [
         'reminders_sent' => 'Sent reminders: :count',
     ],
 ];
-

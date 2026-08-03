@@ -7,7 +7,6 @@ use App\Support\AuditLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Log;
 
 class AuthController extends Controller
 {
@@ -33,14 +32,14 @@ class AuthController extends Controller
             $user->password ?? $dummyHash
         );
 
-        if (!$user || !$passwordValid) {
+        if (! $user || ! $passwordValid) {
             return back()->withErrors(['email' => __('ui.auth.login_failed')])->onlyInput('email');
         }
 
         // Check if user is active (default to true if column doesn't exist)
         $isActive = $user->is_active ?? true;
 
-        if (!$isActive) {
+        if (! $isActive) {
             return back()->withErrors(['email' => __('ui.auth.inactive')])->onlyInput('email');
         }
 
@@ -52,7 +51,7 @@ class AuthController extends Controller
             // Force session to persist before redirect
             $request->session()->put('auth_user_id', Auth::user()->id);
             $request->session()->save();
-            
+
             $request->session()->regenerate();
             AuditLogger::log('auth.login', Auth::user());
 

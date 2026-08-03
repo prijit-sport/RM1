@@ -1,8 +1,10 @@
 <?php
+
 namespace App\Models;
+
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
- 
+
 class Maintenance extends Model
 {
     protected $fillable = [
@@ -20,18 +22,17 @@ class Maintenance extends Model
         'notes',
     ];
 
- 
     protected $casts = [
-        'reported_date'  => 'date',  // ✅ ตรงกับ migration
+        'reported_date' => 'date',  // ✅ ตรงกับ migration
         'completed_date' => 'date',  // ✅ ตรงกับ migration
-        'cost'           => 'decimal:2',
+        'cost' => 'decimal:2',
     ];
- 
+
     public function room(): BelongsTo
     {
         return $this->belongsTo(Room::class, 'room_id');
     }
- 
+
     // facility relation (facility_id)
 
     public function facility(): BelongsTo
@@ -39,4 +40,3 @@ class Maintenance extends Model
         return $this->belongsTo(Facility::class, 'facility_id');
     }
 }
- 

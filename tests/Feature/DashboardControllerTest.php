@@ -78,4 +78,3 @@ class DashboardControllerTest extends TestCase
         return User::factory()->create(['role_id' => $role->id]);
     }
 }
-

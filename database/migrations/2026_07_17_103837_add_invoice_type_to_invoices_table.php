@@ -9,7 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('invoices', function (Blueprint $table) {
-            if (!Schema::hasColumn('invoices', 'invoice_type')) {
+            if (! Schema::hasColumn('invoices', 'invoice_type')) {
                 $table->enum('invoice_type', ['rent', 'utility'])
                     ->default('rent')
                     ->after('invoice_number');

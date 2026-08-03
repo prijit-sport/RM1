@@ -92,7 +92,7 @@ class MeterReadingControllerTest extends TestCase
         return Meter::create([
             'room_id' => $room->id,
             'type' => $type,
-            'meter_number' => 'MTR-' . $room->room_number . '-' . $type,
+            'meter_number' => 'MTR-'.$room->room_number.'-'.$type,
             'unit' => $type === 'electric' ? 'kWh' : 'Unit',
             'installed_at' => '2026-01-01',
             'is_active' => true,
@@ -115,4 +115,3 @@ class MeterReadingControllerTest extends TestCase
         ]);
     }
 }
-

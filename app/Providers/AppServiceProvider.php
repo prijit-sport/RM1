@@ -8,8 +8,6 @@ use App\Models\Facility;
 use App\Models\Guest;
 use App\Models\Invoice;
 use App\Models\Maintenance;
-use App\Policies\MaintenancePolicy;
-
 use App\Models\Meter;
 use App\Models\Role;
 use App\Models\Room;
@@ -17,7 +15,8 @@ use App\Policies\BookingPolicy;
 use App\Policies\ContractPolicy;
 use App\Policies\FacilityPolicy;
 use App\Policies\GuestPolicy;
-use App\Policies\InvoicePolicy; // ✅ แก้ไข: เพิ่ม import InvoicePolicy
+use App\Policies\InvoicePolicy;
+use App\Policies\MaintenancePolicy; // ✅ แก้ไข: เพิ่ม import InvoicePolicy
 use App\Policies\MeterPolicy;
 use App\Policies\RolePolicy;
 use App\Policies\RoomPolicy;
@@ -25,9 +24,9 @@ use Carbon\Carbon;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\View;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -49,25 +48,25 @@ class AppServiceProvider extends ServiceProvider
         Paginator::useBootstrapFive();
 
         // ✅ แก้ไข: รวม Gate::policy ทั้งหมดไว้ที่เดียว ใช้ FQCN สม่ำเสมอ
-        Gate::policy(Booking::class,  BookingPolicy::class);
+        Gate::policy(Booking::class, BookingPolicy::class);
         Gate::policy(Contract::class, ContractPolicy::class);
         Gate::policy(Facility::class, FacilityPolicy::class);
-        Gate::policy(Guest::class,    GuestPolicy::class);
-        Gate::policy(Invoice::class,  InvoicePolicy::class);  // ✅ แก้ไข: เพิ่ม Invoice policy ที่ขาดไป
-        Gate::policy(Meter::class,    MeterPolicy::class);
-        Gate::policy(Role::class,     RolePolicy::class);
-        Gate::policy(Room::class,     RoomPolicy::class);
+        Gate::policy(Guest::class, GuestPolicy::class);
+        Gate::policy(Invoice::class, InvoicePolicy::class);  // ✅ แก้ไข: เพิ่ม Invoice policy ที่ขาดไป
+        Gate::policy(Meter::class, MeterPolicy::class);
+        Gate::policy(Role::class, RolePolicy::class);
+        Gate::policy(Room::class, RoomPolicy::class);
         Gate::policy(Maintenance::class, MaintenancePolicy::class);
-
 
         // Register @role directive for Blade - improved with null safety
         Blade::directive('role', function ($role) {
             $role = trim($role, "'\"");
+
             return "<?php if(auth()->check() && auth()->user() && auth()->user()->hasRole('{$role}')): ?>";
         });
 
         Blade::directive('endrole', function () {
-            return "<?php endif; ?>";
+            return '<?php endif; ?>';
         });
 
         // Register @canany directive for multiple permissions
@@ -76,7 +75,7 @@ class AppServiceProvider extends ServiceProvider
         });
 
         Blade::directive('endcanany', function () {
-            return "<?php endif; ?>";
+            return '<?php endif; ?>';
         });
 
         View::composer('layouts.app', function ($view) {
@@ -145,9 +144,9 @@ class AppServiceProvider extends ServiceProvider
             }
 
             $view->with([
-                'notifications'      => $notifications,
-                'notificationCount'  => $notifications->count(),
-                'pendingPayments'    => $overdueInvoices,
+                'notifications' => $notifications,
+                'notificationCount' => $notifications->count(),
+                'pendingPayments' => $overdueInvoices,
                 'pendingMaintenance' => $pendingMaintenance,
             ]);
         });

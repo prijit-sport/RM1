@@ -22,10 +22,10 @@ class UpdateInvoiceRequest extends FormRequest
     public function rules(): array
     {
         $invoiceId = $this->route('invoice')?->id ?? null;
-        
+
         return [
             'booking_id' => 'required|exists:bookings,id',
-            'invoice_number' => 'required|unique:invoices,invoice_number,' . $invoiceId . '|max:50',
+            'invoice_number' => 'required|unique:invoices,invoice_number,'.$invoiceId.'|max:50',
             'amount' => 'required|numeric|min:0',
             'tax' => 'required|numeric|min:0',
             'total' => 'nullable|numeric|min:0',

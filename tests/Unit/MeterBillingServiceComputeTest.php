@@ -24,7 +24,7 @@ class MeterBillingServiceComputeTest extends TestCase
     private function makeMeter(float $rate, float $taxRate): Meter
     {
         $room = Room::create([
-            'room_number' => 'CALC-' . uniqid(),
+            'room_number' => 'CALC-'.uniqid(),
             'room_type' => 'Single',
             'price_per_month' => 1500,
             'capacity' => 1,
@@ -34,7 +34,7 @@ class MeterBillingServiceComputeTest extends TestCase
         return Meter::create([
             'room_id' => $room->id,
             'type' => 'electric',
-            'meter_number' => 'CALC-METER-' . uniqid(),
+            'meter_number' => 'CALC-METER-'.uniqid(),
             'unit' => 'kWh',
             'installed_at' => now()->toDateString(),
             'is_active' => true,

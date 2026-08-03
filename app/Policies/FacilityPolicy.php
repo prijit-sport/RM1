@@ -38,4 +38,3 @@ class FacilityPolicy
         return $user->hasRole(Role::ADMIN);
     }
 }
-

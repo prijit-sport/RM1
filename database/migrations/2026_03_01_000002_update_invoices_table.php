@@ -10,16 +10,16 @@ return new class extends Migration
     {
         Schema::table('invoices', function (Blueprint $table) {
             // Add new fields for better tracking
-           $table->foreignId('guest_id')->nullable()->constrained()->onDelete('no action');
-	   $table->foreignId('room_id')->nullable()->constrained()->onDelete('no action');
+            $table->foreignId('guest_id')->nullable()->constrained()->onDelete('no action');
+            $table->foreignId('room_id')->nullable()->constrained()->onDelete('no action');
             $table->decimal('late_fee', 12, 2)->default(0)->after('total');
             $table->decimal('paid_amount', 12, 2)->nullable()->after('late_fee');
             $table->string('payment_method')->nullable()->after('paid_amount');
             $table->date('payment_date')->nullable()->after('payment_method');
-            
+
             // Add soft deletes
             $table->softDeletes();
-            
+
             // Add indexes
             $table->index(['guest_id', 'status']);
             $table->index(['room_id', 'status']);
@@ -38,7 +38,7 @@ return new class extends Migration
             $table->dropIndex(['room_id', 'status']);
             $table->dropIndex(['status', 'due_date']);
             $table->dropIndex(['payment_date']);
-            
+
             $table->dropColumn([
                 'guest_id',
                 'room_id',

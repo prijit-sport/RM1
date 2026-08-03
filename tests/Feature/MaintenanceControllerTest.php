@@ -56,13 +56,11 @@ class MaintenanceControllerTest extends TestCase
                 'status' => 'pending',
                 'description' => 'ทดสอบ',
 
-
             ]);
 
         $response->assertRedirect(route('maintenances.index'));
         $this->assertSame(1, Maintenance::count());
     }
-
 
     public function test_show_displays_existing_maintenance_details(): void
     {
@@ -114,7 +112,6 @@ class MaintenanceControllerTest extends TestCase
         ]);
     }
 
-
     private function createRoom(string $roomNumber, string $status = 'available'): Room
     {
         return Room::create([
@@ -134,4 +131,3 @@ class MaintenanceControllerTest extends TestCase
         return User::factory()->create(['role_id' => $role->id]);
     }
 }
-

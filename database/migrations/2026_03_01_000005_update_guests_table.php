@@ -15,10 +15,10 @@ return new class extends Migration
             $table->string('emergency_contact')->nullable()->after('nationality');
             $table->string('emergency_phone')->nullable()->after('emergency_contact');
             $table->text('notes')->nullable()->after('emergency_phone');
-            
+
             // Add soft deletes
             $table->softDeletes();
-            
+
             // Add indexes
             $table->index('email');
             $table->index('phone');
@@ -31,7 +31,7 @@ return new class extends Migration
             $table->dropSoftDeletes();
             $table->dropIndex(['email']);
             $table->dropIndex(['phone']);
-            
+
             $table->dropColumn([
                 'date_of_birth',
                 'nationality',

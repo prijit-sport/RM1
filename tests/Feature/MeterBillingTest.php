@@ -6,10 +6,9 @@ use App\Models\Booking;
 use App\Models\Guest;
 use App\Models\Invoice;
 use App\Models\Meter;
-use App\Models\MeterReading;
+use App\Models\Role;
 use App\Models\Room;
 use App\Models\User;
-use App\Models\Role;
 use App\Services\MeterBillingService;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -69,7 +68,7 @@ class MeterBillingTest extends TestCase
             'tax_rate' => 7,
         ]);
 
-        $service = new MeterBillingService();
+        $service = new MeterBillingService;
 
         $result = $service->recordMonthlyAndCreateInvoice(
             $meter,
@@ -145,7 +144,7 @@ class MeterBillingTest extends TestCase
             'tax_rate' => 0,
         ]);
 
-        $service = new MeterBillingService();
+        $service = new MeterBillingService;
 
         $result1 = $service->recordMonthlyAndCreateInvoice($meter, 2, 2026, 120, null);
         $this->assertTrue($result1['success']);
@@ -206,7 +205,7 @@ class MeterBillingTest extends TestCase
             'tax_rate' => 7,
         ]);
 
-        $service = new MeterBillingService();
+        $service = new MeterBillingService;
 
         $result = $service->recordMonthlyAndCreateInvoice(
             $meter,
@@ -223,7 +222,7 @@ class MeterBillingTest extends TestCase
     private function createUserWithRole(string $roleName): User
     {
         $role = Role::firstOrCreate(['name' => $roleName], ['description' => $roleName]);
+
         return User::factory()->create(['role_id' => $role->id]);
     }
 }
-

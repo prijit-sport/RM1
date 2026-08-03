@@ -1,9 +1,9 @@
 <?php
- 
+
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
- 
+
 return new class extends Migration
 {
     /**
@@ -14,16 +14,16 @@ return new class extends Migration
         Schema::table('facilities', function (Blueprint $table) {
             // ✅ เพิ่ม room_id column
             $table->unsignedBigInteger('room_id')->nullable()->after('id');
-            
+
             // ✅ เพิ่ม foreign key constraint
             $table->foreign('room_id')
-                  ->references('id')
-                  ->on('rooms')
-                  ->onDelete('set null')
-                  ->onUpdate('cascade');
+                ->references('id')
+                ->on('rooms')
+                ->onDelete('set null')
+                ->onUpdate('cascade');
         });
     }
- 
+
     /**
      * Reverse the migrations.
      */
@@ -32,10 +32,9 @@ return new class extends Migration
         Schema::table('facilities', function (Blueprint $table) {
             // ✅ ลบ foreign key ก่อน
             $table->dropForeign(['room_id']);
-            
+
             // ✅ ลบ column
             $table->dropColumn('room_id');
         });
     }
 };
- 

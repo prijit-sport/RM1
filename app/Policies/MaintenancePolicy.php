@@ -53,4 +53,3 @@ class MaintenancePolicy
         return $user->hasRole(Role::ADMIN) || $user->hasRole(Role::STAFF);
     }
 }
-

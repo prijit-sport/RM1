@@ -2,21 +2,21 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
     public function up(): void
     {
         // ตรวจสอบว่า floor และ zone columns มีอยู่
-        if (!Schema::hasColumn('rooms', 'floor')) {
+        if (! Schema::hasColumn('rooms', 'floor')) {
             Schema::table('rooms', function (Blueprint $table) {
                 $table->string('floor')->nullable();
             });
         }
 
-        if (!Schema::hasColumn('rooms', 'zone')) {
+        if (! Schema::hasColumn('rooms', 'zone')) {
             Schema::table('rooms', function (Blueprint $table) {
                 $table->string('zone')->nullable();
             });
@@ -28,7 +28,7 @@ return new class extends Migration
             ->orWhereNull('zone')
             ->update([
                 'floor' => DB::raw('COALESCE(floor, "1")'),
-                'zone' => DB::raw('COALESCE(zone, "A")')
+                'zone' => DB::raw('COALESCE(zone, "A")'),
             ]);
     }
 

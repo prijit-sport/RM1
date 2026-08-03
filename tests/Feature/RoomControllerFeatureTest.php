@@ -40,4 +40,3 @@ class RoomControllerFeatureTest extends TestCase
         $this->assertNotEquals(200, $response->getStatusCode());
     }
 }
-

@@ -4,12 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\Meter;
 use App\Models\Room;
-use App\Models\MeterReading;
 use App\Services\MeterBillingService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
-use Illuminate\Http\RedirectResponse;
 
 /**
  * หมายเหตุ: โค้ดนี้เป็น Laravel (access model fields เป็น property)
@@ -41,13 +40,11 @@ class MeterController extends Controller
                 $q->where('room_number', 'like', "%{$search}%")
                     ->orWhereHas(
                         'meters',
-                        fn($m) =>
-                        $m->where('meter_number', 'like', "%{$search}%")
+                        fn ($m) => $m->where('meter_number', 'like', "%{$search}%")
                     )
                     ->orWhereHas(
                         'currentBooking.guest',
-                        fn($g) =>
-                        $g->where('first_name', 'like', "%{$search}%")
+                        fn ($g) => $g->where('first_name', 'like', "%{$search}%")
                             ->orWhere('last_name', 'like', "%{$search}%")
                     );
             });
@@ -56,16 +53,14 @@ class MeterController extends Controller
         if ($request->filled('type')) {
             $query->whereHas(
                 'meters',
-                fn($m) =>
-                $m->where('type', $request->string('type'))
+                fn ($m) => $m->where('type', $request->string('type'))
             );
         }
 
         if ($request->filled('status')) {
             $query->whereHas(
                 'meters',
-                fn($m) =>
-                $m->where('is_active', $request->boolean('status'))
+                fn ($m) => $m->where('is_active', $request->boolean('status'))
             );
         }
 
@@ -82,6 +77,7 @@ class MeterController extends Controller
         $this->authorize('create', Meter::class);
 
         $rooms = Room::orderBy('zone')->orderBy('room_number')->get();
+
         return view('meters.create', compact('rooms'));
     }
 
@@ -93,21 +89,21 @@ class MeterController extends Controller
         $this->authorize('create', Meter::class);
 
         $validated = $request->validate([
-            'room_id'       => ['required', 'exists:rooms,id'],
-            'type'          => [
+            'room_id' => ['required', 'exists:rooms,id'],
+            'type' => [
                 'required',
                 Rule::in(['water', 'electric']),
-                Rule::unique('meters')->where(fn($q) => $q
+                Rule::unique('meters')->where(fn ($q) => $q
                     ->where('room_id', $request->input('room_id'))
                     ->where('type', $request->input('type'))),
             ],
-            'meter_number'  => ['required', 'max:100', 'unique:meters,meter_number'],
-            'unit'          => ['nullable', 'max:20'],
-            'installed_at'  => ['nullable', 'date'],
+            'meter_number' => ['required', 'max:100', 'unique:meters,meter_number'],
+            'unit' => ['nullable', 'max:20'],
+            'installed_at' => ['nullable', 'date'],
             'rate_per_unit' => ['required', 'numeric', 'min:0'],
-            'tax_rate'      => ['required', 'numeric', 'min:0'],
-            'is_active'     => ['nullable', 'boolean'],
-            'notes'         => ['nullable', 'max:500'],
+            'tax_rate' => ['required', 'numeric', 'min:0'],
+            'is_active' => ['nullable', 'boolean'],
+            'notes' => ['nullable', 'max:500'],
         ]);
 
         $validated['is_active'] = (bool) ($validated['is_active'] ?? true);
@@ -127,10 +123,10 @@ class MeterController extends Controller
 
         $meter->load([
             'room',
-            'readings' => fn($q) =>
-            $q->latest('reading_date')->limit(10)->with('recordedBy')
+            'readings' => fn ($q) => $q->latest('reading_date')->limit(10)->with('recordedBy'),
         ]);
         $billing = $this->billingService->summarize($meter);
+
         return view('meters.show', compact('meter', 'billing'));
     }
 
@@ -142,6 +138,7 @@ class MeterController extends Controller
         $this->authorize('update', $meter);
 
         $rooms = Room::orderBy('zone')->orderBy('room_number')->get();
+
         return view('meters.edit', compact('meter', 'rooms'));
     }
 
@@ -153,26 +150,26 @@ class MeterController extends Controller
         $this->authorize('update', $meter);
 
         $validated = $request->validate([
-            'room_id'       => ['required', 'exists:rooms,id'],
-            'type'          => [
+            'room_id' => ['required', 'exists:rooms,id'],
+            'type' => [
                 'required',
                 Rule::in(['water', 'electric']),
-                Rule::unique('meters')->where(fn($q) => $q
+                Rule::unique('meters')->where(fn ($q) => $q
                     ->where('room_id', $request->input('room_id'))
                     ->where('type', $request->input('type'))
                     ->where('id', '!=', $meter->id)),
             ],
-            'meter_number'  => [
+            'meter_number' => [
                 'required',
                 'max:100',
-                Rule::unique('meters', 'meter_number')->ignore($meter->id)
+                Rule::unique('meters', 'meter_number')->ignore($meter->id),
             ],
-            'unit'          => ['nullable', 'max:20'],
-            'installed_at'  => ['nullable', 'date'],
+            'unit' => ['nullable', 'max:20'],
+            'installed_at' => ['nullable', 'date'],
             'rate_per_unit' => ['required', 'numeric', 'min:0'],
-            'tax_rate'      => ['required', 'numeric', 'min:0'],
-            'is_active'     => ['nullable', 'boolean'],
-            'notes'         => ['nullable', 'max:500'],
+            'tax_rate' => ['required', 'numeric', 'min:0'],
+            'is_active' => ['nullable', 'boolean'],
+            'notes' => ['nullable', 'max:500'],
         ]);
 
         $validated['is_active'] = (bool) ($validated['is_active'] ?? false);
@@ -189,6 +186,7 @@ class MeterController extends Controller
         $this->authorize('delete', $meter);
 
         $meter->delete();
+
         return redirect()->route('meters.index')->with('success', __('ui.meter.deleted'));
     }
 
@@ -202,7 +200,7 @@ class MeterController extends Controller
         $query = Meter::with('room');
 
         if ($request->filled('search')) {
-            $query->where('meter_number', 'like', '%' . $request->string('search') . '%');
+            $query->where('meter_number', 'like', '%'.$request->string('search').'%');
         }
         if ($request->filled('type')) {
             $query->where('type', $request->string('type'));
@@ -211,10 +209,10 @@ class MeterController extends Controller
             $query->where('is_active', $request->boolean('status'));
         }
 
-        $meters   = $query->orderBy('id', 'desc')->get();
-        $filename = 'meters_' . date('Ymd_His') . '.xlsx';
+        $meters = $query->orderBy('id', 'desc')->get();
+        $filename = 'meters_'.date('Ymd_His').'.xlsx';
 
-        $rows   = [];
+        $rows = [];
         $rows[] = [
             'ห้องพัก',
             'ประเภท',
@@ -224,7 +222,7 @@ class MeterController extends Controller
             'ภาษี (%)',
             'สถานะ',
             'วันติดตั้ง',
-            'หมายเหตุ'
+            'หมายเหตุ',
         ];
 
         foreach ($meters as $meter) {
