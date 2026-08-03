@@ -112,3 +112,28 @@ MIT (ตามที่ระบุใน `composer.json`)
 - แนะนำตั้งค่า QUEUE_CONNECTION เป็น database หรือ redis (ปัจจุบันใช้ database อยู่แล้ว)
 - ต้องรัน php artisan config:cache, route:cache, view:cache หลัง deploy
 - ต้อง backup ฐานข้อมูลด้วย mysqldump ก่อนรัน migration บน production เสมอ
+
+### ตรวจสอบความพร้อมก่อน deploy (แนะนำ)
+
+รันคำสั่งต่อไปนี้ **ก่อนทุกครั้งที่ deploy** เพื่อตรวจสอบว่าค่า config/env ปลอดภัยสำหรับ production:
+
+```bash
+php artisan app:check-production-readiness
+```
+
+คำสั่งนี้จะตรวจสอบ 6 รายการ และแสดงเป็นตาราง (✅/❌):
+
+1. `APP_ENV` ต้องเป็น `production`
+2. `APP_DEBUG` ต้องเป็น `false`
+3. `SESSION_SECURE_COOKIE` ต้องเป็น `true` (บังคับใช้ HTTPS cookie)
+4. `APP_KEY` ต้องไม่ว่างเปล่า และต้องขึ้นต้นด้วย `base64:` (จาก `php artisan key:generate`)
+5. `APP_URL` ต้องไม่ใช่ค่า default `http://localhost:8000`
+6. `LOG_LEVEL` ต้องไม่เป็น `debug` ใน production
+
+หากมีรายการใดไม่ผ่าน command จะคืนค่า **exit code ที่ไม่ใช่ 0** (ล้มเหลว) และถ้าผ่านครบทุกรายการจะคืนค่า **0** (สำเร็จ) — จึงสามารถใช้เป็นเงื่อนไขใน CI/CD หรือ deploy script ได้ เช่น:
+
+```bash
+php artisan app:check-production-readiness || exit 1
+```
+
+> หมายเหตุ: ควรใช้คำสั่งนี้บนค่า config ที่ถูก cache แล้ว (หลัง `php artisan config:cache`) เพื่อให้ตรงกับค่าที่ app ใช้จริงใน production

@@ -1,9 +1,9 @@
-# TODO — Production Readiness Audit
+# TASK 3 – Pint & APP_URL Limitation Comment
 
-## TASK 1: แก้ Race Condition ในการจองห้อง (Critical — Priority สูงสุด)
-
-- [x] 1. แก้ `BookingService::create()` — ย้าย overlap check เข้าใน `DB::transaction()` + lock แถว `rooms` + ใช้ `lockForUpdate()->first()` แทน `exists()`
-- [x] 2. แก้ `BookingService::update()` — lock แถว rooms ตามลำดับ id (กัน deadlock) + lock แถว booking + ใช้ `lockForUpdate()->first()` บน overlap query
-- [x] 3. สร้าง `tests/Feature/BookingConcurrencyTest.php`
-- [x] 4. รัน test (BookingFlowTest + BookingConcurrencyTest + ทั้ง suite) — ผ่านทั้งหมด 110 tests (286 assertions)
-- [x] 5. Commit แบบ Conventional Commits
+- [x] 1. Run Pint on command file
+- [x] 2. Run Pint on test file
+- [x] 3. Confirm `pint --test` passes whole project
+- [x] 4. Add APP_URL limitation comment in command file
+- [x] 5. git add → status → diff --cached
+- [x] 6. Run `php artisan test` (expect 118 tests)
+- [x] 7. Report results (no commit)
