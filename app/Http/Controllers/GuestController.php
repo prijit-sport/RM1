@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\DB;
 
 class GuestController extends Controller
 {
-// ─────────────────────────────────────────
+    // ─────────────────────────────────────────
     //  INDEX - รายการผู้เช่าทั้งหมด
     // ─────────────────────────────────────────
     public function index(Request $request)
@@ -44,7 +44,7 @@ class GuestController extends Controller
                     return true;
                 }
 
-$s = strtolower($request->input('search'));
+                $s = strtolower($request->input('search'));
 
                 // Keep rows already matched via SQL (name/phone) or hash lookup.
                 return str_contains(strtolower((string) $guest->email), $s)
@@ -86,7 +86,7 @@ $s = strtolower($request->input('search'));
     // ─────────────────────────────────────────
     public function store(Request $request)
     {
-$this->authorize('create', Guest::class); // ✅ แก้ไข: เพิ่ม authorization
+        $this->authorize('create', Guest::class); // ✅ แก้ไข: เพิ่ม authorization
 
         $validated = $request->validate([
             'first_name' => 'required|max:50',
@@ -134,7 +134,7 @@ $this->authorize('create', Guest::class); // ✅ แก้ไข: เพิ่�
     {
         $this->authorize('create', Guest::class); // ✅ แก้ไข: เพิ่ม authorization
 
-$validated = $request->validate([
+        $validated = $request->validate([
             'guests' => ['required', 'array', 'min:1'],
             'guests.*.first_name' => ['required', 'string', 'max:50'],
             'guests.*.last_name' => ['required', 'string', 'max:50'],
@@ -192,7 +192,7 @@ $validated = $request->validate([
     {
         $this->authorize('update', $guest); // ✅ แก้ไข: เพิ่ม authorization
 
-$validated = $request->validate([
+        $validated = $request->validate([
             'first_name' => 'required|max:50',
             'last_name' => 'required|max:50',
             'email' => ['required', 'email', function ($attribute, $value, $fail) use ($guest) {

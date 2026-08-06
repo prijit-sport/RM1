@@ -45,10 +45,10 @@ class MigrateGuestPiiEncryption extends Command
             try {
                 DB::transaction(function () use ($guest): void {
                     $guest->forceFill([
-                        'email_ciphertext'      => encrypt($guest->email),
-                        'email_hash'            => hash_hmac('sha256', $guest->email, (string) config('app.key')),
-                        'id_number_ciphertext'  => encrypt($guest->id_number),
-                        'id_number_hash'        => hash_hmac('sha256', $guest->id_number, (string) config('app.key')),
+                        'email_ciphertext' => encrypt($guest->email),
+                        'email_hash' => hash_hmac('sha256', $guest->email, (string) config('app.key')),
+                        'id_number_ciphertext' => encrypt($guest->id_number),
+                        'id_number_hash' => hash_hmac('sha256', $guest->id_number, (string) config('app.key')),
                     ])->save();
                 });
 
