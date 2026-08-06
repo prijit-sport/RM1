@@ -4,11 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\Guest;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 
 class GuestController extends Controller
 {
-    // ─────────────────────────────────────────
+// ─────────────────────────────────────────
     //  INDEX - รายการผู้เช่าทั้งหมด
     // ─────────────────────────────────────────
     public function index(Request $request)
@@ -19,18 +20,55 @@ class GuestController extends Controller
 
         if ($request->filled('search')) {
             $s = $request->input('search');
+
+            // PII fields (email, id_number) are encrypted at rest and cannot be
+            // searched via SQL LIKE. We filter them in PHP after fetching the
+            // SQL-compatible subset (first_name, last_name, phone).
             $query->where(function ($q) use ($s) {
                 $q->where('first_name', 'like', "%{$s}%")
                     ->orWhere('last_name', 'like', "%{$s}%")
-                    ->orWhere('email', 'like', "%{$s}%")
-                    ->orWhere('phone', 'like', "%{$s}%")
-                    ->orWhere('id_number', 'like', "%{$s}%");
-            });
+                    ->orWhere('phone', 'like', "%{$s}%");
+            })
+                ->orWhere(function ($q) use ($s) {
+                    // Exact lookup on the blind-index hash for PII fields.
+                    $q->where('email_hash', $this->piiHash($s))
+                        ->orWhere('id_number_hash', $this->piiHash($s));
+                });
         }
 
-        $guests = $query->orderByDesc('id')->paginate(10)->withQueryString();
+        $guests = $query
+            ->orderByDesc('id')
+            ->get()
+            ->filter(function (Guest $guest) use ($request) {
+                if (! $request->filled('search')) {
+                    return true;
+                }
 
-        return view('guests.index', compact('guests'));
+$s = strtolower($request->input('search'));
+
+                // Keep rows already matched via SQL (name/phone) or hash lookup.
+                return str_contains(strtolower((string) $guest->email), $s)
+                    || str_contains(strtolower((string) $guest->id_number), $s);
+            })
+            ->values();
+
+        $perPage = 10;
+        $page = max(1, (int) $request->get('page', 1));
+        $paginator = new LengthAwarePaginator(
+            $guests->forPage($page, $perPage),
+            $guests->count(),
+            $perPage,
+            $page,
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
+
+        return view('guests.index', ['guests' => $paginator]);
+    }
+
+    /** คำนวณ blind-index hash สำหรับ lookup PII field */
+    private function piiHash(string $value): string
+    {
+        return hash_hmac('sha256', $value, (string) config('app.key'));
     }
 
     // ─────────────────────────────────────────
@@ -48,17 +86,25 @@ class GuestController extends Controller
     // ─────────────────────────────────────────
     public function store(Request $request)
     {
-        $this->authorize('create', Guest::class); // ✅ แก้ไข: เพิ่ม authorization
+$this->authorize('create', Guest::class); // ✅ แก้ไข: เพิ่ม authorization
 
         $validated = $request->validate([
             'first_name' => 'required|max:50',
             'last_name' => 'required|max:50',
-            'email' => 'required|email|unique:guests',
+            'email' => ['required', 'email', function ($attribute, $value, $fail) {
+                if (Guest::where('email_hash', $this->piiHash($value))->exists()) {
+                    $fail('The email has already been taken.');
+                }
+            }],
             'phone' => 'required|max:20',
             'address' => 'nullable|max:255',
             'city' => 'nullable|max:100',
             'country' => 'nullable|max:100',
-            'id_number' => 'required|unique:guests|max:50',
+            'id_number' => ['required', 'max:50', function ($attribute, $value, $fail) {
+                if (Guest::where('id_number_hash', $this->piiHash($value))->exists()) {
+                    $fail('The id number has already been taken.');
+                }
+            }],
             'nationality' => 'nullable|max:100',
             'date_of_birth' => 'nullable|date',
             'emergency_contact' => 'nullable|max:100',
@@ -88,11 +134,15 @@ class GuestController extends Controller
     {
         $this->authorize('create', Guest::class); // ✅ แก้ไข: เพิ่ม authorization
 
-        $validated = $request->validate([
+$validated = $request->validate([
             'guests' => ['required', 'array', 'min:1'],
             'guests.*.first_name' => ['required', 'string', 'max:50'],
             'guests.*.last_name' => ['required', 'string', 'max:50'],
-            'guests.*.id_number' => ['required', 'string', 'max:50', 'distinct', 'unique:guests,id_number'],
+            'guests.*.id_number' => ['required', 'string', 'max:50', 'distinct', function ($attribute, $value, $fail) {
+                if (Guest::where('id_number_hash', $this->piiHash($value))->exists()) {
+                    $fail('The id number has already been taken.');
+                }
+            }],
             'guests.*.date_of_birth' => ['nullable', 'date'],
             'guests.*.phone' => ['required', 'string', 'max:20'],
         ]);
@@ -142,15 +192,27 @@ class GuestController extends Controller
     {
         $this->authorize('update', $guest); // ✅ แก้ไข: เพิ่ม authorization
 
-        $validated = $request->validate([
+$validated = $request->validate([
             'first_name' => 'required|max:50',
             'last_name' => 'required|max:50',
-            'email' => 'required|email|unique:guests,email,'.$guest->id,
+            'email' => ['required', 'email', function ($attribute, $value, $fail) use ($guest) {
+                if (Guest::where('email_hash', $this->piiHash($value))
+                    ->where('id', '!=', $guest->id)
+                    ->exists()) {
+                    $fail('The email has already been taken.');
+                }
+            }],
             'phone' => 'required|max:20',
             'address' => 'nullable|max:255',
             'city' => 'nullable|max:100',
             'country' => 'nullable|max:100',
-            'id_number' => 'required|max:50|unique:guests,id_number,'.$guest->id,
+            'id_number' => ['required', 'max:50', function ($attribute, $value, $fail) use ($guest) {
+                if (Guest::where('id_number_hash', $this->piiHash($value))
+                    ->where('id', '!=', $guest->id)
+                    ->exists()) {
+                    $fail('The id number has already been taken.');
+                }
+            }],
             'nationality' => 'nullable|max:100',
             'date_of_birth' => 'nullable|date',
             'emergency_contact' => 'nullable|max:100',

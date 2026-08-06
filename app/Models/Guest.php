@@ -17,7 +17,7 @@ class Guest extends Model
         'last_name',
         'email',
         'phone',
-        'address',
+'address',
         'city',
         'country',
         'nationality',
@@ -30,7 +30,75 @@ class Guest extends Model
 
     protected $casts = [
         'date_of_birth' => 'date',
+        // NOTE: We intentionally do NOT use the 'encrypted' cast on the email /
+        // id_number columns. The original plaintext columns are kept as a safety
+        // net during the cutover period. Instead, PII is encrypted into dedicated
+        // *_ciphertext columns (and looked up via *_hash blind-index columns)
+        // using the custom mutators/accessors below.
     ];
+
+    // ─────────────────────────────────────────
+    //  PII Encryption (email, id_number)
+    // ─────────────────────────────────────────
+
+    private function piiHash(string $value): string
+    {
+        return hash_hmac('sha256', $value, (string) config('app.key'));
+    }
+
+    private function piiEncrypt(string $value): string
+    {
+        return encrypt($value);
+    }
+
+    private function decryptPii(?string $plaintext, string $cipherColumn): ?string
+    {
+        $cipher = $this->attributes[$cipherColumn] ?? null;
+        if (! empty($cipher)) {
+            try {
+                return decrypt($cipher);
+            } catch (\Throwable $e) {
+                // fall back to the plaintext column (safety net)
+            }
+        }
+
+        return $plaintext;
+    }
+
+    private function setPiiAttributes(string $field, ?string $value): void
+    {
+        $this->attributes[$field] = $value;
+
+        if ($value === null || $value === '') {
+            $this->attributes[$field.'_ciphertext'] = null;
+            $this->attributes[$field.'_hash'] = null;
+
+            return;
+        }
+
+        $this->attributes[$field.'_ciphertext'] = $this->piiEncrypt($value);
+        $this->attributes[$field.'_hash'] = $this->piiHash($value);
+    }
+
+    public function getEmailAttribute(?string $value): ?string
+    {
+        return $this->decryptPii($value, 'email_ciphertext');
+    }
+
+    public function setEmailAttribute(?string $value): void
+    {
+        $this->setPiiAttributes('email', $value);
+    }
+
+    public function getIdNumberAttribute(?string $value): ?string
+    {
+        return $this->decryptPii($value, 'id_number_ciphertext');
+    }
+
+    public function setIdNumberAttribute(?string $value): void
+    {
+        $this->setPiiAttributes('id_number', $value);
+    }
 
     // ─────────────────────────────────────────
     //  Relationships
