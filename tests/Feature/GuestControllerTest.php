@@ -96,6 +96,144 @@ class GuestControllerTest extends TestCase
         $response->assertRedirect(route('login'));
     }
 
+    public function test_index_search_by_partial_name_returns_matching_guests(): void
+    {
+        $this->actingAs(User::factory()->create(['role_id' => null]));
+
+        // Create multiple guests with different names
+        Guest::create([
+            'first_name' => 'Emanuel',
+            'last_name' => 'Garcia',
+            'email' => 'emanuel@example.com',
+            'phone' => '0811111111',
+            'id_number' => '1234567890',
+        ]);
+
+        Guest::create([
+            'first_name' => 'John',
+            'last_name' => 'Doe',
+            'email' => 'john@example.com',
+            'phone' => '0822222222',
+            'id_number' => '1234567891',
+        ]);
+
+        // Search by partial first name
+        $response = $this->get(route('guests.index', ['search' => 'emanu']));
+
+        $response->assertOk();
+        $response->assertSeeText('Emanuel');
+        $response->assertDontSeeText('John');
+    }
+
+    public function test_index_search_by_full_email_exact_match_returns_result(): void
+    {
+        $this->actingAs(User::factory()->create(['role_id' => null]));
+
+        $guest = Guest::create([
+            'first_name' => 'Alice',
+            'last_name' => 'Smith',
+            'email' => 'alice@example.com',
+            'phone' => '0811111111',
+            'id_number' => '1234567892',
+        ]);
+
+        // Search by complete email (exact match)
+        $response = $this->get(route('guests.index', ['search' => 'alice@example.com']));
+
+        $response->assertOk();
+        $response->assertSeeText('Alice');
+    }
+
+    public function test_index_search_by_partial_email_returns_no_results(): void
+    {
+        $this->actingAs(User::factory()->create(['role_id' => null]));
+
+        Guest::create([
+            'first_name' => 'Bob',
+            'last_name' => 'Wilson',
+            'email' => 'bob@example.com',
+            'phone' => '0811111111',
+            'id_number' => '1234567893',
+        ]);
+
+        // Search by partial email string (contains @ but incomplete/wrong)
+        // Since it contains @, system treats as PII exact-match lookup
+        // This should NOT match partial email searches anymore
+        $response = $this->get(route('guests.index', ['search' => 'bob@exam']));
+
+        $response->assertOk();
+        // Should NOT find guest when searching partial email
+        $response->assertDontSeeText('Wilson');
+    }
+
+    public function test_index_search_by_id_number_exact_match_returns_result(): void
+    {
+        $this->actingAs(User::factory()->create(['role_id' => null]));
+
+        $guest = Guest::create([
+            'first_name' => 'Charlie',
+            'last_name' => 'Brown',
+            'email' => 'charlie@example.com',
+            'phone' => '0811111111',
+            'id_number' => '1234567894',
+        ]);
+
+        // Search by complete ID number (exact match)
+        $response = $this->get(route('guests.index', ['search' => '1234567894']));
+
+        $response->assertOk();
+        $response->assertSeeText('Charlie');
+    }
+
+    public function test_index_search_by_partial_id_number_returns_no_results(): void
+    {
+        $this->actingAs(User::factory()->create(['role_id' => null]));
+
+        Guest::create([
+            'first_name' => 'David',
+            'last_name' => 'Lee',
+            'email' => 'david@example.com',
+            'phone' => '0811111111',
+            'id_number' => '1234567895',
+        ]);
+
+        // Search by partial ID number (NOT supported - must be exact or >= 10 digits)
+        $response = $this->get(route('guests.index', ['search' => '12345']));
+
+        $response->assertOk();
+        // Partial ID number should not match
+        $response->assertDontSeeText('David');
+    }
+
+    public function test_index_without_search_paginates_at_sql_level(): void
+    {
+        $this->actingAs(User::factory()->create(['role_id' => null]));
+
+        // Create 15 guests to test pagination
+        for ($i = 1; $i <= 15; $i++) {
+            Guest::create([
+                'first_name' => "Guest{$i}",
+                'last_name' => "Last{$i}",
+                'email' => "guest{$i}@example.com",
+                'phone' => "081" . str_pad($i, 8, '0', STR_PAD_LEFT),
+                'id_number' => (1234567890 + $i),
+            ]);
+        }
+
+        // First page should have 10 guests
+        $response = $this->get(route('guests.index'));
+        $response->assertOk();
+        $guests = $response->viewData('guests');
+        $this->assertCount(10, $guests);
+        $this->assertTrue($guests->hasPages());
+
+        // Second page should have 5 guests
+        $response = $this->get(route('guests.index', ['page' => 2]));
+        $response->assertOk();
+        $guests = $response->viewData('guests');
+        $this->assertCount(5, $guests);
+    }
+
     private function createGuest(): Guest
     {
         return Guest::create([
@@ -117,3 +255,4 @@ class GuestControllerTest extends TestCase
         return User::factory()->create(['role_id' => $role->id]);
     }
 }
+

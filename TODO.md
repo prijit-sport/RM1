@@ -28,3 +28,25 @@
 - [x] 6. รัน full test suite — ผ่านครบ 118 tests (308 assertions) ไม่มี regression
 - [x] 7. Manual verification ผ่าน tinker: (a) สร้าง guest ใหม่ → `email_hash`/`id_number_hash` ถูกสร้าง (ไม่ null), ciphertext ถูกเก็บ, accessor decrypt ได้ถูกต้อง; (b) สร้าง guest ด้วย id_number ซ้ำ → ถูก reject ด้วย `UniqueConstraintViolationException`; (c) ค้นหาแบบ partial email ("manu") → เจอ guest ที่ถูกต้อง
 - [x] 8. พบ & แก้ bug: `mb_str_contains()` ไม่มีใน runtime (undefined) → เปลี่ยนเป็น `str_contains()` ใน `GuestController::index` (PHP filter) — แก้ไขแล้ว, test suite ผ่าน 118 tests เหมือนเดิม
+
+## TASK 5: แก้ให้ Sanctum API token มีวันหมดอายุ และจำกัด ability ให้เหมาะสม
+
+- [x] 1. ตรวจสอบ config/sanctum.php — พบว่า `'expiration' => null` ต้องแก้เป็น env value
+- [x] 2. แก้ config/sanctum.php — เปลี่ยนเป็น `env('SANCTUM_TOKEN_EXPIRATION', 1440)` (default 24 ชั่วโมง)
+- [x] 3. เพิ่ม SANCTUM_TOKEN_EXPIRATION=1440 ใน .env.example พร้อมหมายเหตุ
+- [x] 4. แก้ AuthController::login() — เพิ่มการกำหนด abilities ตามบทบาท (Admin/Staff ได้ ['*'], อื่น ได้ ['dashboard:read']) และคำนวณ $expiresAt จาก config
+- [x] 5. แก้ bug: Token ถูกสร้างแต่ expiration ไม่ได้ถูก apply — ต้องส่ง $expiresAt เป็น parameter ที่ 3 ให้ createToken()
+- [x] 6. สร้าง test_login_creates_token_with_expiration() ใน ApiSmokeTest.php — ยืนยัน token->expires_at ไม่ null
+- [x] 7. รัน full test suite — ผ่านครบ 122 tests (330 assertions)
+- [x] 8. Commit แบบ Conventional Commits
+
+## TASK 6: แก้ปัญหาการโหลดข้อมูลผู้เช่าทั้งหมดเข้าหน่วยความจำก่อน paginate
+
+- [x] 1. วิเคราะห์ GuestController::index() — พบว่าใช้ ->get() โหลด 167+ records แล้วอาศัย pagination ใน PHP (memory expensive)
+- [x] 2. ออกแบบแก้ไข — แยกรูปแบบการค้นหา: PII (email/ID) ใช้ exact hash match, อื่น ใช้ LIKE search บน name/phone, ทั้งหมดปิด ->paginate(10) ที่ SQL level
+- [x] 3. Implement GuestController::index() — ฟิลเตอร์แยกตาม looksLikePii(), hash query สำหรับ PII, LIKE query สำหรับอื่น, ลบ LengthAwarePaginator import
+- [x] 4. เพิ่ม private helper looksLikePii() — ตรวจ @ หรือ 10-19 digit เพื่อบอกว่าเป็น PII
+- [x] 5. สร้าง 6 test cases ครอบคลุม: partial name ผ่าน, full email ผ่าน, partial email ไม่ผ่าน (trade-off), full ID ผ่าน, partial ID ไม่ผ่าน, pagination 10/page
+- [x] 6. รัน GuestControllerTest — ผ่าน 11 tests (33 assertions)
+- [x] 7. รัน full test suite — ผ่านครบ 128 tests (346 assertions) ไม่มี regression
+- [x] 8. Commit แบบ Conventional Commits

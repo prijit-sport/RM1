@@ -39,6 +39,27 @@ class ApiSmokeTest extends TestCase
         ]);
     }
 
+    public function test_login_creates_token_with_expiration(): void
+    {
+        $role = Role::firstOrCreate(['name' => Role::STAFF], ['description' => 'Staff user']);
+        $user = User::factory()->create([
+            'role_id' => $role->id,
+            'password' => bcrypt('password'),
+        ]);
+
+        $response = $this->postJson('/api/login', [
+            'email' => $user->email,
+            'password' => 'password',
+        ]);
+
+        $response->assertStatus(200);
+
+        $token = $user->fresh()->tokens()->latest()->first();
+
+        $this->assertNotNull($token);
+        $this->assertNotNull($token->expires_at);
+    }
+
     public function test_dashboard_requires_auth_sanctum(): void
     {
         $response = $this->getJson('/api/dashboard');

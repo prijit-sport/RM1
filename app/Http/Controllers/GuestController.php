@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Guest;
 use Illuminate\Http\Request;
-use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 
 class GuestController extends Controller
@@ -21,51 +20,65 @@ class GuestController extends Controller
         if ($request->filled('search')) {
             $s = $request->input('search');
 
-            // PII fields (email, id_number) are encrypted at rest and cannot be
-            // searched via SQL LIKE. We filter them in PHP after fetching the
-            // SQL-compatible subset (first_name, last_name, phone).
-            $query->where(function ($q) use ($s) {
-                $q->where('first_name', 'like', "%{$s}%")
-                    ->orWhere('last_name', 'like', "%{$s}%")
-                    ->orWhere('phone', 'like', "%{$s}%");
-            })
-                ->orWhere(function ($q) use ($s) {
-                    // Exact lookup on the blind-index hash for PII fields.
-                    $q->where('email_hash', $this->piiHash($s))
-                        ->orWhere('id_number_hash', $this->piiHash($s));
+            // Optimize search: distinguish between PII fields and general fields
+            // to avoid loading all guests into memory before pagination.
+            //
+            // - If search looks like an email (contains @): exact hash lookup only
+            // - If search looks like an ID number (all digits, specific length): exact hash lookup
+            // - Otherwise: LIKE search on name/phone (SQL-compatible fields)
+            //
+            // NOTE: Partial PII search (e.g., "manu" in "manu@example.com") is no longer
+            // supported. Users must provide the complete email or ID number for PII lookup.
+
+            $isPiiSearch = $this->looksLikePii($s);
+
+            if ($isPiiSearch) {
+                // Exact hash-based lookup for PII fields only (email or id_number).
+                $hash = $this->piiHash($s);
+                $query->where(function ($q) use ($hash) {
+                    $q->where('email_hash', $hash)
+                        ->orWhere('id_number_hash', $hash);
                 });
+            } else {
+                // LIKE search on name/phone fields (non-encrypted).
+                $query->where(function ($q) use ($s) {
+                    $q->where('first_name', 'like', "%{$s}%")
+                        ->orWhere('last_name', 'like', "%{$s}%")
+                        ->orWhere('phone', 'like', "%{$s}%");
+                });
+            }
         }
 
+        // Paginate at the SQL level (not loading all rows into memory).
         $guests = $query
             ->orderByDesc('id')
-            ->get()
-            ->filter(function (Guest $guest) use ($request) {
-                if (! $request->filled('search')) {
-                    return true;
-                }
+            ->paginate(10);
 
-                $s = strtolower($request->input('search'));
+        return view('guests.index', ['guests' => $guests]);
+    }
 
-                // Keep rows already matched via SQL (name/phone) or hash lookup.
-                return str_contains(strtolower((string) $guest->email), $s)
-                    || str_contains(strtolower((string) $guest->id_number), $s);
-            })
-            ->values();
+    /**
+     * Detect if a search string looks like PII (email or ID number).
+     * Heuristic: email must contain @, ID numbers are 10-19 digits only.
+     */
+    private function looksLikePii(string $search): bool
+    {
+        // Check if it looks like an email address
+        if (str_contains($search, '@')) {
+            return true;
+        }
 
-        $perPage = 10;
-        $page = max(1, (int) $request->get('page', 1));
-        $paginator = new LengthAwarePaginator(
-            $guests->forPage($page, $perPage),
-            $guests->count(),
-            $perPage,
-            $page,
-            ['path' => $request->url(), 'query' => $request->query()]
-        );
+        // Check if it looks like an ID number (digits only, 10-19 chars)
+        // Adjustable range based on local ID format requirements
+        if (ctype_digit($search) && strlen($search) >= 10 && strlen($search) <= 19) {
+            return true;
+        }
 
-        return view('guests.index', ['guests' => $paginator]);
+        return false;
     }
 
     /** คำนวณ blind-index hash สำหรับ lookup PII field */
+
     private function piiHash(string $value): string
     {
         return hash_hmac('sha256', $value, (string) config('app.key'));

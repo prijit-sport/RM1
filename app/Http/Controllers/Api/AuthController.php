@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Resources\LoginResource;
 use App\Http\Resources\UserResource;
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -44,7 +45,21 @@ class AuthController extends Controller
             ], 401);
         }
 
-        $token = $user->createToken('api-token')->plainTextToken;
+        $roleName = $user->loadMissing('role')->role?->name;
+
+        // The app currently exposes only two roles (`Admin` and `Staff`) in App\Models\Role,
+        // but it does not yet define a granular permission matrix for Sanctum abilities.
+        // TODO: replace '*' with a specific ability list per role once the permission model is finalized.
+        $abilities = in_array($roleName, [Role::ADMIN, Role::STAFF], true)
+            ? ['*']
+            : ['dashboard:read'];
+
+        // Calculate token expiration from config (in minutes). If expiration is null, token never expires.
+        $expiresAt = config('sanctum.expiration')
+            ? now()->addMinutes((int) config('sanctum.expiration'))
+            : null;
+
+        $token = $user->createToken('api-token', $abilities, $expiresAt)->plainTextToken;
 
         return new LoginResource([
             'user' => $user->load('role'),
