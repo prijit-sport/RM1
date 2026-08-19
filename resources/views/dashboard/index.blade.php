@@ -347,7 +347,7 @@
  
 @push('scripts')
     <script>
-        // ⚠️ ห่อด้วย DOMContentLoaded เพราะ @vite() compile เป็น <script type="module">
+        // ⚠️ ห่อด้วย DOMContentLoaded เพราะ @@vite() compile เป็น <script type="module">
         // ซึ่งเบราว์เซอร์จะ defer การรันเสมอ (รอ parse HTML เสร็จก่อน) แต่ inline script
         // ธรรมดาแบบนี้จะรันทันทีตอน parse ถึง ทำให้ window.Chart (ที่ตั้งค่าใน
         // resources/js/app.js) อาจยังไม่พร้อมใช้งานถ้าไม่รอ event นี้ก่อน
