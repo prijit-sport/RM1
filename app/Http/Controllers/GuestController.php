@@ -89,7 +89,6 @@ class GuestController extends Controller
     }
 
     /** คำนวณ blind-index hash สำหรับ lookup PII field */
-
     private function piiHash(string $value): string
     {
         return hash_hmac('sha256', $value, (string) config('app.key'));

@@ -233,7 +233,7 @@ class GuestControllerTest extends TestCase
                 'first_name' => "Guest{$i}",
                 'last_name' => "Last{$i}",
                 'email' => "guest{$i}@example.com",
-                'phone' => "081" . str_pad($i, 8, '0', STR_PAD_LEFT),
+                'phone' => '081'.str_pad($i, 8, '0', STR_PAD_LEFT),
                 'id_number' => (1234567890 + $i),
             ]);
         }
@@ -273,4 +273,3 @@ class GuestControllerTest extends TestCase
         return User::factory()->create(['role_id' => $role->id]);
     }
 }
-

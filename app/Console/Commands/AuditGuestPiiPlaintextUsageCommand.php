@@ -55,20 +55,20 @@ class AuditGuestPiiPlaintextUsageCommand extends Command
         // Direct attribute/column selection in queries
         ['regex' => "\\->select\\([^)]*['\\\"](?<column>email|id_number)['\\\"]", 'description' => 'Direct select() with plaintext column'],
         ['regex' => "\\->select.*['\\\"](?<column>email|id_number)['\\\"]", 'description' => 'select() with plaintext column'],
-        ['regex' => "\\->selectRaw[^\\n]*\\b(?<column>email|id_number)\\b", 'description' => 'selectRaw() with plaintext column'],
+        ['regex' => '\\->selectRaw[^\\n]*\\b(?<column>email|id_number)\\b', 'description' => 'selectRaw() with plaintext column'],
         ['regex' => "\\->pluck\\([^)]*['\\\"](?<column>email|id_number)['\\\"]", 'description' => 'pluck() with plaintext column'],
 
         // Raw SQL queries that mention plaintext columns
-        ['regex' => "\\->whereRaw[^\\n]*\\b(?<column>email|id_number)\\b", 'description' => 'whereRaw() with plaintext column reference'],
+        ['regex' => '\\->whereRaw[^\\n]*\\b(?<column>email|id_number)\\b', 'description' => 'whereRaw() with plaintext column reference'],
         ['regex' => "\\->orderBy\\([^)]*['\\\"](?<column>email|id_number)['\\\"]", 'description' => 'orderBy() with plaintext column'],
-        ['regex' => "\\bDB::raw[^\\n]*\\b(?<column>email|id_number)\\b", 'description' => 'DB::raw() with plaintext column'],
+        ['regex' => '\\bDB::raw[^\\n]*\\b(?<column>email|id_number)\\b', 'description' => 'DB::raw() with plaintext column'],
 
         // Array/attribute direct access that might bypass encryption
         ['regex' => "\\['(?<column>email|id_number)'\\]", 'description' => 'Array access to plaintext column'],
-        ['regex' => "\\[\\\"(?<column>email|id_number)\\\"\\]", 'description' => 'Array access to plaintext column (double quotes)'],
+        ['regex' => '\\[\\"(?<column>email|id_number)\\"\\]', 'description' => 'Array access to plaintext column (double quotes)'],
 
         // Blade template direct access (potential issue if not using model accessor)
-        ['regex' => "\\\$guest->(?<column>email|id_number)", 'description' => 'View: direct property access (may be accessor)'],
+        ['regex' => '\\$guest->(?<column>email|id_number)', 'description' => 'View: direct property access (may be accessor)'],
     ];
 
     public function handle(): int
@@ -182,7 +182,7 @@ class AuditGuestPiiPlaintextUsageCommand extends Command
             return [];
         }
 
-        $relativePath = str_replace(base_path() . DIRECTORY_SEPARATOR, '', $filePath);
+        $relativePath = str_replace(base_path().DIRECTORY_SEPARATOR, '', $filePath);
 
         foreach (self::RISKY_PATTERNS as $patternDefinition) {
             $pattern = $patternDefinition['regex'];
