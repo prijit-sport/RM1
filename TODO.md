@@ -70,3 +70,10 @@
 - [x] 1. ยืนยัน migration `users.is_active` เป็น NOT NULL พร้อม default true และ seeder กำหนดค่า active ชัดเจน
 - [x] 2. เปลี่ยน Web/API authentication จาก fail-open (`?? true`) เป็น `(bool) $user->is_active`
 - [x] 3. ตรวจสอบ `AuthLoginTest` มี test ป้องกัน user inactive login อยู่แล้ว และรัน full test suite
+
+## TASK 10: ตรวจสอบและอัปเดต Dependency Vulnerabilities ก่อน Deploy
+
+- [x] 1. รัน `composer audit` — พบ 41 advisories ใน 12 packages รวม high; อัปเดตภายใน major เดิมด้วย Composer (Laravel 12.53.0 → 12.67.0, Guzzle 7.10.0 → 7.15.3, CommonMark 2.8.0 → 2.10.0 และ Symfony security patches) เพราะ release notes/advisories ระบุว่ามี patched releases ที่ compatible และไม่พบการใช้ API เฉพาะที่เสี่ยง breaking change ในแอป
+- [x] 2. รัน `npm audit` — พบ nanoid 3.3.16 (high) และ postcss 8.5.18 (moderate); อัปเดตผ่าน `npm audit fix` แบบไม่ใช้ `--force` เป็น nanoid 3.3.18 และ postcss 8.5.26 แล้วเหลือ 0 vulnerabilities
+- [x] 3. ยืนยันผลหลังอัปเดต: `composer audit` เหลือ 9 advisories ระดับ medium/low ใน dompdf/dompdf และ symfony/yaml เท่านั้น; ยังไม่อัปเดตตามเกณฑ์ เพราะไม่พบการใช้ Dompdf/YAML โดยตรงหรือการรับ SVG/BMP/YAML จากผู้ใช้ แต่ต้องติดตามและอัปเดตเมื่อมี release ที่ compatible
+- [x] 4. รัน `php artisan test` ทั้ง suite — ผ่านครบ 139 tests (369 assertions) ไม่มี regression

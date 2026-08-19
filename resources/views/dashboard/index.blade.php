@@ -1,37 +1,37 @@
 @extends('layouts.app')
-
+ 
 @section('title', 'แดชบอร์ด')
 @section('page-title', 'แดชบอร์ด')
-
+ 
 @push('styles')
     <style>
         .stat-card {
             border: none;
             overflow: hidden;
         }
-
+ 
         .stat-card .stat-icon {
             width: 60px;
             height: 60px;
         }
-
+ 
         .chart-container {
             position: relative;
             height: 300px;
         }
-
+ 
         .progress-card {
             transition: all 0.3s ease;
         }
-
+ 
         .progress-card:hover {
             transform: translateY(-3px);
         }
     </style>
 @endpush
-
+ 
 @section('content')
-
+ 
     {{-- ═══ KPI Cards ═══ --}}
     <div class="row g-4 mb-4">
         <div class="col-md-6 col-xl-3">
@@ -51,7 +51,7 @@
                 </div>
             </div>
         </div>
-
+ 
         <div class="col-md-6 col-xl-3">
             <div class="stat-card">
                 <div class="d-flex justify-content-between align-items-start">
@@ -68,7 +68,7 @@
                 </div>
             </div>
         </div>
-
+ 
         <div class="col-md-6 col-xl-3">
             <div class="stat-card">
                 <div class="d-flex justify-content-between align-items-start">
@@ -85,7 +85,7 @@
                 </div>
             </div>
         </div>
-
+ 
         <div class="col-md-6 col-xl-3">
             <div class="stat-card">
                 <div class="d-flex justify-content-between align-items-start">
@@ -100,7 +100,7 @@
             </div>
         </div>
     </div>
-
+ 
     {{-- ═══ Room Status by Type ═══ --}}
     <div class="row g-4 mb-4">
         @php
@@ -114,7 +114,7 @@
                 'maintenance' => ['label' => 'ซ่อม', 'class' => 'warning'],
             ];
         @endphp
-
+ 
         @foreach ($typeConfig as $typeKey => $typeInfo)
             @php
                 $stats = $roomTypeStats[$typeKey] ?? ['available' => 0, 'occupied' => 0, 'maintenance' => 0];
@@ -129,7 +129,7 @@
                         </h5>
                         <span class="text-muted">ทั้งหมด {{ number_format($total) }} ห้อง</span>
                     </div>
-
+ 
                     @foreach ($statuses as $statusKey => $meta)
                         @php
                             $count = (int) ($stats[$statusKey] ?? 0);
@@ -150,7 +150,7 @@
             </div>
         @endforeach
     </div>
-
+ 
     {{-- ═══ Charts Row ═══ --}}
     <div class="row g-4 mb-4">
         <div class="col-lg-8">
@@ -163,7 +163,7 @@
                 </div>
             </div>
         </div>
-
+ 
         <div class="col-lg-4">
             <div class="table-card p-4">
                 <h5 class="mb-4">สถานะห้อง</h5>
@@ -173,7 +173,7 @@
                     $availablePercent = (($availableCount ?? 0) / $totalRooms) * 100;
                     $maintenancePct = (($maintenanceCount ?? 0) / $totalRooms) * 100;
                 @endphp
-
+ 
                 @if (($roomCount ?? 0) > 0)
                     <div class="mb-4">
                         <div class="d-flex justify-content-between mb-2">
@@ -184,7 +184,7 @@
                             <div class="progress-bar bg-primary" style="width: {{ min($occupiedPercent, 100) }}%"></div>
                         </div>
                     </div>
-
+ 
                     <div class="mb-4">
                         <div class="d-flex justify-content-between mb-2">
                             <span>ห้องว่าง</span>
@@ -194,7 +194,7 @@
                             <div class="progress-bar bg-success" style="width: {{ min($availablePercent, 100) }}%"></div>
                         </div>
                     </div>
-
+ 
                     <div class="mb-4">
                         <div class="d-flex justify-content-between mb-2">
                             <span>ห้องปรับปรุง</span>
@@ -212,7 +212,7 @@
             </div>
         </div>
     </div>
-
+ 
     {{-- ═══ Tables Row ═══ --}}
     <div class="row g-4">
         <div class="col-lg-6">
@@ -281,7 +281,7 @@
                 </div>
             </div>
         </div>
-
+ 
         <div class="col-lg-6">
             <div class="table-card">
                 <div class="p-4 border-bottom d-flex justify-content-between align-items-center">
@@ -342,18 +342,23 @@
             </div>
         </div>
     </div>
-
+ 
 @endsection
-
+ 
 @push('scripts')
     <script>
-        const monthlyData = @json($monthlyBookings ?? []);
-        const labels = monthlyData.map(d => d.label);
-        const counts = monthlyData.map(d => d.count);
-
-        const ctx = document.getElementById('bookingChart').getContext('2d');
-
-        new Chart(ctx, {
+        // ⚠️ ห่อด้วย DOMContentLoaded เพราะ @vite() compile เป็น <script type="module">
+        // ซึ่งเบราว์เซอร์จะ defer การรันเสมอ (รอ parse HTML เสร็จก่อน) แต่ inline script
+        // ธรรมดาแบบนี้จะรันทันทีตอน parse ถึง ทำให้ window.Chart (ที่ตั้งค่าใน
+        // resources/js/app.js) อาจยังไม่พร้อมใช้งานถ้าไม่รอ event นี้ก่อน
+        document.addEventListener('DOMContentLoaded', () => {
+            const monthlyData = @json($monthlyBookings ?? []);
+            const labels = monthlyData.map(d => d.label);
+            const counts = monthlyData.map(d => d.count);
+ 
+            const ctx = document.getElementById('bookingChart').getContext('2d');
+ 
+            new Chart(ctx, {
             type: 'bar',
             data: {
                 labels: labels,
@@ -399,5 +404,7 @@
                 }
             }
         });
+        });
     </script>
 @endpush
+ 
