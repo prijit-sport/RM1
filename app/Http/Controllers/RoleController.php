@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Permission;
 use App\Models\Role;
+use App\Support\CacheKeys;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 
@@ -22,7 +23,7 @@ class RoleController extends Controller
     {
         $this->authorize('create', Role::class);
 
-        $permissions = Cache::remember('permissions.all', now()->addHours(6), fn () => Permission::orderBy('name')->get());
+        $permissions = Cache::remember(CacheKeys::allPermissions(), now()->addHours(6), fn () => Permission::orderBy('name')->get());
 
         return view('roles.create', compact('permissions'));
 
@@ -46,7 +47,7 @@ class RoleController extends Controller
 
         $role->permissions()->sync($validated['permissions'] ?? []);
 
-        Cache::forget('permissions.all');
+        Cache::forget(CacheKeys::allPermissions());
 
         return redirect()->route('roles.index')->with('success', __('ui.role.created'));
 
@@ -63,7 +64,7 @@ class RoleController extends Controller
     {
         $this->authorize('update', $role);
 
-        $permissions = Cache::remember('permissions.all', now()->addHours(6), fn () => Permission::orderBy('name')->get());
+        $permissions = Cache::remember(CacheKeys::allPermissions(), now()->addHours(6), fn () => Permission::orderBy('name')->get());
 
         return view('roles.edit', compact('role', 'permissions'));
 
@@ -88,7 +89,7 @@ class RoleController extends Controller
 
         $role->permissions()->sync($validated['permissions'] ?? []);
 
-        Cache::forget('permissions.all');
+        Cache::forget(CacheKeys::allPermissions());
 
         return redirect()->route('roles.show', $role)->with('success', __('ui.role.updated'));
 
@@ -100,7 +101,7 @@ class RoleController extends Controller
 
         $role->delete();
 
-        Cache::forget('permissions.all');
+        Cache::forget(CacheKeys::allPermissions());
 
         return redirect()->route('roles.index')->with('success', __('ui.role.deleted'));
 

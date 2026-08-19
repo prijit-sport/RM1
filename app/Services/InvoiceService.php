@@ -7,6 +7,7 @@ use App\Models\Guest;
 use App\Models\Invoice;
 use App\Models\Room;
 use App\Support\AuditLogger;
+use App\Support\CacheKeys;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
@@ -416,7 +417,7 @@ class InvoiceService
 
         $paidAmount = $amount ?? $invoice->total;
         DB::transaction(function () use ($invoice, $method, $paidAmount) {
-            Cache::forget('layout_notifications');
+            Cache::forget(CacheKeys::layoutNotifications());
 
             $invoice->update([
                 'status' => 'paid',

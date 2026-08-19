@@ -7,6 +7,7 @@ use App\Http\Requests\UpdateMaintenanceRequest;
 use App\Models\Facility;
 use App\Models\Maintenance;
 use App\Models\Room;
+use App\Support\CacheKeys;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -80,7 +81,7 @@ class MaintenanceController extends Controller
         $rooms = Room::orderBy('floor')->orderBy('zone')->orderBy('room_number')->get();
 
         // ✅ แก้ไข: ส่ง facilities เฉพาะที่ต้องใช้ตอน Lock mode (มาจาก facility_id)
-        $facilities = Cache::remember('facilities.all', now()->addHours(6), fn () => Facility::orderBy('id')->get());
+        $facilities = Cache::remember(CacheKeys::allFacilities(), now()->addHours(6), fn () => Facility::orderBy('id')->get());
 
         $facilityId = $request->input('facility_id');
         $selectedRoomId = null;
@@ -131,7 +132,7 @@ class MaintenanceController extends Controller
 
         Maintenance::create($data);
 
-        Cache::forget('facilities.all');
+        Cache::forget(CacheKeys::allFacilities());
 
         return redirect()->route('maintenances.index')
 
@@ -159,7 +160,7 @@ class MaintenanceController extends Controller
 
         $rooms = Room::orderBy('floor')->orderBy('zone')->orderBy('room_number')->get();
 
-        $facilities = Cache::remember('facilities.all', now()->addHours(6), fn () => Facility::orderBy('id')->get());
+        $facilities = Cache::remember(CacheKeys::allFacilities(), now()->addHours(6), fn () => Facility::orderBy('id')->get());
 
         return view('maintenances.edit', compact('maintenance', 'rooms', 'facilities'));
     }

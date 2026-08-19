@@ -43,10 +43,30 @@
 ## TASK 6: แก้ปัญหาการโหลดข้อมูลผู้เช่าทั้งหมดเข้าหน่วยความจำก่อน paginate
 
 - [x] 1. วิเคราะห์ GuestController::index() — พบว่าใช้ ->get() โหลด 167+ records แล้วอาศัย pagination ใน PHP (memory expensive)
-- [x] 2. ออกแบบแก้ไข — แยกรูปแบบการค้นหา: PII (email/ID) ใช้ exact hash match, อื่น ใช้ LIKE search บน name/phone, ทั้งหมดปิด ->paginate(10) ที่ SQL level
-- [x] 3. Implement GuestController::index() — ฟิลเตอร์แยกตาม looksLikePii(), hash query สำหรับ PII, LIKE query สำหรับอื่น, ลบ LengthAwarePaginator import
-- [x] 4. เพิ่ม private helper looksLikePii() — ตรวจ @ หรือ 10-19 digit เพื่อบอกว่าเป็น PII
-- [x] 5. สร้าง 6 test cases ครอบคลุม: partial name ผ่าน, full email ผ่าน, partial email ไม่ผ่าน (trade-off), full ID ผ่าน, partial ID ไม่ผ่าน, pagination 10/page
-- [x] 6. รัน GuestControllerTest — ผ่าน 11 tests (33 assertions)
-- [x] 7. รัน full test suite — ผ่านครบ 128 tests (346 assertions) ไม่มี regression
+- [x] 2. ออกแบบแก้ไข — แยกรูปแบบการค้นหา: email ใช้ exact hash match, ID number ใช้ exact hash match เฉพาะกรณีไม่ใช่ phone-like 0XXXXXXXXX, อื่นๆ ใช้ LIKE search บน name/phone เพื่อให้ SQL paginate ถูกต้องและป้องกัน phone ถูกเข้าใจผิดว่าเป็น id_number
+- [x] 3. Implement GuestController::index() — ใช้ SQL-level where ตาม looksLikePii(), exact hash lookup สำหรับ PII จริง, LIKE query สำหรับ name/phone, และ ->paginate(10) โดยตรง
+- [x] 4. เพิ่ม private helper looksLikePii() — แยกกรณีชัดเจน: email (`contains '@'`) เป็น PII; Thai mobile phone (`/^0\d{9}$/`) ต้อง return false เพื่อให้ LIKE search กับ phone; numeric ID number เป็น `preg_match('/^\d{10,13}$/')` เท่านั้น
+- [x] 5. สร้าง 7 test cases ครอบคลุม: partial name ผ่าน, full email ผ่าน, partial email ไม่ผ่าน, full ID ผ่าน, partial ID ไม่ผ่าน, full phone 10 หลักผ่าน, pagination 10/page
+- [x] 6. รัน GuestControllerTest — ผ่าน 12 tests (35 assertions)
+- [x] 7. รัน full test suite — ผ่านครบ 129 tests (348 assertions) ไม่มี regression
 - [x] 8. Commit แบบ Conventional Commits
+
+## TASK 7: เตรียมการลบคอลัมน์ plaintext PII (email, id_number) — Phase 1: Audit & Plan
+
+- [x] 1. สร้าง Artisan command `app:audit-guest-pii-plaintext-usage` — สแกนโครงสร้าง runtime เพื่อหาจุดที่อ่าน/เขียนคอลัมน์ plaintext โดยตรง + รายงานเป็นตาราง (ไฟล์, บรรทัด, คอลัมน์, pattern, code snippet)
+- [x] 2. สร้าง `tests/Feature/AuditGuestPiiPlaintextUsageCommandTest.php` — ทำให้มั่นใจว่า command ทำงานถูกต้องและแสดงผลลัพธ์อย่างเหมาะสม (5 tests)
+- [x] 3. สร้าง `docs/pii-decommission-plan.md` — เอกสารที่อธิบาย (a) เงื่อนไขปลอดภัยสำหรับการลบ plaintext columns (4+ weeks of verify-guest-pii-encryption passes, zero risky plaintext access, database backup, test coverage, rollback plan), (b) ขั้นตอนการลบจริง (migration draft, model update, verification steps), (c) รายการโค้ดที่ต้องแก้ก่อนลบ
+- [x] 4. รัน `php artisan test` ทั้ง suite — ผ่านครบ 134 tests (357 assertions) ไม่มี regression (รวม 5 tests ใหม่)
+- [ ] 5. Commit แบบ Conventional Commits (feat(pii): prepare for plaintext column decommissioning)
+
+## TASK 8: เตรียม Cache Layer สำหรับ Redis/Memcached
+
+- [x] 1. รวมการสร้าง cache key ทั้งระบบไว้ใน `App\Support\CacheKeys` โดยคง format key เดิม
+- [x] 2. เปลี่ยนทุกจุด cache read/invalidation ให้เรียก `CacheKeys` และเพิ่ม unit test ป้องกัน key format เปลี่ยนโดยไม่ตั้งใจ
+- [ ] 3. เมื่อเปลี่ยน cache store เป็น Redis/Memcached ให้ใช้ `Cache::tags()` สำหรับ invalidation ตามกลุ่ม
+
+## TASK 9: เปลี่ยน is_active login guard ให้ fail-closed
+
+- [x] 1. ยืนยัน migration `users.is_active` เป็น NOT NULL พร้อม default true และ seeder กำหนดค่า active ชัดเจน
+- [x] 2. เปลี่ยน Web/API authentication จาก fail-open (`?? true`) เป็น `(bool) $user->is_active`
+- [x] 3. ตรวจสอบ `AuthLoginTest` มี test ป้องกัน user inactive login อยู่แล้ว และรัน full test suite

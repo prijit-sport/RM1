@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Facility;
 use App\Models\Room;
+use App\Support\CacheKeys;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 
@@ -44,13 +45,12 @@ class FacilityController extends Controller
             $query->where('location', 'like', '%'.$request->location.'%');
         }
 
-        $cacheKey = 'facilities.list.'.md5(json_encode([
+        $cacheKey = CacheKeys::facilityList([
             'search' => $request->search,
             'type' => $request->type,
             'status' => $request->status,
             'location' => $request->location,
-            'page' => $request->get('page', 1),
-        ]));
+        ], $request->get('page', 1));
 
         $facilities = Cache::remember($cacheKey, now()->addMinutes(5), function () use ($query) {
             return $query->latest('id')->paginate(20)->withQueryString();

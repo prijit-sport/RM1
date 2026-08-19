@@ -58,19 +58,30 @@ class GuestController extends Controller
     }
 
     /**
-     * Detect if a search string looks like PII (email or ID number).
-     * Heuristic: email must contain @, ID numbers are 10-19 digits only.
+     * Detect whether the search should be treated as PII-only lookup.
+     *
+     * - Email searches are exact hash lookups.
+     * - Thai mobile phone numbers (10 digits, starts with 0) are not ID numbers and must
+     *   be handled as regular phone LIKE searches.
+     * - Numeric ID values are exact hash lookups only when they are not a phone-like value.
      */
     private function looksLikePii(string $search): bool
     {
-        // Check if it looks like an email address
+        $search = trim($search);
+
         if (str_contains($search, '@')) {
             return true;
         }
 
-        // Check if it looks like an ID number (digits only, 10-19 chars)
-        // Adjustable range based on local ID format requirements
-        if (ctype_digit($search) && strlen($search) >= 10 && strlen($search) <= 19) {
+        // Thai mobile phone numbers use the format 0XXXXXXXXX (10 digits, starts with 0).
+        // These must not be mistaken for ID numbers.
+        if (preg_match('/^0\d{9}$/', $search)) {
+            return false;
+        }
+
+        // For non-phone numeric values, treat 10-13 digit numbers as ID-number candidates.
+        // This keeps the optimization without colliding with full phone-number searches.
+        if (preg_match('/^\d{10,13}$/', $search)) {
             return true;
         }
 

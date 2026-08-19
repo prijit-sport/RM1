@@ -36,8 +36,8 @@ class AuthController extends Controller
             return back()->withErrors(['email' => __('ui.auth.login_failed')])->onlyInput('email');
         }
 
-        // Check if user is active (default to true if column doesn't exist)
-        $isActive = $user->is_active ?? true;
+        // users.is_active is NOT NULL with a database default of true, so a null value fails closed.
+        $isActive = (bool) $user->is_active;
 
         if (! $isActive) {
             return back()->withErrors(['email' => __('ui.auth.inactive')])->onlyInput('email');

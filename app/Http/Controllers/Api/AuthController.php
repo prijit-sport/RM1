@@ -38,7 +38,8 @@ class AuthController extends Controller
             ], 401);
         }
 
-        $isActive = $user->is_active ?? true;
+        // users.is_active is NOT NULL with a database default of true, so a null value fails closed.
+        $isActive = (bool) $user->is_active;
         if (! $isActive) {
             return response()->json([
                 'message' => 'Account is inactive',

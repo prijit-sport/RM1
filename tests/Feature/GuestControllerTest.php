@@ -205,6 +205,24 @@ class GuestControllerTest extends TestCase
         $response->assertDontSeeText('David');
     }
 
+    public function test_index_search_by_full_phone_number_exact_match_returns_result(): void
+    {
+        $this->actingAs(User::factory()->create(['role_id' => null]));
+
+        Guest::create([
+            'first_name' => 'Phone',
+            'last_name' => 'Owner',
+            'email' => 'phoneowner@example.com',
+            'phone' => '0811111111',
+            'id_number' => '9876543210',
+        ]);
+
+        $response = $this->get(route('guests.index', ['search' => '0811111111']));
+
+        $response->assertOk();
+        $response->assertSeeText('Phone');
+    }
+
     public function test_index_without_search_paginates_at_sql_level(): void
     {
         $this->actingAs(User::factory()->create(['role_id' => null]));

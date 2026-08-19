@@ -20,6 +20,7 @@ use App\Policies\MaintenancePolicy; // ✅ แก้ไข: เพิ่ม impo
 use App\Policies\MeterPolicy;
 use App\Policies\RolePolicy;
 use App\Policies\RoomPolicy;
+use App\Support\CacheKeys;
 use Carbon\Carbon;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Auth;
@@ -85,7 +86,7 @@ class AppServiceProvider extends ServiceProvider
 
             $today = Carbon::today();
 
-            $counts = Cache::remember('layout_notifications', 300, function () use ($today) {
+            $counts = Cache::remember(CacheKeys::layoutNotifications(), 300, function () use ($today) {
                 return [
                     'overdueInvoices' => Invoice::query()
                         ->whereIn('status', ['sent', 'overdue'])

@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Contract;
 use App\Models\Room;
 use App\Support\AuditLogger;
+use App\Support\CacheKeys;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
@@ -98,7 +99,7 @@ class ContractService
         // ─── Step 7: Save to database (transaction) ──────────────────────
         $contract = DB::transaction(function () use ($validated, $shouldOccupied) {
             $contract = Contract::create($validated);
-            Cache::forget('layout_notifications');
+            Cache::forget(CacheKeys::layoutNotifications());
             \Log::info('✅ Contract created', [
                 'id' => $contract->id,
                 'number' => $contract->contract_number,
