@@ -23,9 +23,9 @@ Schedule::command('app:verify-guest-pii-encryption')
     });
 
 Schedule::command('app:audit-guest-pii-plaintext-usage')
-     ->weekly()
-     ->sundays()
-     ->at('02:15')
-     ->onFailure(function () {
-         \Illuminate\Support\Facades\Log::warning('PII plaintext usage audit found findings — see app:audit-guest-pii-plaintext-usage output.');
-     });
+    ->weekly()
+    ->sundays()
+    ->at('02:15')
+    ->onFailure(function () {
+        \Illuminate\Support\Facades\Log::warning('PII plaintext usage audit found findings — see app:audit-guest-pii-plaintext-usage output.');
+    });
