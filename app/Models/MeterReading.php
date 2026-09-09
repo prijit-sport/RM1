@@ -1,11 +1,11 @@
 <?php
- 
+
 namespace App\Models;
- 
+
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
- 
+
 /**
  * MeterReading Model
  *
@@ -38,17 +38,17 @@ class MeterReading extends Model
         'recorded_by',
         'notes',
     ];
- 
+
     protected $casts = [
         'reading_date' => 'date',
         'reading_value' => 'decimal:2',
         'is_meter_reset' => 'boolean',
     ];
- 
+
     // ─────────────────────────────────────────
     //  RELATIONSHIPS
     // ─────────────────────────────────────────
- 
+
     /**
      * @return BelongsTo<Meter, $this>
      */
@@ -56,7 +56,7 @@ class MeterReading extends Model
     {
         return $this->belongsTo(Meter::class);
     }
- 
+
     /**
      * @return BelongsTo<User, $this>
      */
@@ -64,7 +64,7 @@ class MeterReading extends Model
     {
         return $this->belongsTo(User::class, 'recorded_by');
     }
- 
+
     /**
      * @return BelongsTo<User, $this>
      */
@@ -73,4 +73,3 @@ class MeterReading extends Model
         return $this->recorder();
     }
 }
- 

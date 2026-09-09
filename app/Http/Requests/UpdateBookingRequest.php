@@ -1,9 +1,9 @@
 <?php
- 
+
 namespace App\Http\Requests;
- 
+
 use Illuminate\Foundation\Http\FormRequest;
- 
+
 class UpdateBookingRequest extends FormRequest
 {
     /**
@@ -13,7 +13,7 @@ class UpdateBookingRequest extends FormRequest
     {
         return true;
     }
- 
+
     /**
      * Get the validation rules that apply to the request.
      *
@@ -22,7 +22,7 @@ class UpdateBookingRequest extends FormRequest
     public function rules(): array
     {
         $bookingId = $this->route('booking')->id;
- 
+
         return [
             'guest_id' => 'required|exists:guests,id',
             'guest_id_2' => 'nullable|exists:guests,id|different:guest_id',
@@ -39,7 +39,7 @@ class UpdateBookingRequest extends FormRequest
             'notes' => 'nullable|string|max:500',
         ];
     }
- 
+
     public function messages(): array
     {
         return [
@@ -65,4 +65,3 @@ class UpdateBookingRequest extends FormRequest
         ];
     }
 }
- 

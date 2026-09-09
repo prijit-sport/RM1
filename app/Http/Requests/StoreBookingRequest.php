@@ -1,9 +1,9 @@
 <?php
- 
+
 namespace App\Http\Requests;
- 
+
 use Illuminate\Foundation\Http\FormRequest;
- 
+
 class StoreBookingRequest extends FormRequest
 {
     /**
@@ -13,7 +13,7 @@ class StoreBookingRequest extends FormRequest
     {
         return true;
     }
- 
+
     /**
      * @return array<string, mixed>
      */
@@ -25,10 +25,10 @@ class StoreBookingRequest extends FormRequest
             'guest_id_3' => 'nullable|exists:guests,id|different:guest_id|different:guest_id_2',
             'room_id' => 'required|exists:rooms,id',
             'check_in_date' => 'required|date|after_or_equal:today',
- 
+
             'check_out_date' => 'nullable|date|after:check_in_date',
             // ✅ nullable เพื่อให้ test ที่ไม่ส่งค่ามาผ่านได้
- 
+
             'rent_amount' => 'nullable|numeric|min:0',
             'deposit_amount' => 'nullable|numeric|min:0',
             'electric_meter_start' => 'nullable|integer|min:0',
@@ -37,7 +37,7 @@ class StoreBookingRequest extends FormRequest
             'notes' => 'nullable|string|max:500',
         ];
     }
- 
+
     public function messages(): array
     {
         return [
@@ -64,4 +64,3 @@ class StoreBookingRequest extends FormRequest
         ];
     }
 }
- 

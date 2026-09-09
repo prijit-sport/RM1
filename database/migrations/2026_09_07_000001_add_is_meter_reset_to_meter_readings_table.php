@@ -1,9 +1,9 @@
 <?php
- 
+
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
- 
+
 /**
  * ✅ FIX (meter rollover): เพิ่ม is_meter_reset ให้ meter_readings
  *
@@ -23,7 +23,7 @@ return new class extends Migration
             $table->boolean('is_meter_reset')->default(false)->after('reading_value');
         });
     }
- 
+
     public function down(): void
     {
         Schema::table('meter_readings', function (Blueprint $table) {
@@ -31,4 +31,3 @@ return new class extends Migration
         });
     }
 };
- 

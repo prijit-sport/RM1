@@ -1,7 +1,7 @@
 <?php
- 
+
 namespace Tests\Feature;
- 
+
 use App\Models\Booking;
 use App\Models\Guest;
 use App\Models\Meter;
@@ -11,7 +11,7 @@ use Carbon\Carbon;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
- 
+
 /**
  * เทสยืนยันว่า composite unique index (meter_id, period_month, period_year,
  * booking_id) บน meter_readings ทำงานจริงระดับ DB — เป็น safety net เสริมจาก
@@ -21,7 +21,7 @@ use Tests\TestCase;
 class MeterReadingUniqueConstraintTest extends TestCase
 {
     use RefreshDatabase;
- 
+
     private function createRoom(string $roomNumber): Room
     {
         return Room::create([
@@ -33,7 +33,7 @@ class MeterReadingUniqueConstraintTest extends TestCase
             'description' => null,
         ]);
     }
- 
+
     private function createGuest(string $email): Guest
     {
         return Guest::create([
@@ -47,7 +47,7 @@ class MeterReadingUniqueConstraintTest extends TestCase
             'id_number' => 'UNIQ-'.substr(md5($email), 0, 8),
         ]);
     }
- 
+
     private function createConfirmedBooking(Room $room, Guest $guest): Booking
     {
         return Booking::create([
@@ -64,7 +64,7 @@ class MeterReadingUniqueConstraintTest extends TestCase
             'notes' => null,
         ]);
     }
- 
+
     private function createMeter(Room $room): Meter
     {
         return Meter::create([
@@ -79,14 +79,14 @@ class MeterReadingUniqueConstraintTest extends TestCase
             'tax_rate' => 0,
         ]);
     }
- 
+
     public function test_duplicate_meter_period_booking_combination_is_rejected_at_db_level(): void
     {
         $room = $this->createRoom('UNIQ-1');
         $guest = $this->createGuest('unique-1@example.com');
         $booking = $this->createConfirmedBooking($room, $guest);
         $meter = $this->createMeter($room);
- 
+
         MeterReading::create([
             'meter_id' => $meter->id,
             'booking_id' => $booking->id,
@@ -97,9 +97,9 @@ class MeterReadingUniqueConstraintTest extends TestCase
             'recorded_by' => null,
             'notes' => null,
         ]);
- 
+
         $this->expectException(QueryException::class);
- 
+
         // แถวที่ 2: meter_id + period_month + period_year + booking_id ซ้ำกับแถวแรก
         // เป๊ะ (วันที่ reading_date ต่างกันเพื่อไม่ชน unique เดิม [meter_id, reading_date])
         MeterReading::create([
@@ -113,7 +113,7 @@ class MeterReadingUniqueConstraintTest extends TestCase
             'notes' => null,
         ]);
     }
- 
+
     public function test_different_booking_id_for_same_meter_and_period_is_allowed(): void
     {
         // เคสที่ตั้งใจให้ผ่านได้: ห้องเดียวกัน มิเตอร์เดียวกัน รอบบิลเดียวกัน แต่คนละ
@@ -124,7 +124,7 @@ class MeterReadingUniqueConstraintTest extends TestCase
         $bookingA = $this->createConfirmedBooking($room, $guestA);
         $bookingB = $this->createConfirmedBooking($room, $guestB);
         $meter = $this->createMeter($room);
- 
+
         $readingA = MeterReading::create([
             'meter_id' => $meter->id,
             'booking_id' => $bookingA->id,
@@ -135,7 +135,7 @@ class MeterReadingUniqueConstraintTest extends TestCase
             'recorded_by' => null,
             'notes' => null,
         ]);
- 
+
         $readingB = MeterReading::create([
             'meter_id' => $meter->id,
             'booking_id' => $bookingB->id,
@@ -146,18 +146,18 @@ class MeterReadingUniqueConstraintTest extends TestCase
             'recorded_by' => null,
             'notes' => null,
         ]);
- 
+
         $this->assertNotSame($readingA->id, $readingB->id);
         $this->assertSame(2, MeterReading::where('meter_id', $meter->id)->count());
     }
- 
+
     public function test_multiple_general_readings_without_period_are_still_allowed(): void
     {
         // reading ทั่วไป (ไม่ผ่าน "บันทึกรายเดือน") ไม่มี period_month/period_year
         // (เป็น NULL) — MySQL unique index ถือว่า NULL แต่ละแถวไม่เท่ากัน จึงไม่ชนกัน
         $room = $this->createRoom('UNIQ-3');
         $meter = $this->createMeter($room);
- 
+
         MeterReading::create([
             'meter_id' => $meter->id,
             'booking_id' => null,
@@ -168,7 +168,7 @@ class MeterReadingUniqueConstraintTest extends TestCase
             'recorded_by' => null,
             'notes' => null,
         ]);
- 
+
         MeterReading::create([
             'meter_id' => $meter->id,
             'booking_id' => null,
@@ -179,8 +179,7 @@ class MeterReadingUniqueConstraintTest extends TestCase
             'recorded_by' => null,
             'notes' => null,
         ]);
- 
+
         $this->assertSame(2, MeterReading::where('meter_id', $meter->id)->count());
     }
 }
- 

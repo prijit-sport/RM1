@@ -1,7 +1,7 @@
 <?php
- 
+
 namespace App\Support;
- 
+
 /**
  * ✅ FIX (meter rollover / meter replacement):
  *
@@ -37,17 +37,17 @@ class MeterUsageCalculator
             // เริ่มจาก 0 ซึ่งตรงกับมิเตอร์ใหม่ส่วนใหญ่ในทางปฏิบัติ)
             return max(0.0, $currentValue);
         }
- 
+
         if ($currentValue < $previousValue) {
             // เลขย้อนกลับโดยไม่ได้ระบุว่ามิเตอร์เปลี่ยนใหม่ — น่าจะเป็น data entry ผิดพลาด
             // หรือมิเตอร์เปลี่ยนจริงแต่ลืมติ๊ก flag ปลอดภัยไว้ก่อนด้วยการคืน usage = 0
             // (พฤติกรรมเดิม) ผู้เรียกควรเช็ค isUnflaggedRollover() เพื่อแจ้งเตือนผู้ใช้ด้วย
             return 0.0;
         }
- 
+
         return $currentValue - $previousValue;
     }
- 
+
     /**
      * true ถ้าเข้าข่าย "เลขมิเตอร์ย้อนกลับโดยไม่ได้ติ๊กว่ามิเตอร์เปลี่ยนใหม่"
      * ผู้เรียกใช้ควรแสดงคำเตือนให้ผู้ใช้ตรวจสอบเมื่อเจอกรณีนี้
@@ -57,4 +57,3 @@ class MeterUsageCalculator
         return ! $isMeterReset && $currentValue < $previousValue;
     }
 }
- 

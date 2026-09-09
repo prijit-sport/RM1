@@ -1,7 +1,7 @@
 <?php
- 
+
 namespace App\Http\Controllers;
- 
+
 use App\Http\Requests\StoreBookingRequest;
 use App\Http\Requests\UpdateBookingRequest;
 use App\Models\Booking;
@@ -13,18 +13,18 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
- 
+
 class BookingController extends Controller
 {
     public function __construct(private readonly BookingService $bookingService) {}
- 
+
     // ─────────────────────────────────────────
     //  LIST
     // ─────────────────────────────────────────
     public function index(Request $request): View
     {
         $this->authorize('viewAny', Booking::class);
- 
+
         $bookings = Booking::with(['room', 'guest'])
             ->when($request->filled('status'), function (Builder $query) use ($request) {
                 $query->where('status', $request->string('status'));
@@ -48,20 +48,20 @@ class BookingController extends Controller
             ->latest('id')
             ->paginate(config('rm1.items_per_page'))
             ->withQueryString();
- 
+
         $fanTotal = Room::where('room_type', 'fan')->count();
         $acTotal = Room::where('room_type', 'air')->count();
- 
+
         $availableFanRooms = Room::where('room_type', 'fan')
             ->where('status', 'available')
             ->orderBy('room_number')
             ->get(['id', 'room_number', 'price_per_month', 'zone']);
- 
+
         $availableAcRooms = Room::where('room_type', 'air')
             ->where('status', 'available')
             ->orderBy('room_number')
             ->get(['id', 'room_number', 'price_per_month', 'zone']);
- 
+
         return view('bookings.index', compact(
             'bookings',
             'fanTotal',
@@ -70,54 +70,54 @@ class BookingController extends Controller
             'availableAcRooms'
         ));
     }
- 
+
     // ─────────────────────────────────────────
     //  CREATE FORM
     // ─────────────────────────────────────────
     public function create(): View
     {
         $this->authorize('create', Booking::class);
- 
+
         $rooms = Room::where('status', 'available')
             ->orderBy('zone')
             ->orderBy('room_number')
             ->get(['id', 'room_number', 'room_type', 'price_per_month', 'status', 'zone']);
- 
+
         $guests = Guest::orderBy('first_name')->get(['id', 'first_name', 'last_name']);
- 
+
         return view('bookings.create', compact('rooms', 'guests'));
     }
- 
+
     // ─────────────────────────────────────────
     //  STORE
     // ─────────────────────────────────────────
     public function store(StoreBookingRequest $request): RedirectResponse
     {
         $this->authorize('create', Booking::class);
- 
+
         try {
             $booking = $this->bookingService->create($request->validated());
         } catch (ValidationException $e) {
             return redirect()->back()->withErrors($e->errors())->withInput();
         }
- 
+
         return redirect()
             ->route('bookings.show', $booking)
             ->with('success', __('ui.booking.created'));
     }
- 
+
     // ─────────────────────────────────────────
     //  SHOW
     // ─────────────────────────────────────────
     public function show(Booking $booking): View
     {
         $this->authorize('view', $booking);
- 
+
         $booking->load(['room', 'guest', 'guest2', 'guest3']);
- 
+
         return view('bookings.show', compact('booking'));
     }
- 
+
     // ─────────────────────────────────────────
     //  CANCEL
     // ✅ ให้ Service จัดการ room status เอง ไม่ update ซ้ำใน Controller
@@ -125,14 +125,14 @@ class BookingController extends Controller
     public function cancel(Booking $booking): RedirectResponse
     {
         $this->authorize('cancel', $booking);
- 
+
         $this->bookingService->cancel($booking);
- 
+
         return redirect()
             ->route('bookings.index')
             ->with('success', 'ยกเลิกการจอง และคืนสถานะห้องกลับเป็นว่างเรียบร้อยแล้ว');
     }
- 
+
     // ─────────────────────────────────────────
     //  CONFIRM
     // ✅ เพิ่ม try-catch สำหรับ ValidationException
@@ -140,31 +140,31 @@ class BookingController extends Controller
     public function confirm(Booking $booking): RedirectResponse
     {
         $this->authorize('confirm', $booking);
- 
+
         try {
             $this->bookingService->confirm($booking);
         } catch (ValidationException $e) {
             return redirect()->back()->withErrors($e->errors());
         }
- 
+
         return redirect()
             ->route('bookings.show', $booking)
             ->with('success', __('ui.booking.confirmed'));
     }
- 
+
     // ─────────────────────────────────────────
     //  EDIT FORM
     // ─────────────────────────────────────────
     public function edit(Booking $booking): View
     {
         $this->authorize('update', $booking);
- 
+
         $booking->load(['room', 'guest', 'guest2', 'guest3']);
         $guests = Guest::orderBy('first_name')->get(['id', 'first_name', 'last_name']);
- 
+
         return view('bookings.edit', compact('booking', 'guests'));
     }
- 
+
     // ─────────────────────────────────────────
     //  UPDATE
     // ✅ เพิ่ม try-catch สำหรับ ValidationException
@@ -172,29 +172,29 @@ class BookingController extends Controller
     public function update(UpdateBookingRequest $request, Booking $booking): RedirectResponse
     {
         $this->authorize('update', $booking);
- 
+
         try {
             $this->bookingService->update($booking, $request->validated());
         } catch (ValidationException $e) {
             return redirect()->back()->withErrors($e->errors())->withInput();
         }
- 
+
         return redirect()
             ->route('bookings.show', $booking)
             ->with('success', __('ui.booking.updated'));
     }
- 
+
     // ─────────────────────────────────────────
     //  EXPORT
     // ─────────────────────────────────────────
     public function export(Request $request): \Symfony\Component\HttpFoundation\BinaryFileResponse
     {
         $this->authorize('export', Booking::class);
- 
+
         $filename = 'bookings_export_'.date('Y-m-d').'.xlsx';
- 
+
         $rows = [['ID', 'ห้อง', 'โซน', 'ผู้เช่า', 'วันเข้าพัก', 'ค่าเช่า', 'มัดจำ', 'มิเตอร์ไฟ', 'มิเตอร์น้ำ', 'สถานะ', 'หมายเหตุ']];
- 
+
         Booking::with(['room', 'guest'])
             ->orderBy('id')
             ->chunk(500, function ($bookings) use (&$rows): void {
@@ -214,8 +214,7 @@ class BookingController extends Controller
                     ];
                 }
             });
- 
+
         return xlsx_download($filename, $rows);
     }
 }
- 

@@ -1,15 +1,15 @@
 <?php
- 
+
 namespace App\Models;
- 
+
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
- 
+
 class Contract extends Model
 {
     use SoftDeletes;
- 
+
     protected $fillable = [
         'contractor_name',
         'contract_number',
@@ -47,7 +47,7 @@ class Contract extends Model
         'room_id',
         'guest_id',
     ];
- 
+
     protected $casts = [
         'contract_date' => 'date',
         'start_date' => 'date',
@@ -63,11 +63,11 @@ class Contract extends Model
         'late_fee' => 'decimal:2',
         'amount' => 'decimal:2',
     ];
- 
+
     // ─────────────────────────────────────────
     //  Relationships
     // ─────────────────────────────────────────
- 
+
     /**
      * ห้องพักที่ผูกกับสัญญานี้
      *
@@ -77,7 +77,7 @@ class Contract extends Model
     {
         return $this->belongsTo(Room::class);
     }
- 
+
     /**
      * ผู้เช่าที่ผูกกับสัญญานี้
      *
@@ -87,11 +87,11 @@ class Contract extends Model
     {
         return $this->belongsTo(Guest::class);
     }
- 
+
     // ─────────────────────────────────────────
     //  Scopes — ใส่ type hint ครบ ไม่มี warning
     // ─────────────────────────────────────────
- 
+
     /**
      * กรองเฉพาะสัญญาที่ active
      *
@@ -102,7 +102,7 @@ class Contract extends Model
     {
         return $query->where('status', 'active');
     }
- 
+
     /**
      * กรองเฉพาะสัญญาที่หมดอายุแล้ว
      *
@@ -113,11 +113,11 @@ class Contract extends Model
     {
         return $query->where('end_date', '<', now());
     }
- 
+
     // ─────────────────────────────────────────
     //  Accessors
     // ─────────────────────────────────────────
- 
+
     /** แสดงสถานะเป็นภาษาไทย */
     public function getStatusLabelAttribute(): string
     {
@@ -129,11 +129,11 @@ class Contract extends Model
             default => $this->status ?? '',
         };
     }
- 
+
     // ─────────────────────────────────────────
     //  Helpers — แปลงตัวเลขเป็นภาษาไทย
     // ─────────────────────────────────────────
- 
+
     public static function ThaiBaht(string $amount): string
     {
         $amount = (float) $amount;
@@ -141,15 +141,15 @@ class Contract extends Model
         $unit = ['', 'สิบ', 'ร้อย', 'พัน', 'หมื่น', 'แสน', 'ล้าน'];
         $intPart = (int) floor($amount);
         $decPart = (int) round(($amount - $intPart) * 100);
- 
+
         $result = self::convertInt($intPart, $thai, $unit).'บาท';
         $result .= $decPart > 0
             ? self::convertInt($decPart, $thai, $unit).'สตางค์'
             : 'ถ้วน';
- 
+
         return $result;
     }
- 
+
     /**
      * @param  array<int, string>  $thai
      * @param  array<int, string>  $unit
@@ -176,8 +176,7 @@ class Contract extends Model
                 $result .= $thai[$d].($pos > 0 ? $unit[$pos % 6] : '');
             }
         }
- 
+
         return $result;
     }
 }
- 

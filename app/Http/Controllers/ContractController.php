@@ -1,7 +1,7 @@
 <?php
- 
+
 namespace App\Http\Controllers;
- 
+
 use App\Http\Requests\StoreContractRequest;
 use App\Http\Requests\UpdateContractRequest;
 use App\Models\Contract;
@@ -13,15 +13,15 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
- 
+
 class ContractController extends Controller
 {
     public function __construct(protected readonly ContractService $contractService) {}
- 
+
     public function index(Request $request): View
     {
         $this->authorize('viewAny', Contract::class);
- 
+
         $contracts = Contract::with(['room', 'guest'])
             ->when($request->filled('status'), function ($query) use ($request) {
                 $query->where('status', $request->status);
@@ -42,30 +42,30 @@ class ContractController extends Controller
             ->latest()
             ->paginate(config('rm1.items_per_page'))
             ->withQueryString();
- 
+
         return view('contracts.index', compact('contracts'));
     }
- 
+
     public function create(): View
     {
         $this->authorize('create', Contract::class);
- 
+
         $rooms = Room::whereIn('status', ['available', 'occupied'])
             ->orderBy('room_number')
             ->get();
- 
+
         $guests = Guest::all();
         $contractNumber = $this->contractService->generateContractNumber();
- 
+
         return view('contracts.create', compact('rooms', 'guests', 'contractNumber'));
     }
- 
+
     public function store(StoreContractRequest $request): RedirectResponse
     {
         $this->authorize('create', Contract::class);
- 
+
         $validated = $request->validated();
- 
+
         // ✅ ตรวจสอบ end_date > start_date
         if (! empty($validated['start_date']) && ! empty($validated['end_date'])) {
             $startDate = Carbon::parse($validated['start_date']);
@@ -76,7 +76,7 @@ class ContractController extends Controller
                     ->withErrors(['end_date' => 'วันสิ้นสุดสัญญาต้องมากกว่าวันเริ่มสัญญา']);
             }
         }
- 
+
         // ✅ ตรวจสอบ room occupied
         $room = Room::find($validated['room_id'] ?? null);
         if ($room && $room->status === 'occupied') {
@@ -84,117 +84,117 @@ class ContractController extends Controller
                 ->withInput()
                 ->withErrors(['room_id' => 'ห้องนี้มีผู้เช่าอยู่แล้ว ไม่สามารถสร้างสัญญาได้']);
         }
- 
+
         try {
             $this->contractService->create($validated);
- 
+
             return redirect()->route('contracts.index')
                 ->with('success', 'สัญญาเช่าถูกสร้างสำเร็จ');
- 
+
         } catch (ValidationException $e) {
             return redirect()->back()
                 ->withInput()
                 ->withErrors($e->errors());
- 
+
         } catch (\Exception $e) {
             \Log::error('ContractController store failed', ['error' => $e->getMessage()]);
- 
+
             return redirect()->back()
                 ->withInput()
                 ->withErrors(['error' => 'ไม่สามารถสร้างสัญญาได้ กรุณาลองใหม่']);
         }
     }
- 
+
     public function show(Contract $contract): View
     {
         $this->authorize('view', $contract);
         $contract->load(['room', 'guest']);
- 
+
         return view('contracts.show', compact('contract'));
     }
- 
+
     public function edit(Contract $contract): View
     {
         $this->authorize('update', $contract);
         $rooms = Room::all();
         $guests = Guest::all();
- 
+
         return view('contracts.edit', compact('contract', 'rooms', 'guests'));
     }
- 
+
     public function update(UpdateContractRequest $request, Contract $contract): RedirectResponse
     {
         $this->authorize('update', $contract);
- 
+
         try {
             $this->contractService->update($contract, $request->validated());
- 
+
             return redirect()->route('contracts.show', $contract)
                 ->with('success', 'สัญญาเช่าถูกอัปเดตสำเร็จ');
- 
+
         } catch (ValidationException $e) {
             return redirect()->back()
                 ->withInput()
                 ->withErrors($e->errors());
- 
+
         } catch (\Exception $e) {
             \Log::error('ContractController update failed', ['error' => $e->getMessage()]);
- 
+
             return redirect()->back()
                 ->withInput()
                 ->withErrors(['error' => 'ไม่สามารถอัปเดตสัญญาได้ กรุณาลองใหม่']);
         }
     }
- 
+
     public function destroy(Contract $contract): RedirectResponse
     {
         $this->authorize('delete', $contract);
- 
+
         try {
             $roomId = $contract->room_id;
             $contract->delete();
- 
+
             if ($roomId) {
                 $this->contractService->updateRoomStatus($roomId, 'available');
             }
- 
+
             return redirect()->route('contracts.index')
                 ->with('success', 'สัญญาเช่าถูกลบสำเร็จ');
- 
+
         } catch (\Exception $e) {
             \Log::error('ContractController destroy failed', ['error' => $e->getMessage()]);
- 
+
             return redirect()->back()
                 ->withErrors(['error' => 'ไม่สามารถลบสัญญาได้ กรุณาลองใหม่']);
         }
     }
- 
+
     public function export(Request $request): \Symfony\Component\HttpFoundation\BinaryFileResponse|RedirectResponse
     {
         $this->authorize('viewAny', Contract::class);
- 
+
         try {
             $contracts = Contract::with(['room', 'guest'])
                 ->orderBy('id', 'desc')
                 ->get();
- 
+
             $filename = 'contracts_export_'.date('Y-m-d_H-i-s').'.xlsx';
             $rows = $this->contractService->formatForExport($contracts);
- 
+
             return xlsx_download($filename, $rows);
- 
+
         } catch (\Exception $e) {
             \Log::error('ContractController export failed', ['error' => $e->getMessage()]);
- 
+
             return redirect()->back()
                 ->withErrors(['error' => 'ไม่สามารถ export ได้ กรุณาลองใหม่']);
         }
     }
- 
+
     public function expiring(): View
     {
         $this->authorize('viewAny', Contract::class);
- 
+
         $contracts = Contract::with(['room', 'guest'])
             ->where('status', 'active')
             ->whereDate('end_date', '>=', now())
@@ -202,8 +202,7 @@ class ContractController extends Controller
             ->orderBy('end_date', 'asc')
             ->paginate(config('rm1.items_per_page'))
             ->withQueryString();
- 
+
         return view('contracts.expiring', compact('contracts'));
     }
 }
- 

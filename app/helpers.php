@@ -1,32 +1,32 @@
 <?php
- 
+
 use App\Support\EnumLabel;
- 
+
 if (! function_exists('enum_th')) {
     function enum_th(string $group, mixed $value, ?string $fallback = null): string
     {
         return EnumLabel::th($group, $value !== null ? (string) $value : null, $fallback);
     }
 }
- 
+
 if (! function_exists('enum_bi')) {
     function enum_bi(string $group, mixed $value, ?string $fallback = null): string
     {
         return EnumLabel::bi($group, $value !== null ? (string) $value : null, $fallback);
     }
 }
- 
+
 if (! function_exists('csv_sanitize_text')) {
     function csv_sanitize_text(mixed $value): string
     {
         $text = (string) $value;
         $text = str_replace(["\0", "\u{FFFD}"], '', $text);
         $text = preg_replace('/\s+/u', ' ', $text) ?? $text;
- 
+
         return trim($text);
     }
 }
- 
+
 if (! function_exists('xlsx_download')) {
     /**
      * @param  array<int, mixed>  $rows
@@ -38,7 +38,7 @@ if (! function_exists('xlsx_download')) {
                 return csv_sanitize_text($value);
             }, is_array($row) ? $row : [$row]);
         }, $rows);
- 
+
         $sheetXml = build_xlsx_sheet_xml($safeRows);
         $contentTypesXml = <<<'XML'
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -88,23 +88,23 @@ XML;
     <Application>Rm1</Application>
 </Properties>
 XML;
- 
+
         $tempPath = tempnam(sys_get_temp_dir(), 'xlsx_');
         if ($tempPath === false) {
             abort(500, 'ไม่สามารถสร้างไฟล์ชั่วคราวได้');
         }
- 
+
         if (! class_exists('ZipArchive')) {
             @unlink($tempPath);
             abort(500, 'ZipArchive class not found. PHP zip extension may be missing/enabled incorrectly.');
         }
- 
+
         $zip = new \ZipArchive;
         if ($zip->open($tempPath, \ZipArchive::OVERWRITE) !== true) {
             @unlink($tempPath);
             abort(500, 'ไม่สามารถสร้างไฟล์ Export ได้');
         }
- 
+
         $zip->addFromString('[Content_Types].xml', $contentTypesXml);
         $zip->addFromString('_rels/.rels', $relsXml);
         $zip->addFromString('xl/workbook.xml', $workbookXml);
@@ -113,9 +113,9 @@ XML;
         $zip->addFromString('docProps/core.xml', $coreXml);
         $zip->addFromString('docProps/app.xml', $appXml);
         $zip->close();
- 
+
         $downloadName = preg_replace('/\.xlsx$/i', '', $filename).'.xlsx';
- 
+
         return response()->download(
             $tempPath,
             $downloadName,
@@ -123,7 +123,7 @@ XML;
         )->deleteFileAfterSend(true);
     }
 }
- 
+
 if (! function_exists('build_xlsx_sheet_xml')) {
     /**
      * @param  array<int, array<int, mixed>>  $rows
@@ -134,27 +134,27 @@ if (! function_exists('build_xlsx_sheet_xml')) {
         $lines[] = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
         $lines[] = '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">';
         $lines[] = '<sheetData>';
- 
+
         foreach ($rows as $rowIndex => $row) {
             $rowNumber = $rowIndex + 1;
             $lines[] = '<row r="'.$rowNumber.'">';
- 
+
             foreach (array_values($row) as $colIndex => $value) {
                 $cellRef = xlsx_cell_ref($colIndex + 1, $rowNumber);
                 $escaped = htmlspecialchars((string) $value, ENT_XML1 | ENT_QUOTES, 'UTF-8');
                 $lines[] = '<c r="'.$cellRef.'" t="inlineStr"><is><t>'.$escaped.'</t></is></c>';
             }
- 
+
             $lines[] = '</row>';
         }
- 
+
         $lines[] = '</sheetData>';
         $lines[] = '</worksheet>';
- 
+
         return implode('', $lines);
     }
 }
- 
+
 if (! function_exists('csv_stream_download')) {
     /**
      * @param  array<int, string>  $headers
@@ -163,25 +163,25 @@ if (! function_exists('csv_stream_download')) {
     function csv_stream_download(string $filename, array $headers, callable $rowProducer): \Symfony\Component\HttpFoundation\StreamedResponse
     {
         $downloadName = preg_replace('/\.csv$/i', '', $filename).'.csv';
- 
+
         return response()->streamDownload(function () use ($headers, $rowProducer) {
             $out = fopen('php://output', 'w');
             if ($out === false) {
                 return;
             }
- 
+
             fwrite($out, "\xEF\xBB\xBF");
             fputcsv($out, $headers);
- 
+
             $rowProducer(static function (array $row) use ($out): void {
                 fputcsv($out, array_map(static fn ($value) => csv_sanitize_text($value), $row));
             });
- 
+
             fclose($out);
         }, $downloadName, ['Content-Type' => 'text/csv; charset=UTF-8']);
     }
 }
- 
+
 if (! function_exists('csv_download')) {
     /**
      * @param  array<int, mixed>  $rows
@@ -193,26 +193,26 @@ if (! function_exists('csv_download')) {
                 return csv_sanitize_text($value);
             }, is_array($row) ? $row : [$row]);
         }, $rows);
- 
+
         $downloadName = preg_replace('/\.csv$/i', '', $filename).'.csv';
- 
+
         return response()->streamDownload(function () use ($safeRows): void {
             $out = fopen('php://output', 'w');
             if ($out === false) {
                 return;
             }
- 
+
             fwrite($out, "\xEF\xBB\xBF");
- 
+
             foreach ($safeRows as $row) {
                 fputcsv($out, $row);
             }
- 
+
             fclose($out);
         }, $downloadName, ['Content-Type' => 'text/csv; charset=UTF-8']);
     }
 }
- 
+
 if (! function_exists('xlsx_cell_ref')) {
     function xlsx_cell_ref(int $column, int $row): string
     {
@@ -222,8 +222,7 @@ if (! function_exists('xlsx_cell_ref')) {
             $letters = chr(65 + $remainder).$letters;
             $column = (int) floor(($column - 1) / 26);
         }
- 
+
         return $letters.$row;
     }
 }
- 

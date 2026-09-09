@@ -1,10 +1,10 @@
 <?php
- 
+
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
- 
+
 /**
  * ✅ FIX (data integrity): เพิ่ม composite unique index บน meter_readings
  * (meter_id, period_month, period_year, booking_id)
@@ -35,7 +35,7 @@ return new class extends Migration
             );
         });
     }
- 
+
     public function down(): void
     {
         Schema::table('meter_readings', function (Blueprint $table) {
@@ -43,4 +43,3 @@ return new class extends Migration
         });
     }
 };
- 

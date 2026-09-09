@@ -1,13 +1,13 @@
 <?php
- 
+
 namespace App\Http\Controllers;
- 
+
 use App\Models\Guest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
- 
+
 class GuestController extends Controller
 {
     // ─────────────────────────────────────────
@@ -16,12 +16,12 @@ class GuestController extends Controller
     public function index(Request $request): View
     {
         $this->authorize('viewAny', Guest::class);
- 
+
         $query = Guest::with(['contracts.room']);
- 
+
         if ($request->filled('search')) {
             $s = $request->input('search');
- 
+
             // Optimize search: distinguish between PII fields and general fields
             // to avoid loading all guests into memory before pagination.
             //
@@ -31,9 +31,9 @@ class GuestController extends Controller
             //
             // NOTE: Partial PII search (e.g., "manu" in "manu@example.com") is no longer
             // supported. Users must provide the complete email or ID number for PII lookup.
- 
+
             $isPiiSearch = $this->looksLikePii($s);
- 
+
             if ($isPiiSearch) {
                 // Exact hash-based lookup for PII fields only (email or id_number).
                 $hash = $this->piiHash($s);
@@ -50,15 +50,15 @@ class GuestController extends Controller
                 });
             }
         }
- 
+
         // Paginate at the SQL level (not loading all rows into memory).
         $guests = $query
             ->orderByDesc('id')
             ->paginate(10);
- 
+
         return view('guests.index', ['guests' => $guests]);
     }
- 
+
     /**
      * Detect whether the search should be treated as PII-only lookup.
      *
@@ -70,49 +70,49 @@ class GuestController extends Controller
     private function looksLikePii(string $search): bool
     {
         $search = trim($search);
- 
+
         if (str_contains($search, '@')) {
             return true;
         }
- 
+
         // Thai mobile phone numbers use the format 0XXXXXXXXX (10 digits, starts with 0).
         // These must not be mistaken for ID numbers.
         if (preg_match('/^0\d{9}$/', $search)) {
             return false;
         }
- 
+
         // For non-phone numeric values, treat 10-13 digit numbers as ID-number candidates.
         // This keeps the optimization without colliding with full phone-number searches.
         if (preg_match('/^\d{10,13}$/', $search)) {
             return true;
         }
- 
+
         return false;
     }
- 
+
     /** คำนวณ blind-index hash สำหรับ lookup PII field */
     private function piiHash(string $value): string
     {
         return hash_hmac('sha256', $value, (string) config('app.key'));
     }
- 
+
     // ─────────────────────────────────────────
     //  CREATE - ฟอร์มเพิ่มผู้เช่าใหม่
     // ─────────────────────────────────────────
     public function create(): View
     {
         $this->authorize('create', Guest::class); // ✅ แก้ไข: เพิ่ม authorization
- 
+
         return view('guests.create');
     }
- 
+
     // ─────────────────────────────────────────
     //  STORE - บันทึกผู้เช่าใหม่
     // ─────────────────────────────────────────
     public function store(Request $request): RedirectResponse
     {
         $this->authorize('create', Guest::class); // ✅ แก้ไข: เพิ่ม authorization
- 
+
         $validated = $request->validate([
             'first_name' => 'required|max:50',
             'last_name' => 'required|max:50',
@@ -136,29 +136,29 @@ class GuestController extends Controller
             'emergency_phone' => 'nullable|max:20',
             'notes' => 'nullable|max:1000',
         ]);
- 
+
         Guest::create($validated);
- 
+
         return redirect()->route('guests.index')->with('success', 'เพิ่มผู้เช่าเรียบร้อยแล้ว');
     }
- 
+
     // ─────────────────────────────────────────
     //  BULK CREATE - เพิ่มหลายคนพร้อมกัน
     // ─────────────────────────────────────────
     public function bulkCreate(): View
     {
         $this->authorize('create', Guest::class); // ✅ แก้ไข: เพิ่ม authorization
- 
+
         return view('guests.bulk-create');
     }
- 
+
     // ─────────────────────────────────────────
     //  BULK STORE - บันทึกหลายคน
     // ─────────────────────────────────────────
     public function bulkStore(Request $request): RedirectResponse
     {
         $this->authorize('create', Guest::class); // ✅ แก้ไข: เพิ่ม authorization
- 
+
         $validated = $request->validate([
             'guests' => ['required', 'array', 'min:1'],
             'guests.*.first_name' => ['required', 'string', 'max:50'],
@@ -171,7 +171,7 @@ class GuestController extends Controller
             'guests.*.date_of_birth' => ['nullable', 'date'],
             'guests.*.phone' => ['required', 'string', 'max:20'],
         ]);
- 
+
         DB::transaction(function () use ($validated): void {
             foreach ($validated['guests'] as $guestData) {
                 Guest::create([
@@ -183,12 +183,12 @@ class GuestController extends Controller
                 ]);
             }
         });
- 
+
         return redirect()
             ->route('guests.index')
             ->with('success', 'เพิ่มผู้เช่า '.count($validated['guests']).' คนเรียบร้อยแล้ว');
     }
- 
+
     // ─────────────────────────────────────────
     //  SHOW - ดูรายละเอียดผู้เช่า
     // ─────────────────────────────────────────
@@ -196,27 +196,27 @@ class GuestController extends Controller
     {
         $this->authorize('view', $guest); // ✅ แก้ไข: เพิ่ม authorization
         $guest->load(['contracts.room']);
- 
+
         return view('guests.show', compact('guest'));
     }
- 
+
     // ─────────────────────────────────────────
     //  EDIT - ฟอร์มแก้ไข
     // ─────────────────────────────────────────
     public function edit(Guest $guest): View
     {
         $this->authorize('update', $guest); // ✅ แก้ไข: เพิ่ม authorization
- 
+
         return view('guests.edit', compact('guest'));
     }
- 
+
     // ─────────────────────────────────────────
     //  UPDATE - อัปเดตข้อมูล
     // ─────────────────────────────────────────
     public function update(Request $request, Guest $guest): RedirectResponse
     {
         $this->authorize('update', $guest); // ✅ แก้ไข: เพิ่ม authorization
- 
+
         $validated = $request->validate([
             'first_name' => 'required|max:50',
             'last_name' => 'required|max:50',
@@ -244,12 +244,12 @@ class GuestController extends Controller
             'emergency_phone' => 'nullable|max:20',
             'notes' => 'nullable|max:1000',
         ]);
- 
+
         $guest->update($validated);
- 
+
         return redirect()->route('guests.show', $guest)->with('success', 'อัปเดตข้อมูลเรียบร้อยแล้ว');
     }
- 
+
     // ─────────────────────────────────────────
     //  DESTROY - ลบผู้เช่า
     // ─────────────────────────────────────────
@@ -257,26 +257,26 @@ class GuestController extends Controller
     {
         $this->authorize('delete', $guest); // ✅ แก้ไข: เพิ่ม authorization ที่ขาดไป
         $guest->delete();
- 
+
         return redirect()->route('guests.index')->with('success', 'ลบข้อมูลเรียบร้อยแล้ว');
     }
- 
+
     // ─────────────────────────────────────────
     //  EXPORT - ส่งออก Excel
     // ─────────────────────────────────────────
     public function export(Request $request): \Symfony\Component\HttpFoundation\BinaryFileResponse
     {
         $this->authorize('export', Guest::class); // ✅ แก้ไข: เพิ่ม authorization
- 
+
         $guests = Guest::with('contracts.room')->orderBy('id')->get();
- 
+
         $rows = [];
         $rows[] = ['ชื่อ', 'นามสกุล', 'อีเมล', 'เบอร์โทร', 'เลขบัตร', 'ห้องพัก', 'สถานะ'];
- 
+
         foreach ($guests as $guest) {
             $contract = $guest->contracts->where('status', 'active')->first();
             $room = $contract?->room;
- 
+
             $rows[] = [
                 $guest->first_name,
                 $guest->last_name,
@@ -287,10 +287,9 @@ class GuestController extends Controller
                 $contract ? 'มีผู้เช่า' : 'ว่าง',
             ];
         }
- 
+
         $filename = 'guests_export_'.date('Y-m-d').'.xlsx';
- 
+
         return xlsx_download($filename, $rows);
     }
 }
- 

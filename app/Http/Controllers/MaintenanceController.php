@@ -1,7 +1,7 @@
 <?php
- 
+
 namespace App\Http\Controllers;
- 
+
 use App\Http\Requests\StoreMaintenanceRequest;
 use App\Http\Requests\UpdateMaintenanceRequest;
 use App\Models\Facility;
@@ -14,7 +14,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\View\View;
- 
+
 /**
  * หมายเหตุ: โค้ดนี้เป็น Laravel (access model fields เป็น property)
  * ปัญหา "Call to unknown function: status/zone/room_number/..." ที่ VSCode พบ
@@ -28,29 +28,29 @@ class MaintenanceController extends Controller
     public function index(Request $request): View
     {
         $this->authorize('viewAny', Maintenance::class);
- 
+
         $pendingCount = Maintenance::where('status', 'pending')->count();
- 
+
         $inProgressCount = Maintenance::where('status', 'in_progress')->count();
- 
+
         $completedThisMonth = Maintenance::where('status', 'completed')
             ->whereMonth('updated_at', Carbon::now()->month)
             ->whereYear('updated_at', Carbon::now()->year)
             ->count();
- 
+
         $pending = Maintenance::with(['room', 'facility'])
             ->whereIn('status', ['pending', 'in_progress'])
             ->orderByRaw("CASE status WHEN 'pending' THEN 1 WHEN 'in_progress' THEN 2 ELSE 3 END")
             ->orderByDesc('created_at')
             ->take(5)
             ->get();
- 
+
         $recentlyCompleted = Maintenance::with(['room', 'facility'])
             ->where('status', 'completed')
             ->orderByDesc('updated_at')
             ->take(5)
             ->get();
- 
+
         $query = Maintenance::with(['room', 'facility']);
         if ($request->filled('search')) {
             $search = $request->input('search');
@@ -61,9 +61,9 @@ class MaintenanceController extends Controller
                     ->orWhereHas('facility', fn ($f) => $f->where('name', 'like', "%{$search}%"));
             });
         }
- 
+
         $maintenances = $query->orderByDesc('id')->paginate(10);
- 
+
         return view('maintenances.index', compact(
             'maintenances',
             'pendingCount',
@@ -73,23 +73,23 @@ class MaintenanceController extends Controller
             'recentlyCompleted'
         ));
     }
- 
+
     /**
      * หน้าฟอร์มแจ้งซ่อมใหม่
      */
     public function create(Request $request): View
     {
         $this->authorize('create', Maintenance::class);
- 
+
         $rooms = Room::orderBy('floor')->orderBy('zone')->orderBy('room_number')->get();
- 
+
         // ✅ แก้ไข: ส่ง facilities เฉพาะที่ต้องใช้ตอน Lock mode (มาจาก facility_id)
         $facilities = Cache::remember(CacheKeys::allFacilities(), now()->addHours(6), fn () => Facility::orderBy('id')->get());
- 
+
         $facilityId = $request->input('facility_id');
         $selectedRoomId = null;
         $selectedFacilityId = null;
- 
+
         if ($facilityId) {
             $facility = Facility::find($facilityId);
             if ($facility && $facility->room_id) {
@@ -97,7 +97,7 @@ class MaintenanceController extends Controller
                 $selectedFacilityId = $facilityId;
             }
         }
- 
+
         return view('maintenances.create', compact(
             'rooms',
             'facilities',
@@ -105,7 +105,7 @@ class MaintenanceController extends Controller
             'selectedFacilityId'
         ));
     }
- 
+
     /**
      * บันทึกข้อมูลการแจ้งซ่อม
      *
@@ -116,9 +116,9 @@ class MaintenanceController extends Controller
     public function store(StoreMaintenanceRequest $request): RedirectResponse
     {
         $this->authorize('create', Maintenance::class);
- 
+
         $validated = $request->validated();
- 
+
         // DB maintenances มีคอลัมน์: room_id, issue_type, description, reported_date,
         // completed_date, status, assigned_to, cost, notes
         // ฟอร์มส่ง maintenance_type/request_date ให้ map ก่อน insert
@@ -132,51 +132,51 @@ class MaintenanceController extends Controller
             'cost' => $validated['cost'] ?? null,
             'notes' => $validated['notes'] ?? null,
         ];
- 
+
         Maintenance::create($data);
- 
+
         Cache::forget(CacheKeys::allFacilities());
- 
+
         return redirect()->route('maintenances.index')
- 
+
             ->with('success', 'แจ้งซ่อมเรียบร้อยแล้ว');
     }
- 
+
     /**
      * แสดงรายละเอียดการแจ้งซ่อม
      */
     public function show(Maintenance $maintenance): View
     {
         $this->authorize('view', $maintenance);
- 
+
         $maintenance->load(['room', 'facility']);
- 
+
         return view('maintenances.show', compact('maintenance'));
     }
- 
+
     /**
      * หน้าแก้ไขการแจ้งซ่อม
      */
     public function edit(Maintenance $maintenance): View
     {
         $this->authorize('update', $maintenance);
- 
+
         $rooms = Room::orderBy('floor')->orderBy('zone')->orderBy('room_number')->get();
- 
+
         $facilities = Cache::remember(CacheKeys::allFacilities(), now()->addHours(6), fn () => Facility::orderBy('id')->get());
- 
+
         return view('maintenances.edit', compact('maintenance', 'rooms', 'facilities'));
     }
- 
+
     /**
      * อัปเดตข้อมูลการแจ้งซ่อม
      */
     public function update(UpdateMaintenanceRequest $request, Maintenance $maintenance): RedirectResponse
     {
         $this->authorize('update', $maintenance);
- 
+
         $validated = $request->validated();
- 
+
         // Map field ที่มาจากฟอร์มให้ตรงกับ schema
         $updateData = [
             'room_id' => $validated['room_id'] ?? $maintenance->room_id,
@@ -188,84 +188,83 @@ class MaintenanceController extends Controller
             'cost' => $validated['cost'] ?? $maintenance->cost,
             'notes' => $validated['notes'] ?? $maintenance->notes,
         ];
- 
+
         $maintenance->update($updateData);
- 
+
         if ($request->status === 'completed' && $maintenance->facility_id) {
- 
+
             Facility::where('id', $maintenance->facility_id)->update([
                 'status' => 'good',
                 'last_maintenance_date' => now(),
             ]);
         }
- 
+
         return redirect()->route('maintenances.index')
             ->with('success', 'อัปเดตข้อมูลเรียบร้อย');
     }
- 
+
     /**
      * ลบรายการแจ้งซ่อม
      */
     public function destroy(Maintenance $maintenance): RedirectResponse
     {
         $this->authorize('delete', $maintenance);
- 
+
         $maintenance->delete();
- 
+
         return redirect()->route('maintenances.index')
             ->with('success', 'ลบรายการเรียบร้อยแล้ว');
     }
- 
+
     /**
      * ฟังก์ชันทางลัด: เริ่มงานซ่อม
      */
     public function startWork(Maintenance $maintenance): RedirectResponse
     {
         $this->authorize('startWork', $maintenance);
- 
+
         $maintenance->update(['status' => 'in_progress']);
- 
+
         if ($maintenance->facility_id) {
             Facility::where('id', $maintenance->facility_id)->update([
                 'status' => 'maintenance',
             ]);
         }
- 
+
         return back()->with('success', 'เริ่มดำเนินการซ่อมแล้ว');
     }
- 
+
     /**
      * ฟังก์ชันทางลัด: เสร็จสิ้นงานซ่อม
      */
     public function completeWork(Maintenance $maintenance): RedirectResponse
     {
         $this->authorize('completeWork', $maintenance);
- 
+
         $maintenance->update(['status' => 'completed']);
- 
+
         if ($maintenance->facility_id) {
             Facility::where('id', $maintenance->facility_id)->update([
                 'status' => 'good',
                 'last_maintenance_date' => now(),
             ]);
         }
- 
+
         return back()->with('success', 'ดำเนินการซ่อมเสร็จสิ้น');
     }
- 
+
     /**
      * API: ดึง facilities ของห้องที่เลือก (สำหรับ dependent dropdown)
      */
     public function byRoom(int $roomId): JsonResponse
     {
         $this->authorize('byRoom', Maintenance::class);
- 
+
         $facilities = Facility::where('room_id', $roomId)
- 
+
             ->select('id', 'name', 'type', 'status')
             ->get();
- 
+
         return response()->json($facilities);
     }
 }
- 

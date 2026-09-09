@@ -1,12 +1,12 @@
 <?php
- 
+
 namespace App\Http\Controllers;
- 
+
 use App\Models\Room;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
- 
+
 class RoomController extends Controller
 {
     // ─────────────────────────────────────────
@@ -15,48 +15,48 @@ class RoomController extends Controller
     public function index(Request $request): View
     {
         $this->authorize('viewAny', Room::class);
- 
+
         $query = Room::query();
- 
+
         // 1. กรองตามหมายเลขห้อง
         if ($request->filled('search')) {
             $query->where('room_number', 'like', '%'.$request->search.'%');
         }
- 
+
         // 2. กรองตามสถานะ
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
- 
+
         // 3. กรองตามชั้น
         if ($request->filled('floor')) {
             $query->where('floor', $request->floor);
         }
- 
+
         // 4. กรองตามโซน
         if ($request->filled('zone')) {
             $query->where('zone', $request->zone);
         }
- 
+
         // ดึงข้อมูลนับสถิติจากฐานข้อมูลโดยตรงเพื่อลด memory usage
         $availableCount = (clone $query)->where('status', 'available')->count();
         $occupiedCount = (clone $query)->where('status', 'occupied')->count();
         $maintenanceCount = (clone $query)->where('status', 'maintenance')->count();
- 
+
         // รายชื่อห้องที่ว่าง/ไม่ว่าง: ใช้ query DB เพื่อตัดภาระการโหลดทั้งก้อน
         $availableRoomList = (clone $query)
             ->where('status', 'available')
             ->orderBy('room_number')
             ->pluck('room_number');
- 
+
         $occupiedRoomList = (clone $query)
             ->where('status', 'occupied')
             ->orderBy('room_number')
             ->pluck('room_number');
- 
+
         // ดึงข้อมูลแสดงในตารางพร้อม Pagination
         $rooms = $query->orderBy('floor')->orderBy('zone')->orderBy('room_number')->paginate(30)->withQueryString();
- 
+
         return view('rooms.index', compact(
             'rooms',
             'availableCount',
@@ -66,24 +66,24 @@ class RoomController extends Controller
             'occupiedRoomList'
         ));
     }
- 
+
     // ─────────────────────────────────────────
     //  CREATE - หน้าฟอร์มเพิ่มห้องใหม่
     // ─────────────────────────────────────────
     public function create(): View
     {
         $this->authorize('create', Room::class); // ✅ แก้ไข: เพิ่ม authorization
- 
+
         return view('rooms.create');
     }
- 
+
     // ─────────────────────────────────────────
     //  STORE - บันทึกห้องใหม่
     // ─────────────────────────────────────────
     public function store(Request $request): RedirectResponse
     {
         $this->authorize('create', Room::class); // ✅ แก้ไข: เพิ่ม authorization
- 
+
         $validated = $request->validate([
             'room_number' => 'required|unique:rooms,room_number|max:10',
             'room_type' => 'required|in:fan,air',
@@ -96,39 +96,39 @@ class RoomController extends Controller
         ], [
             'room_number.unique' => 'หมายเลขห้องนี้มีอยู่ในระบบแล้ว กรุณาตรวจสอบอีกครั้ง',
         ]);
- 
+
         Room::create($validated);
- 
+
         return redirect()->route('rooms.index')->with('success', 'เพิ่มห้องใหม่เรียบร้อยแล้ว');
     }
- 
+
     // ─────────────────────────────────────────
     //  SHOW - ดูรายละเอียดห้อง
     // ─────────────────────────────────────────
     public function show(Room $room): View
     {
         $this->authorize('view', $room); // ✅ แก้ไข: เพิ่ม authorization
- 
+
         return view('rooms.show', compact('room'));
     }
- 
+
     // ─────────────────────────────────────────
     //  EDIT - หน้าฟอร์มแก้ไขห้อง
     // ─────────────────────────────────────────
     public function edit(Room $room): View
     {
         $this->authorize('update', $room); // ✅ แก้ไข: เพิ่ม authorization
- 
+
         return view('rooms.edit', compact('room'));
     }
- 
+
     // ─────────────────────────────────────────
     //  UPDATE - อัปเดตข้อมูลห้อง
     // ─────────────────────────────────────────
     public function update(Request $request, Room $room): RedirectResponse
     {
         $this->authorize('update', $room); // ✅ แก้ไข: เพิ่ม authorization
- 
+
         $validated = $request->validate([
             'room_number' => 'required|max:10|unique:rooms,room_number,'.$room->id,
             'room_type' => 'required|in:fan,air',
@@ -139,12 +139,12 @@ class RoomController extends Controller
             'floor' => 'nullable|integer|min:1|max:5',
             'zone' => 'nullable|in:A,B',
         ]);
- 
+
         $room->update($validated);
- 
+
         return redirect()->route('rooms.show', $room)->with('success', 'อัปเดตข้อมูลห้องเรียบร้อยแล้ว');
     }
- 
+
     // ─────────────────────────────────────────
     //  DESTROY - ลบห้อง
     // ─────────────────────────────────────────
@@ -152,27 +152,27 @@ class RoomController extends Controller
     {
         $this->authorize('delete', $room); // ✅ แก้ไข: เพิ่ม authorization ที่ขาดไป
         $room->delete();
- 
+
         return redirect()->route('rooms.index')->with('success', 'ลบห้องเรียบร้อยแล้ว');
     }
- 
+
     // ─────────────────────────────────────────
     //  BULK CREATE - เพิ่มหลายห้องพร้อมกัน
     // ─────────────────────────────────────────
     public function bulkCreate(): View
     {
         $this->authorize('create', Room::class); // ✅ แก้ไข: เพิ่ม authorization
- 
+
         return view('rooms.bulk-create');
     }
- 
+
     // ─────────────────────────────────────────
     //  BULK STORE - บันทึกหลายห้อง
     // ─────────────────────────────────────────
     public function bulkStore(Request $request): RedirectResponse
     {
         $this->authorize('create', Room::class); // ✅ แก้ไข: เพิ่ม authorization
- 
+
         $validated = $request->validate([
             'prefix' => 'nullable|string|max:5',
             'start_number' => 'required|integer|min:1',
@@ -184,19 +184,19 @@ class RoomController extends Controller
             'capacity' => 'required|integer|min:1|max:3',
             'status' => 'required|in:available,occupied,maintenance',
         ]);
- 
+
         $created = 0;
         $skipped = 0;
- 
+
         for ($i = $validated['start_number']; $i <= $validated['end_number']; $i++) {
             $roomNumber = ($validated['prefix'] ?? '').$i;
- 
+
             if (Room::where('room_number', $roomNumber)->exists()) {
                 $skipped++;
- 
+
                 continue;
             }
- 
+
             Room::create([
                 'room_number' => $roomNumber,
                 'room_type' => $validated['room_type'],
@@ -208,28 +208,28 @@ class RoomController extends Controller
             ]);
             $created++;
         }
- 
+
         $msg = "เพิ่มห้องสำเร็จ {$created} ห้อง";
         if ($skipped > 0) {
             $msg .= " (ข้ามไป {$skipped} ห้องเนื่องจากเลขซ้ำ)";
         }
- 
+
         return redirect()->route('rooms.index')->with('success', $msg);
     }
- 
+
     // ─────────────────────────────────────────
     //  EXPORT - ส่งออก Excel
     // ─────────────────────────────────────────
     public function export(Request $request): \Symfony\Component\HttpFoundation\BinaryFileResponse
     {
         $this->authorize('export', Room::class); // ✅ แก้ไข: เพิ่ม authorization
- 
+
         $rooms = Room::orderBy('floor')->orderBy('zone')->orderBy('room_number')->get();
         $filename = 'rooms_export_'.date('Y-m-d').'.xlsx';
- 
+
         $rows = [];
         $rows[] = ['หมายเลขห้อง', 'โซน', 'ชั้น', 'ประเภท', 'ราคา/เดือน', 'ความจุ', 'สถานะ', 'หมายเหตุ'];
- 
+
         foreach ($rooms as $room) {
             $rows[] = [
                 $room->room_number,
@@ -247,8 +247,7 @@ class RoomController extends Controller
                 $room->description ?? '-',
             ];
         }
- 
+
         return xlsx_download($filename, $rows);
     }
 }
- 

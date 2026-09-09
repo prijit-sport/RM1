@@ -1,10 +1,10 @@
 <?php
- 
+
 namespace App\Http\Controllers;
- 
+
 use App\Services\ReportService;
 use Illuminate\View\View;
- 
+
 /**
  * ReportController - REFACTORED
  *
@@ -17,7 +17,7 @@ use Illuminate\View\View;
 class ReportController extends Controller
 {
     public function __construct(protected readonly ReportService $reportService) {}
- 
+
     /**
      * Main report dashboard
      *
@@ -27,7 +27,7 @@ class ReportController extends Controller
     {
         return view('reports.index', $this->reportService->buildReportData());
     }
- 
+
     /**
      * Revenue-focused report view
      *
@@ -39,7 +39,7 @@ class ReportController extends Controller
             $this->reportService->buildReportData() + ['report_focus' => 'financial']
         );
     }
- 
+
     /**
      * Occupancy-focused report view
      *
@@ -51,7 +51,7 @@ class ReportController extends Controller
             $this->reportService->buildReportData() + ['report_focus' => 'rooms']
         );
     }
- 
+
     /**
      * Export report as Excel
      *
@@ -62,8 +62,7 @@ class ReportController extends Controller
         $data = $this->reportService->buildReportData();
         $filename = 'report_'.date('Ymd_His').'.xlsx';
         $rows = $this->reportService->formatForExport($data);
- 
+
         return xlsx_download($filename, $rows);
     }
 }
- 

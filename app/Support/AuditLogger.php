@@ -1,11 +1,11 @@
 <?php
- 
+
 namespace App\Support;
- 
+
 use App\Models\AuditLog;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
- 
+
 class AuditLogger
 {
     /**
@@ -24,4 +24,3 @@ class AuditLogger
         ]);
     }
 }
- 
