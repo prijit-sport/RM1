@@ -1,7 +1,7 @@
 <?php
-
+ 
 namespace Tests\Feature;
-
+ 
 use App\Models\Booking;
 use App\Models\Guest;
 use App\Models\Room;
@@ -12,7 +12,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
-
+ 
 /**
  * TASK 1: Concurrency tests for booking overlap race condition.
  *
@@ -30,19 +30,19 @@ use Tests\TestCase;
 class BookingConcurrencyTest extends TestCase
 {
     use RefreshDatabase;
-
+ 
     private BookingService $service;
-
+ 
     protected function setUp(): void
     {
         parent::setUp();
         $this->service = app(BookingService::class);
     }
-
+ 
     // ─────────────────────────────────────────
     //  HELPERS
     // ─────────────────────────────────────────
-
+ 
     private function createRoom(string $roomNumber, string $status = 'available'): Room
     {
         return Room::create([
@@ -54,7 +54,7 @@ class BookingConcurrencyTest extends TestCase
             'description' => null,
         ]);
     }
-
+ 
     private function createGuest(string $email): Guest
     {
         return Guest::create([
@@ -68,7 +68,7 @@ class BookingConcurrencyTest extends TestCase
             'id_number' => 'ID-'.substr(md5($email), 0, 8),
         ]);
     }
-
+ 
     private function bookingPayload(Room $room, Guest $guest, string $checkIn, string $checkOut, string $status = 'pending'): array
     {
         return [
@@ -85,22 +85,22 @@ class BookingConcurrencyTest extends TestCase
             'notes' => null,
         ];
     }
-
+ 
     // ─────────────────────────────────────────
     //  TESTS
     // ─────────────────────────────────────────
-
+ 
     public function test_create_overlap_query_uses_for_update_lock_clause(): void
     {
         $room = $this->createRoom('L101');
         $guest = $this->createGuest('lock@example.com');
-
+ 
         // Use the same query shape as BookingService::create() to prove the
         // compiled SQL carries "for update" on the MySQL grammar (production).
         $connection = DB::connection();
         $originalGrammar = $connection->getQueryGrammar();
         $connection->setQueryGrammar(new \Illuminate\Database\Query\Grammars\MySqlGrammar($connection));
-
+ 
         try {
             $sql = $connection->table('bookings')
                 ->where('room_id', $room->id)
@@ -111,36 +111,36 @@ class BookingConcurrencyTest extends TestCase
                 })
                 ->lockForUpdate()
                 ->toSql();
-
+ 
             $this->assertStringContainsString('for update', $sql);
-
+ 
             // And the room-row lock also compiles to "for update".
             $roomSql = $connection->table('rooms')
                 ->where('id', $room->id)
                 ->lockForUpdate()
                 ->toSql();
-
+ 
             $this->assertStringContainsString('for update', $roomSql);
         } finally {
             $connection->setQueryGrammar($originalGrammar);
         }
     }
-
+ 
     public function test_create_rejects_overlap_inside_uncommitted_transaction(): void
     {
         $this->actingAs(User::factory()->create(['role_id' => null]));
         $room = $this->createRoom('L102');
         $guestOne = $this->createGuest('tx-a@example.com');
         $guestTwo = $this->createGuest('tx-b@example.com');
-
+ 
         $checkIn = Carbon::tomorrow()->toDateString();
         $checkOut = Carbon::tomorrow()->addDays(3)->toDateString();
-
+ 
         // Simulate "request A" that has inserted (but not yet committed) a booking.
         DB::beginTransaction();
         try {
             Booking::create($this->bookingPayload($room, $guestOne, $checkIn, $checkOut, 'pending'));
-
+ 
             // Simulate "request B" arriving while A's transaction is still open:
             // because the service locks the room row, it must see/block the overlap.
             $this->expectException(ValidationException::class);
@@ -150,7 +150,7 @@ class BookingConcurrencyTest extends TestCase
             DB::rollBack();
         }
     }
-
+ 
     public function test_update_rejects_overlap_when_moving_to_occupied_room(): void
     {
         $this->actingAs(User::factory()->create(['role_id' => null]));
@@ -158,28 +158,127 @@ class BookingConcurrencyTest extends TestCase
         $targetRoom = $this->createRoom('L104');
         $guestOne = $this->createGuest('move-a@example.com');
         $guestTwo = $this->createGuest('move-b@example.com');
-
+ 
         $checkIn = Carbon::tomorrow()->toDateString();
         $checkOut = Carbon::tomorrow()->addDays(3)->toDateString();
-
+ 
         // Existing confirmed booking in targetRoom (would overlap).
         Booking::create($this->bookingPayload($targetRoom, $guestOne, $checkIn, $checkOut, 'confirmed'));
-
+ 
         $moving = Booking::create($this->bookingPayload($occupiedRoom, $guestTwo, $checkIn, $checkOut, 'pending'));
-
+ 
         $this->expectException(ValidationException::class);
         $this->service->update($moving, $this->bookingPayload($targetRoom, $guestTwo, $checkIn, $checkOut, 'pending'));
     }
-
+ 
     public function test_lock_rooms_acquired_in_ascending_id_order(): void
     {
         $roomOne = $this->createRoom('L105');
         $roomTwo = $this->createRoom('L106');
-
+ 
         // newRoomId (larger) passed before oldRoomId (smaller) on purpose.
         $ids = array_values(array_unique(array_filter(array_map('intval', [$roomTwo->id, $roomOne->id]))));
         sort($ids);
-
+ 
         $this->assertSame([(int) $roomOne->id, (int) $roomTwo->id], $ids);
     }
+ 
+    // ─────────────────────────────────────────
+    //  confirm() lock — added alongside the meter_readings unique index fix
+    // ─────────────────────────────────────────
+ 
+    /**
+     * ✅ FIX: BookingService::confirm() เดิมเช็คสถานะ pending จาก $booking ที่โหลด
+     * มาก่อนเปิด transaction (อาจเป็นข้อมูลเก่า) และไม่ได้ lockForUpdate() แถว
+     * booking เลย — ถ้ามี 2 request confirm booking เดียวกันพร้อมกัน ทั้งคู่อาจผ่าน
+     * เช็คสถานะพร้อมกันแล้วสร้าง Meter/MeterReading ซ้อนกันสองชุด
+     */
+    public function test_confirm_query_uses_for_update_lock_clause(): void
+    {
+        $room = $this->createRoom('L107');
+        $guest = $this->createGuest('confirm-lock@example.com');
+        $booking = Booking::create($this->bookingPayload(
+            $room,
+            $guest,
+            Carbon::tomorrow()->toDateString(),
+            Carbon::tomorrow()->addDays(2)->toDateString(),
+            'pending'
+        ));
+ 
+        $connection = DB::connection();
+        $originalGrammar = $connection->getQueryGrammar();
+        $connection->setQueryGrammar(new \Illuminate\Database\Query\Grammars\MySqlGrammar($connection));
+ 
+        try {
+            $sql = $connection->table('bookings')
+                ->where('id', $booking->id)
+                ->lockForUpdate()
+                ->toSql();
+ 
+            $this->assertStringContainsString('for update', $sql);
+        } finally {
+            $connection->setQueryGrammar($originalGrammar);
+        }
+    }
+ 
+    public function test_confirm_still_rejects_already_confirmed_booking(): void
+    {
+        $room = $this->createRoom('L108');
+        $guest = $this->createGuest('confirm-reject@example.com');
+        $booking = Booking::create($this->bookingPayload(
+            $room,
+            $guest,
+            Carbon::tomorrow()->toDateString(),
+            Carbon::tomorrow()->addDays(2)->toDateString(),
+            'confirmed'
+        ));
+ 
+        $this->expectException(ValidationException::class);
+        $this->service->confirm($booking);
+    }
+ 
+    public function test_confirm_succeeds_and_creates_meters_for_pending_booking(): void
+    {
+        $room = $this->createRoom('L109');
+        $guest = $this->createGuest('confirm-success@example.com');
+        $booking = Booking::create($this->bookingPayload(
+            $room,
+            $guest,
+            Carbon::tomorrow()->toDateString(),
+            Carbon::tomorrow()->addDays(2)->toDateString(),
+            'pending'
+        ));
+ 
+        $confirmed = $this->service->confirm($booking, [
+            'electric_rate' => 7.5,
+            'water_rate' => 18,
+            'tax_rate' => 0,
+        ]);
+ 
+        $this->assertSame('confirmed', $confirmed->status);
+        $this->assertDatabaseHas('meters', ['room_id' => $room->id, 'type' => 'electric']);
+        $this->assertDatabaseHas('meters', ['room_id' => $room->id, 'type' => 'water']);
+        $this->assertDatabaseHas('meter_readings', ['booking_id' => $booking->id]);
+    }
+ 
+    public function test_confirm_does_not_duplicate_meter_readings_when_called_twice_on_same_booking(): void
+    {
+        // จำลอง "การเรียกซ้ำ" (retry/double-submit) — เรียกครั้งแรกสำเร็จ ครั้งที่สอง
+        // ต้องถูกปฏิเสธเพราะสถานะไม่ใช่ pending แล้ว ไม่ใช่สร้าง reading ซ้ำเงียบ ๆ
+        $room = $this->createRoom('L110');
+        $guest = $this->createGuest('confirm-idempotent@example.com');
+        $booking = Booking::create($this->bookingPayload(
+            $room,
+            $guest,
+            Carbon::tomorrow()->toDateString(),
+            Carbon::tomorrow()->addDays(2)->toDateString(),
+            'pending'
+        ));
+ 
+        $this->service->confirm($booking);
+ 
+        $this->expectException(ValidationException::class);
+        $this->service->confirm($booking->fresh());
+    }
 }
+ 
