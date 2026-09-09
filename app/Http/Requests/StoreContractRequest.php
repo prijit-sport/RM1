@@ -1,16 +1,19 @@
 <?php
-
+ 
 namespace App\Http\Requests;
-
+ 
 use Illuminate\Foundation\Http\FormRequest;
-
+ 
 class StoreContractRequest extends FormRequest
 {
     public function authorize(): bool
     {
         return true;
     }
-
+ 
+    /**
+     * @return array<string, mixed>
+     */
     public function rules(): array
     {
         return [
@@ -47,7 +50,7 @@ class StoreContractRequest extends FormRequest
             'notes' => ['nullable', 'max:1000'],
         ];
     }
-
+ 
     public function messages(): array
     {
         return [
@@ -67,3 +70,4 @@ class StoreContractRequest extends FormRequest
         ];
     }
 }
+ 

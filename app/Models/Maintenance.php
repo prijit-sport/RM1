@@ -1,10 +1,10 @@
 <?php
-
+ 
 namespace App\Models;
-
+ 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-
+ 
 class Maintenance extends Model
 {
     protected $fillable = [
@@ -21,22 +21,29 @@ class Maintenance extends Model
         'priority',            // ✅ จาก migration 2026_03_01_000006
         'notes',
     ];
-
+ 
     protected $casts = [
         'reported_date' => 'date',  // ✅ ตรงกับ migration
         'completed_date' => 'date',  // ✅ ตรงกับ migration
         'cost' => 'decimal:2',
     ];
-
+ 
+    /**
+     * @return BelongsTo<Room, $this>
+     */
     public function room(): BelongsTo
     {
         return $this->belongsTo(Room::class, 'room_id');
     }
-
+ 
     // facility relation (facility_id)
-
+ 
+    /**
+     * @return BelongsTo<Facility, $this>
+     */
     public function facility(): BelongsTo
     {
         return $this->belongsTo(Facility::class, 'facility_id');
     }
 }
+ 

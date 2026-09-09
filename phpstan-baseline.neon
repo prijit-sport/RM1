@@ -1,0 +1,445 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Offset ''column'' on array\{0\: non\-falsy\-string, column\: non\-falsy\-string, 1\: non\-falsy\-string\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Console/Commands/AuditGuestPiiPlaintextUsageCommand.php
+
+		-
+			message: '#^Ternary operator condition is always false\.$#'
+			identifier: ternary.alwaysFalse
+			count: 1
+			path: app/Console/Commands/CheckProductionReadinessCommand.php
+
+		-
+			message: '#^Ternary operator condition is always true\.$#'
+			identifier: ternary.alwaysTrue
+			count: 1
+			path: app/Console/Commands/CheckProductionReadinessCommand.php
+
+		-
+			message: '#^Parameter \#2 \$default of function old expects array\|Illuminate\\Database\\Eloquent\\Model\|string\|null, false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/AccountController.php
+
+		-
+			message: '#^Parameter \#2 \$default of function old expects array\|Illuminate\\Database\\Eloquent\\Model\|string\|null, int given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/AccountController.php
+
+		-
+			message: '#^Expression on left side of \?\? is not nullable\.$#'
+			identifier: nullCoalesce.expr
+			count: 2
+			path: app/Http/Controllers/Api/DashboardController.php
+
+		-
+			message: '#^Instanceof between Carbon\\Carbon and Carbon\\Carbon will always evaluate to true\.$#'
+			identifier: instanceof.alwaysTrue
+			count: 1
+			path: app/Http/Controllers/Api/DashboardController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>full_name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/Api/DashboardController.php
+
+		-
+			message: '#^Using nullsafe property access on non\-nullable type App\\Models\\Room\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/Api/DashboardController.php
+
+		-
+			message: '#^Variable \$checkIn on left side of \?\? is never defined\.$#'
+			identifier: nullCoalesce.variable
+			count: 1
+			path: app/Http/Controllers/Api/DashboardController.php
+
+		-
+			message: '#^Variable \$dueDate on left side of \?\? always exists and is always null\.$#'
+			identifier: nullCoalesce.variable
+			count: 1
+			path: app/Http/Controllers/Api/DashboardController.php
+
+		-
+			message: '#^Instanceof between Carbon\\Carbon and Carbon\\Carbon will always evaluate to true\.$#'
+			identifier: instanceof.alwaysTrue
+			count: 1
+			path: app/Http/Controllers/DashboardController.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between App\\Models\\Guest and null will always evaluate to true\.$#'
+			identifier: notIdentical.alwaysTrue
+			count: 2
+			path: app/Http/Controllers/DashboardController.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between App\\Models\\Room and null will always evaluate to true\.$#'
+			identifier: notIdentical.alwaysTrue
+			count: 2
+			path: app/Http/Controllers/DashboardController.php
+
+		-
+			message: '#^Variable \$checkIn on left side of \?\? is never defined\.$#'
+			identifier: nullCoalesce.variable
+			count: 1
+			path: app/Http/Controllers/DashboardController.php
+
+		-
+			message: '#^Variable \$dueDate on left side of \?\? always exists and is always null\.$#'
+			identifier: nullCoalesce.variable
+			count: 1
+			path: app/Http/Controllers/DashboardController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>floor" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/FacilityController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>room_number" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/FacilityController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>zone" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/FacilityController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>room_number" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/GuestController.php
+
+		-
+			message: '#^Access to property \$reading_date on an unknown class App\\Http\\Controllers\\MeterReading\.$#'
+			identifier: class.notFound
+			count: 3
+			path: app/Http/Controllers/InvoiceController.php
+
+		-
+			message: '#^Access to property \$reading_value on an unknown class App\\Http\\Controllers\\MeterReading\.$#'
+			identifier: class.notFound
+			count: 2
+			path: app/Http/Controllers/InvoiceController.php
+
+		-
+			message: '#^Expression on left side of \?\? is not nullable\.$#'
+			identifier: nullCoalesce.expr
+			count: 3
+			path: app/Http/Controllers/InvoiceController.php
+
+		-
+			message: '#^Offset ''rollover_warnings'' on array\{created\: int, skipped\: array\<int, array\{booking_id\: int, room_number\: string, reason\: string\}\>, rollover_warnings\: array\<int, array\{booking_id\: int, room_number\: string, meter_types\: array\<int, string\>\}\>\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Http/Controllers/InvoiceController.php
+
+		-
+			message: '#^PHPDoc tag @var for variable \$current contains unknown class App\\Http\\Controllers\\MeterReading\.$#'
+			identifier: class.notFound
+			count: 1
+			path: app/Http/Controllers/InvoiceController.php
+
+		-
+			message: '#^PHPDoc tag @var for variable \$previous contains unknown class App\\Http\\Controllers\\MeterReading\.$#'
+			identifier: class.notFound
+			count: 1
+			path: app/Http/Controllers/InvoiceController.php
+
+		-
+			message: '#^PHPDoc tag @var for variable \$readings contains unknown class App\\Http\\Controllers\\MeterReading\.$#'
+			identifier: class.notFound
+			count: 1
+			path: app/Http/Controllers/InvoiceController.php
+
+		-
+			message: '#^Type App\\Http\\Controllers\\MeterReading in generic type Illuminate\\Database\\Eloquent\\Collection\<int, App\\Http\\Controllers\\MeterReading\> in PHPDoc tag @var for variable \$readings is not subtype of template type TModel of Illuminate\\Database\\Eloquent\\Model of class Illuminate\\Database\\Eloquent\\Collection\.$#'
+			identifier: generics.notSubtype
+			count: 1
+			path: app/Http/Controllers/InvoiceController.php
+
+		-
+			message: '#^Instanceof between Carbon\\Carbon and Carbon\\Carbon will always evaluate to true\.$#'
+			identifier: instanceof.alwaysTrue
+			count: 1
+			path: app/Http/Controllers/MeterReadingController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/MeterReadingController.php
+
+		-
+			message: '#^Expression on left side of \?\? is not nullable\.$#'
+			identifier: nullCoalesce.expr
+			count: 1
+			path: app/Http/Middleware/AdminOnly.php
+
+		-
+			message: '#^Using nullsafe property access on non\-nullable type App\\Models\\Role\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Middleware/AdminOnly.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>id" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Requests/UpdateInvoiceRequest.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\UserResource\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/UserResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\UserResource\:\:\$email\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/UserResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\UserResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/UserResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\UserResource\:\:\$is_active\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/UserResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\UserResource\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/UserResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\UserResource\:\:\$role\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/UserResource.php
+
+		-
+			message: '#^Generic type Illuminate\\Database\\Eloquent\\Relations\\HasMany\<App\\Models\\Invoice\> in PHPDoc tag @return does not specify all template types of class Illuminate\\Database\\Eloquent\\Relations\\HasMany\: TRelatedModel, TDeclaringModel$#'
+			identifier: generics.lessTypes
+			count: 1
+			path: app/Models/Booking.php
+
+		-
+			message: '#^Method App\\Models\\Booking\:\:guest\(\) should return Illuminate\\Database\\Eloquent\\Relations\\BelongsTo\<App\\Models\\Guest, App\\Models\\Booking\> but returns Illuminate\\Database\\Eloquent\\Relations\\BelongsTo\<App\\Models\\Guest, \$this\(App\\Models\\Booking\)\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Models/Booking.php
+
+		-
+			message: '#^Method App\\Models\\Booking\:\:invoices\(\) should return Illuminate\\Database\\Eloquent\\Relations\\HasMany\<App\\Models\\Invoice\> but returns Illuminate\\Database\\Eloquent\\Relations\\HasMany\<App\\Models\\Invoice, \$this\(App\\Models\\Booking\)\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Models/Booking.php
+
+		-
+			message: '#^Method App\\Models\\Booking\:\:room\(\) should return Illuminate\\Database\\Eloquent\\Relations\\BelongsTo\<App\\Models\\Room, App\\Models\\Booking\> but returns Illuminate\\Database\\Eloquent\\Relations\\BelongsTo\<App\\Models\\Room, \$this\(App\\Models\\Booking\)\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Models/Booking.php
+
+		-
+			message: '#^Match arm comparison between ''cancelled'' and ''cancelled'' is always true\.$#'
+			identifier: match.alwaysTrue
+			count: 1
+			path: app/Models/Contract.php
+
+		-
+			message: '#^Method App\\Models\\Invoice\:\:booking\(\) should return Illuminate\\Database\\Eloquent\\Relations\\BelongsTo\<App\\Models\\Booking, App\\Models\\Invoice\> but returns Illuminate\\Database\\Eloquent\\Relations\\BelongsTo\<App\\Models\\Booking, \$this\(App\\Models\\Invoice\)\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Models/Invoice.php
+
+		-
+			message: '#^Method App\\Models\\Invoice\:\:guest\(\) should return Illuminate\\Database\\Eloquent\\Relations\\BelongsTo\<App\\Models\\Guest, App\\Models\\Invoice\> but returns Illuminate\\Database\\Eloquent\\Relations\\BelongsTo\<App\\Models\\Guest, \$this\(App\\Models\\Invoice\)\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Models/Invoice.php
+
+		-
+			message: '#^Method App\\Models\\Invoice\:\:room\(\) should return Illuminate\\Database\\Eloquent\\Relations\\BelongsTo\<App\\Models\\Room, App\\Models\\Invoice\> but returns Illuminate\\Database\\Eloquent\\Relations\\BelongsTo\<App\\Models\\Room, \$this\(App\\Models\\Invoice\)\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Models/Invoice.php
+
+		-
+			message: '#^Ternary operator condition is always true\.$#'
+			identifier: ternary.alwaysTrue
+			count: 1
+			path: app/Services/BookingService.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>room_number" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Services/BookingService.php
+
+		-
+			message: '#^Constant App\\Services\\ContractService\:\:STATUSES is unused\.$#'
+			identifier: classConstant.unused
+			count: 1
+			path: app/Services/ContractService.php
+
+		-
+			message: '#^Method App\\Services\\ContractService\:\:calculateDuration\(\) should return int but returns float\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Services/ContractService.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between ''active''\|''cancelled''\|''completed''\|''draft'' and ''pending'' will always evaluate to true\.$#'
+			identifier: notIdentical.alwaysTrue
+			count: 1
+			path: app/Services/ContractService.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between mixed and null will always evaluate to false\.$#'
+			identifier: identical.alwaysFalse
+			count: 2
+			path: app/Services/ContractService.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>first_name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Services/ContractService.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>last_name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Services/ContractService.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>room_number" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Services/ContractService.php
+
+		-
+			message: '#^Constant App\\Services\\InvoiceService\:\:STATUSES is unused\.$#'
+			identifier: classConstant.unused
+			count: 1
+			path: app/Services/InvoiceService.php
+
+		-
+			message: '#^Expression on left side of \?\? is not nullable\.$#'
+			identifier: nullCoalesce.expr
+			count: 1
+			path: app/Services/InvoiceService.php
+
+		-
+			message: '#^Method App\\Services\\InvoiceService\:\:getMeterBillData\(\) is unused\.$#'
+			identifier: method.unused
+			count: 1
+			path: app/Services/InvoiceService.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>first_name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Services/InvoiceService.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>last_name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Services/InvoiceService.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>price_per_month" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Services/InvoiceService.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>room_number" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Services/InvoiceService.php
+
+		-
+			message: '#^Instanceof between Carbon\\Carbon and Carbon\\Carbon will always evaluate to true\.$#'
+			identifier: instanceof.alwaysTrue
+			count: 2
+			path: app/Services/MeterBillingService.php
+
+		-
+			message: '#^Parameter \#1 \$string of function str_pad expects string, int given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/MeterBillingService.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>is_meter_reset" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Services/MeterBillingService.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>reading_value" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
+			path: app/Services/MeterBillingService.php
+
+		-
+			message: '#^Negated boolean expression is always false\.$#'
+			identifier: booleanNot.alwaysFalse
+			count: 1
+			path: app/Services/NotificationService.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type Illuminate\\Http\\Request\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
+			path: app/Support/AuditLogger.php
+
+		-
+			message: '#^Offset ''en'' on array\{en\: ''Active''\|''Occupied'', th\: ''ใช้งาน''\}\|array\{en\: ''Air Conditioning'', th\: ''แอร์''\}\|array\{en\: ''Available'', th\: ''ว่าง''\}\|array\{en\: ''Cancelled''\|''Terminated'', th\: ''ยกเลิก''\}\|array\{en\: ''Checked In'', th\: ''เช็คอินแล้ว''\}\|array\{en\: ''Checked Out'', th\: ''เช็คเอาท์แล้ว''\}\|array\{en\: ''Completed'', th\: ''เสร็จสิ้น''\}\|array\{en\: ''Confirmed'', th\: ''ยืนยันแล้ว''\}\|array\{en\: ''Draft'', th\: ''ฉบับร่าง''\}\|array\{en\: ''Expired'', th\: ''หมดอายุ''\}\|array\{en\: ''Fan'', th\: ''พัด''\}\|array\{en\: ''In Progress'', th\: ''กำลังดำเนินการ''\}\|array\{en\: ''Inactive'', th\: ''ไม่ใช้งาน''\}\|array\{en\: ''Maintenance'', th\: ''ซ่อมบำรุง''\}\|array\{en\: ''Out Of Stock'', th\: ''สินค้าหมด''\}\|array\{en\: ''Overdue'', th\: ''เกินกำหนด''\}\|array\{en\: ''Paid'', th\: ''ชำระแล้ว''\}\|array\{en\: ''Pending'', th\: ''รอชำระ''\|''รอดำเนินการ''\|''รอยืนยัน''\}\|array\{en\: ''Sent'', th\: ''ส่งแล้ว''\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Support/EnumLabel.php
+
+		-
+			message: '#^Offset ''th'' on array\{en\: ''Active''\|''Occupied'', th\: ''ใช้งาน''\}\|array\{en\: ''Air Conditioning'', th\: ''แอร์''\}\|array\{en\: ''Available'', th\: ''ว่าง''\}\|array\{en\: ''Cancelled''\|''Terminated'', th\: ''ยกเลิก''\}\|array\{en\: ''Checked In'', th\: ''เช็คอินแล้ว''\}\|array\{en\: ''Checked Out'', th\: ''เช็คเอาท์แล้ว''\}\|array\{en\: ''Completed'', th\: ''เสร็จสิ้น''\}\|array\{en\: ''Confirmed'', th\: ''ยืนยันแล้ว''\}\|array\{en\: ''Draft'', th\: ''ฉบับร่าง''\}\|array\{en\: ''Expired'', th\: ''หมดอายุ''\}\|array\{en\: ''Fan'', th\: ''พัด''\}\|array\{en\: ''In Progress'', th\: ''กำลังดำเนินการ''\}\|array\{en\: ''Inactive'', th\: ''ไม่ใช้งาน''\}\|array\{en\: ''Maintenance'', th\: ''ซ่อมบำรุง''\}\|array\{en\: ''Out Of Stock'', th\: ''สินค้าหมด''\}\|array\{en\: ''Overdue'', th\: ''เกินกำหนด''\}\|array\{en\: ''Paid'', th\: ''ชำระแล้ว''\}\|array\{en\: ''Pending'', th\: ''รอชำระ''\|''รอดำเนินการ''\|''รอยืนยัน''\}\|array\{en\: ''Sent'', th\: ''ส่งแล้ว''\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Support/EnumLabel.php
+
+		-
+			message: '#^Result of \|\| is always false\.$#'
+			identifier: booleanOr.alwaysFalse
+			count: 1
+			path: app/Support/EnumLabel.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between ''กำลังดำเนินการ''\|''ฉบับร่าง''\|''ชำระแล้ว''\|''ซ่อมบำรุง''\|''พัด''\|''ยกเลิก''\|''ยืนยันแล้ว''\|''รอชำระ''\|''รอดำเนินการ''\|''รอยืนยัน''\|''ว่าง''\|''สินค้าหมด''\|''ส่งแล้ว''\|''หมดอายุ''\|''เกินกำหนด''\|''เช็คอินแล้ว''\|''เช็คเอาท์แล้ว''\|''เสร็จสิ้น''\|''แอร์''\|''ใช้งาน''\|''ไม่ใช้งาน'' and '''' will always evaluate to false\.$#'
+			identifier: identical.alwaysFalse
+			count: 1
+			path: app/Support/EnumLabel.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between ''กำลังดำเนินการ''\|''ฉบับร่าง''\|''ชำระแล้ว''\|''ซ่อมบำรุง''\|''พัด''\|''ยกเลิก''\|''ยืนยันแล้ว''\|''รอชำระ''\|''รอดำเนินการ''\|''รอยืนยัน''\|''ว่าง''\|''สินค้าหมด''\|''ส่งแล้ว''\|''หมดอายุ''\|''เกินกำหนด''\|''เช็คอินแล้ว''\|''เช็คเอาท์แล้ว''\|''เสร็จสิ้น''\|''แอร์''\|''ใช้งาน''\|''ไม่ใช้งาน'' and null will always evaluate to false\.$#'
+			identifier: identical.alwaysFalse
+			count: 1
+			path: app/Support/EnumLabel.php

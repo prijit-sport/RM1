@@ -1,14 +1,14 @@
 <?php
-
+ 
 namespace App\Models;
-
+ 
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
-
+ 
 /**
  * Room Model
  *
@@ -33,7 +33,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Room extends Model
 {
     use SoftDeletes;
-
+ 
     protected $fillable = [
         'room_number',
         'room_type',
@@ -41,53 +41,74 @@ class Room extends Model
         'floor',
         'building',
         'price_per_month',
-
+ 
         'capacity',
         'description',
         'status',
         'notes',
     ];
-
+ 
     protected $casts = [
         'price_per_month' => 'decimal:2',
         'capacity' => 'integer',
         'floor' => 'integer',
     ];
-
+ 
     // ─────────────────────────────────────────
     //  RELATIONSHIPS
     // ─────────────────────────────────────────
-
+ 
+    /**
+     * @return HasMany<\App\Models\Contract, $this>
+     */
     public function contracts(): HasMany
     {
         return $this->hasMany(\App\Models\Contract::class);
     }
-
+ 
+    /**
+     * @return HasMany<\App\Models\Invoice, $this>
+     */
     public function invoices(): HasMany
     {
         return $this->hasMany(\App\Models\Invoice::class);
     }
-
+ 
+    /**
+     * @return HasMany<\App\Models\Facility, $this>
+     */
     public function facilities(): HasMany
     {
         return $this->hasMany(\App\Models\Facility::class);
     }
-
+ 
+    /**
+     * @return HasMany<\App\Models\Maintenance, $this>
+     */
     public function maintenances(): HasMany
     {
         return $this->hasMany(\App\Models\Maintenance::class);
     }
-
+ 
+    /**
+     * @return HasMany<Booking, $this>
+     */
     public function bookings(): HasMany
     {
         return $this->hasMany(Booking::class);
     }
-
+ 
+    /**
+     * @return HasMany<Meter, $this>
+     */
     public function meters(): HasMany
     {
         return $this->hasMany(Meter::class);
     }
-
+ 
+    /**
+     * @return HasOne<Booking, $this>
+     */
     public function currentBooking(): HasOne
     {
         return $this->hasOne(Booking::class)
@@ -95,13 +116,14 @@ class Room extends Model
             ->whereNull('deleted_at')
             ->latest('check_in_date');
     }
-
+ 
     // ─────────────────────────────────────────
     //  ACCESSORS
     // ─────────────────────────────────────────
-
+ 
     public function getRentAmountAttribute(): ?float
     {
         return $this->price_per_month;
     }
 }
+ 

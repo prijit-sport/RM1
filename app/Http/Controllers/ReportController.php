@@ -1,9 +1,10 @@
 <?php
-
+ 
 namespace App\Http\Controllers;
-
+ 
 use App\Services\ReportService;
-
+use Illuminate\View\View;
+ 
 /**
  * ReportController - REFACTORED
  *
@@ -16,52 +17,53 @@ use App\Services\ReportService;
 class ReportController extends Controller
 {
     public function __construct(protected readonly ReportService $reportService) {}
-
+ 
     /**
      * Main report dashboard
      *
      * ✅ CHANGED: Delegate all data logic to service
      */
-    public function index()
+    public function index(): View
     {
         return view('reports.index', $this->reportService->buildReportData());
     }
-
+ 
     /**
      * Revenue-focused report view
      *
      * ✅ CHANGED: Use service, add focus flag
      */
-    public function revenue()
+    public function revenue(): View
     {
         return view('reports.index',
             $this->reportService->buildReportData() + ['report_focus' => 'financial']
         );
     }
-
+ 
     /**
      * Occupancy-focused report view
      *
      * ✅ CHANGED: Use service, add focus flag
      */
-    public function occupancy()
+    public function occupancy(): View
     {
         return view('reports.index',
             $this->reportService->buildReportData() + ['report_focus' => 'rooms']
         );
     }
-
+ 
     /**
      * Export report as Excel
      *
      * ✅ CHANGED: Use service for data + formatting
      */
-    public function export()
+    public function export(): \Symfony\Component\HttpFoundation\BinaryFileResponse
     {
         $data = $this->reportService->buildReportData();
         $filename = 'report_'.date('Ymd_His').'.xlsx';
         $rows = $this->reportService->formatForExport($data);
-
+ 
         return xlsx_download($filename, $rows);
     }
 }
+ 

@@ -1,10 +1,10 @@
 <?php
-
+ 
 namespace App\Http\Requests;
-
+ 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
-
+ 
 class UpdateContractRequest extends FormRequest
 {
     /**
@@ -14,7 +14,10 @@ class UpdateContractRequest extends FormRequest
     {
         return true;
     }
-
+ 
+    /**
+     * @return array<string, mixed>
+     */
     public function rules(): array
     {
         return [
@@ -56,7 +59,7 @@ class UpdateContractRequest extends FormRequest
             'notes' => ['sometimes', 'nullable', 'max:1000'],
         ];
     }
-
+ 
     public function messages(): array
     {
         return [

@@ -1,17 +1,17 @@
 <?php
-
+ 
 namespace App\Models;
-
+ 
 use DateTimeInterface;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
-
+ 
 class Guest extends Model
 {
     use SoftDeletes;
-
+ 
     protected $fillable = [
         'first_name',
         'last_name',
@@ -27,7 +27,7 @@ class Guest extends Model
         'emergency_phone',     // ✅ แก้จาก emergency_contact_phone
         'notes',
     ];
-
+ 
     protected $casts = [
         'date_of_birth' => 'date',
         // NOTE: We intentionally do NOT use the 'encrypted' cast on the email /
@@ -36,21 +36,21 @@ class Guest extends Model
         // *_ciphertext columns (and looked up via *_hash blind-index columns)
         // using the custom mutators/accessors below.
     ];
-
+ 
     // ─────────────────────────────────────────
     //  PII Encryption (email, id_number)
     // ─────────────────────────────────────────
-
+ 
     private function piiHash(string $value): string
     {
         return hash_hmac('sha256', $value, (string) config('app.key'));
     }
-
+ 
     private function piiEncrypt(string $value): string
     {
         return encrypt($value);
     }
-
+ 
     private function decryptPii(?string $plaintext, string $cipherColumn): ?string
     {
         $cipher = $this->attributes[$cipherColumn] ?? null;
@@ -61,72 +61,89 @@ class Guest extends Model
                 // fall back to the plaintext column (safety net)
             }
         }
-
+ 
         return $plaintext;
     }
-
+ 
     private function setPiiAttributes(string $field, ?string $value): void
     {
         $this->attributes[$field] = $value;
-
+ 
         if ($value === null || $value === '') {
             $this->attributes[$field.'_ciphertext'] = null;
             $this->attributes[$field.'_hash'] = null;
-
+ 
             return;
         }
-
+ 
         $this->attributes[$field.'_ciphertext'] = $this->piiEncrypt($value);
         $this->attributes[$field.'_hash'] = $this->piiHash($value);
     }
-
+ 
     public function getEmailAttribute(?string $value): ?string
     {
         return $this->decryptPii($value, 'email_ciphertext');
     }
-
+ 
     public function setEmailAttribute(?string $value): void
     {
         $this->setPiiAttributes('email', $value);
     }
-
+ 
     public function getIdNumberAttribute(?string $value): ?string
     {
         return $this->decryptPii($value, 'id_number_ciphertext');
     }
-
+ 
     public function setIdNumberAttribute(?string $value): void
     {
         $this->setPiiAttributes('id_number', $value);
     }
-
+ 
     // ─────────────────────────────────────────
     //  Relationships
     // ─────────────────────────────────────────
-
+ 
+    /**
+     * @return HasMany<Contract, $this>
+     */
     public function contracts(): HasMany
     {
         return $this->hasMany(Contract::class);
     }
-
+ 
+    /**
+     * @return HasMany<Booking, $this>
+     */
     public function bookings(): HasMany
     {
         return $this->hasMany(Booking::class);
     }
-
+ 
+    /**
+     * @return HasMany<Invoice, $this>
+     */
     public function invoices(): HasMany
     {
         return $this->hasMany(Invoice::class);
     }
-
-    /** ดึงสัญญาที่ active อยู่ (ล่าสุด 1 รายการ) */
-    public function activeContract()
+ 
+    /**
+     * ดึงสัญญาที่ active อยู่ (ล่าสุด 1 รายการ)
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasOne<Contract, $this>
+     */
+    public function activeContract(): \Illuminate\Database\Eloquent\Relations\HasOne
     {
         return $this->hasOne(Contract::class)->where('status', 'active')->latest();
     }
-
-    /** ดึงห้องที่พักอยู่ตอนนี้ */
-    public function currentRoom()
+ 
+    /**
+     * ดึงห้องที่พักอยู่ตอนนี้
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasOneThrough<Room, Contract, $this>
+     */
+    public function currentRoom(): \Illuminate\Database\Eloquent\Relations\HasOneThrough
     {
         return $this->hasOneThrough(
             Room::class,
@@ -137,30 +154,31 @@ class Guest extends Model
             'room_id'
         )->where('contracts.status', 'active');
     }
-
+ 
     // ─────────────────────────────────────────
     //  Accessors
     // ─────────────────────────────────────────
-
+ 
     /** ชื่อ-นามสกุลเต็ม */
     public function getFullNameAttribute(): string
     {
         return trim($this->first_name.' '.$this->last_name);
     }
-
+ 
     /** อายุ */
     public function getAgeAttribute(): ?int
     {
         if (! $this->date_of_birth instanceof DateTimeInterface) {
             return null;
         }
-
+ 
         return Carbon::instance($this->date_of_birth)->age;
     }
-
+ 
     /** มีห้องพักอยู่ไหม */
     public function getHasRoomAttribute(): bool
     {
         return $this->contracts()->where('status', 'active')->exists();
     }
 }
+ 

@@ -1,13 +1,16 @@
 <?php
-
+ 
 namespace App\Support;
-
+ 
 use App\Models\AuditLog;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
-
+ 
 class AuditLogger
 {
+    /**
+     * @param  array<string, mixed>  $meta
+     */
     public static function log(string $event, ?Model $auditable = null, array $meta = []): void
     {
         AuditLog::create([
@@ -21,3 +24,4 @@ class AuditLogger
         ]);
     }
 }
+ 

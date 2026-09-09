@@ -1,14 +1,14 @@
 <?php
-
+ 
 namespace App\Models;
-
+ 
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
-
+ 
 /**
  * Meter Model
  *
@@ -43,37 +43,46 @@ class Meter extends Model
         'rate_per_unit',
         'tax_rate',
     ];
-
+ 
     protected $casts = [
         'installed_at' => 'date',
         'is_active' => 'boolean',
         'rate_per_unit' => 'decimal:2',
         'tax_rate' => 'decimal:2',
     ];
-
+ 
     // ─────────────────────────────────────────
     //  RELATIONSHIPS
     // ─────────────────────────────────────────
-
+ 
+    /**
+     * @return BelongsTo<Room, $this>
+     */
     public function room(): BelongsTo
     {
         return $this->belongsTo(Room::class);
     }
-
+ 
+    /**
+     * @return HasMany<MeterReading, $this>
+     */
     public function readings(): HasMany
     {
         return $this->hasMany(MeterReading::class);
     }
-
+ 
+    /**
+     * @return HasOne<MeterReading, $this>
+     */
     public function latestReading(): HasOne
     {
         return $this->hasOne(MeterReading::class)->latestOfMany('reading_date');
     }
-
+ 
     // ─────────────────────────────────────────
     //  ACCESSORS
     // ─────────────────────────────────────────
-
+ 
     public function getTypeLabelAttribute(): string
     {
         return match ($this->type) {
@@ -82,9 +91,10 @@ class Meter extends Model
             default => $this->type,
         };
     }
-
+ 
     public function getStatusLabelAttribute(): string
     {
         return $this->is_active ? 'ใช้งาน' : 'ปิดใช้';
     }
 }
+ 
