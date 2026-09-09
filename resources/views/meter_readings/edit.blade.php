@@ -32,29 +32,36 @@
                 ห้อง <strong>{{ $meter->room->room_number ?? '-' }}</strong>
                 | เลขมิเตอร์: <strong>{{ $meter->meter_number }}</strong>
             </div>
-
+ 
             <form action="{{ route('meters.readings.update', [$meter, $reading]) }}" method="POST">
                 @csrf
                 @method('PUT')
-
+ 
                 <div class="form-group">
                     <label for="reading_date">วันที่ *</label>
                     <input id="reading_date" name="reading_date" type="date" value="{{ old('reading_date', optional($reading->reading_date)->format('Y-m-d')) }}" required>
                     @error('reading_date') <div class="error">{{ $message }}</div> @enderror
                 </div>
-
+ 
                 <div class="form-group">
                     <label for="reading_value">เลขมิเตอร์ *</label>
                     <input id="reading_value" name="reading_value" type="number" step="0.01" min="0" value="{{ old('reading_value', $reading->reading_value) }}" required>
                     @error('reading_value') <div class="error">{{ $message }}</div> @enderror
                 </div>
-
+ 
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" name="is_meter_reset" value="1" {{ old('is_meter_reset', $reading->is_meter_reset) ? 'checked' : '' }}>
+                        มิเตอร์เพิ่งเปลี่ยนใหม่ (เลขที่กรอกไม่ต้องหักลบเลขเก่า)
+                    </label>
+                </div>
+ 
                 <div class="form-group">
                     <label for="notes">หมายเหตุ</label>
                     <textarea id="notes" name="notes" rows="4" placeholder="รายละเอียดเพิ่มเติม...">{{ old('notes', $reading->notes) }}</textarea>
                     @error('notes') <div class="error">{{ $message }}</div> @enderror
                 </div>
-
+ 
                 <div class="btn-group">
                     <button type="submit" class="btn btn-primary">✓ บันทึก</button>
                     <a href="{{ route('meters.readings.index', $meter) }}" class="btn btn-secondary">← ยกเลิก</a>
@@ -64,4 +71,5 @@
     </div>
 </body>
 </html>
-
+ 
+ 

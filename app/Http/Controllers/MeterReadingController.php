@@ -1,15 +1,18 @@
 <?php
-
+ 
 namespace App\Http\Controllers;
-
+ 
 use App\Models\Meter;
 use App\Models\MeterReading;
 use App\Services\MeterBillingService;
 use Carbon\Carbon;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
-
+use Illuminate\View\View;
+ 
 /**
  * หมายเหตุ: โค้ดนี้เป็น Laravel (access model fields เป็น property)
  * ปัญหา "Call to unknown function: meter_id/reading_date/notes/..." ที่ VSCode พบ
@@ -18,52 +21,52 @@ use Illuminate\Validation\Rule;
 class MeterReadingController extends Controller
 {
     public function __construct(protected MeterBillingService $billingService) {}
-
+ 
     // ─────────────────────────────────────────
     //  LIST
     // ─────────────────────────────────────────
-    public function index(Meter $meter, Request $request)
+    public function index(Meter $meter, Request $request): Response
     {
         $this->authorize('view', $meter);
-
+ 
         $query = MeterReading::with('recordedBy')
             ->where('meter_id', $meter->id);
-
+ 
         if ($request->filled('date')) {
             $query->whereDate('reading_date', $request->date);
         }
-
+ 
         if ($request->filled('search')) {
             $query->where('notes', 'like', '%'.$request->search.'%');
         }
-
+ 
         $readings = $query->latest('reading_date')->paginate(15);
         $billing = $this->billingService->summarize($meter);
-
+ 
         return response()
             ->view('meter_readings.index', compact('meter', 'readings', 'billing'))
             ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
     }
-
+ 
     // ─────────────────────────────────────────
     //  CREATE FORM
     // ─────────────────────────────────────────
-    public function create(Meter $meter)
+    public function create(Meter $meter): View
     {
         $this->authorize('update', $meter);
-
+ 
         $meter->load('room');
-
+ 
         return view('meter_readings.create', compact('meter'));
     }
-
+ 
     // ─────────────────────────────────────────
     //  STORE (บันทึกทั่วไป — ไม่สร้าง invoice)
     // ─────────────────────────────────────────
-    public function store(Request $request, Meter $meter)
+    public function store(Request $request, Meter $meter): RedirectResponse
     {
         $this->authorize('update', $meter);
-
+ 
         $validated = $request->validate([
             'reading_date' => [
                 'required',
@@ -73,54 +76,58 @@ class MeterReadingController extends Controller
                 ),
             ],
             'reading_value' => ['required', 'numeric', 'min:0'],
+            'is_meter_reset' => ['nullable', 'boolean'],
             'notes' => ['nullable', 'max:500'],
         ]);
-
+ 
         $validated['meter_id'] = $meter->id;
+        $validated['is_meter_reset'] = (bool) ($validated['is_meter_reset'] ?? false);
         $validated['recorded_by'] = Auth::id();
-
+ 
         MeterReading::create($validated);
-
+ 
         return redirect()
             ->route('meters.readings.index', $meter)
             ->with('success', __('ui.meter_reading.created'));
     }
-
+ 
     // ─────────────────────────────────────────
     //  STORE MONTHLY + GENERATE INVOICE
     //  ✅ UPDATED: redirect ไปหน้า invoice/create
     //  พร้อม query string ?from_meter=1&invoice_id=X
     // ─────────────────────────────────────────
-    public function storeMonthlyAndGenerateInvoice(Request $request, Meter $meter)
+    public function storeMonthlyAndGenerateInvoice(Request $request, Meter $meter): RedirectResponse
     {
         $this->authorize('update', $meter);
-
+ 
         $validated = $request->validate([
             'period_month' => ['required', 'integer', 'min:1', 'max:12'],
             'period_year' => ['required', 'integer', 'min:2000', 'max:2100'],
             'reading_value' => ['required', 'numeric', 'min:0'],
+            'is_meter_reset' => ['nullable', 'boolean'],
             'notes' => ['nullable', 'max:500'],
         ]);
-
+ 
         try {
             $result = $this->billingService->recordMonthlyAndCreateInvoice(
                 $meter,
                 (int) $validated['period_month'],
                 (int) $validated['period_year'],
                 (float) $validated['reading_value'],
-                $validated['notes'] ?? null
+                $validated['notes'] ?? null,
+                (bool) ($validated['is_meter_reset'] ?? false)
             );
-
+ 
             if (! $result['success']) {
                 return redirect()
                     ->back()
                     ->withInput()
                     ->with('error', $result['error'] ?? 'เกิดข้อผิดพลาด');
             }
-
+ 
             // ✅ ดึง invoice ที่เพิ่งสร้าง/อัปเดตจาก result
             $invoice = $result['invoice'] ?? null;
-
+ 
             if ($invoice) {
                 // ✅ redirect ไปหน้า invoice/create พร้อมข้อมูล
                 // from_meter=1 = บอก InvoiceController ว่ามาจาก meter reading
@@ -132,7 +139,7 @@ class MeterReadingController extends Controller
                     ])
                     ->with('success', 'บันทึกมิเตอร์เรียบร้อยแล้ว — กรุณาตรวจสอบและยืนยันใบแจ้งหนี้');
             }
-
+ 
             // fallback กรณี invoice เป็น null (ไม่ควรเกิดขึ้น)
             return redirect()
                 ->route('meters.readings.index', $meter)
@@ -142,36 +149,36 @@ class MeterReadingController extends Controller
                 'meter_id' => $meter->id,
                 'error' => $e->getMessage(),
             ]);
-
+ 
             return redirect()
                 ->back()
                 ->withInput()
                 ->with('error', 'เกิดข้อผิดพลาด: '.$e->getMessage());
         }
     }
-
+ 
     // ─────────────────────────────────────────
     //  EDIT FORM
     // ─────────────────────────────────────────
-    public function edit(Meter $meter, MeterReading $reading)
+    public function edit(Meter $meter, MeterReading $reading): View
     {
         $this->authorize('update', $meter);
-
+ 
         abort_unless($reading->meter_id === $meter->id, 404);
         $meter->load('room');
-
+ 
         return view('meter_readings.edit', compact('meter', 'reading'));
     }
-
+ 
     // ─────────────────────────────────────────
     //  UPDATE
     // ─────────────────────────────────────────
-    public function update(Request $request, Meter $meter, MeterReading $reading)
+    public function update(Request $request, Meter $meter, MeterReading $reading): RedirectResponse
     {
         $this->authorize('update', $meter);
-
+ 
         abort_unless($reading->meter_id === $meter->id, 404);
-
+ 
         $validated = $request->validate([
             'reading_date' => [
                 'required',
@@ -181,56 +188,58 @@ class MeterReadingController extends Controller
                     ->ignore($reading->id),
             ],
             'reading_value' => ['required', 'numeric', 'min:0'],
+            'is_meter_reset' => ['nullable', 'boolean'],
             'notes' => ['nullable', 'max:500'],
         ]);
-
+ 
+        $validated['is_meter_reset'] = (bool) ($validated['is_meter_reset'] ?? false);
         $validated['recorded_by'] = Auth::id();
         $reading->update($validated);
-
+ 
         return redirect()
             ->route('meters.readings.index', $meter)
             ->with('success', __('ui.meter_reading.updated'));
     }
-
+ 
     // ─────────────────────────────────────────
     //  DELETE
     // ─────────────────────────────────────────
-    public function destroy(Meter $meter, MeterReading $reading)
+    public function destroy(Meter $meter, MeterReading $reading): RedirectResponse
     {
         $this->authorize('update', $meter);
-
+ 
         abort_unless($reading->meter_id === $meter->id, 404);
         $reading->delete();
-
+ 
         return redirect()
             ->route('meters.readings.index', $meter)
             ->with('success', __('ui.meter_reading.deleted'));
     }
-
+ 
     // ─────────────────────────────────────────
     //  EXPORT
     // ─────────────────────────────────────────
-    public function export(Meter $meter, Request $request)
+    public function export(Meter $meter, Request $request): \Symfony\Component\HttpFoundation\BinaryFileResponse
     {
         $this->authorize('export', $meter);
-
+ 
         $query = MeterReading::with('recordedBy')
             ->where('meter_id', $meter->id);
-
+ 
         if ($request->filled('date')) {
             $query->whereDate('reading_date', $request->date);
         }
-
+ 
         if ($request->filled('search')) {
             $query->where('notes', 'like', '%'.$request->search.'%');
         }
-
+ 
         $readings = $query->latest('reading_date')->get();
         $filename = 'meter_readings_'.$meter->meter_number.'_'.date('Ymd_His').'.xlsx';
-
+ 
         $rows = [];
         $rows[] = ['วันที่', 'เลขมิเตอร์', 'บันทึกโดย', 'หมายเหตุ'];
-
+ 
         foreach ($readings as $reading) {
             /** @var MeterReading $reading */
             $rows[] = [
@@ -242,7 +251,8 @@ class MeterReadingController extends Controller
                 $reading->notes ?? '-',
             ];
         }
-
+ 
         return xlsx_download($filename, $rows);
     }
 }
+ 
