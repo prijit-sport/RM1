@@ -349,31 +349,7 @@ parameters:
 			path: app/Services/InvoiceService.php
 
 		-
-			message: '#^Method App\\Services\\InvoiceService\:\:getMeterBillData\(\) is unused\.$#'
-			identifier: method.unused
-			count: 1
-			path: app/Services/InvoiceService.php
-
-		-
-			message: '#^Using nullsafe property access "\?\-\>first_name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 1
-			path: app/Services/InvoiceService.php
-
-		-
-			message: '#^Using nullsafe property access "\?\-\>last_name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 1
-			path: app/Services/InvoiceService.php
-
-		-
 			message: '#^Using nullsafe property access "\?\-\>price_per_month" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
-			count: 1
-			path: app/Services/InvoiceService.php
-
-		-
-			message: '#^Using nullsafe property access "\?\-\>room_number" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
 			identifier: nullsafe.neverNull
 			count: 1
 			path: app/Services/InvoiceService.php

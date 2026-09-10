@@ -8,7 +8,6 @@ use App\Models\Invoice;
 use App\Models\Room;
 use App\Support\AuditLogger;
 use App\Support\CacheKeys;
-use App\Support\MeterUsageCalculator;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
@@ -26,6 +25,17 @@ class InvoiceService
     private const DEFAULT_LATE_FEE_RATE = 0.01;
 
     /**
+     * ✅ REFACTOR: คำนวณค่าน้ำ-ไฟ (InvoiceUtilityService) และรายงาน/export
+     * (InvoiceReportService) ถูกแยกออกไปเป็นคลาสของตัวเองแล้ว — คลาสนี้แค่
+     * "ส่งต่อ" งานให้ (delegate) เพื่อให้ public API เดิมของ InvoiceService
+     * ยังคงเหมือนเดิมทุกจุด ไม่ต้องแก้ InvoiceController หรือเทสที่มีอยู่แล้วเลย
+     */
+    public function __construct(
+        private readonly InvoiceUtilityService $utilityService,
+        private readonly InvoiceReportService $reportService,
+    ) {}
+
+    /**
      * Utility invoice bulk-create calculation (batch-loaded).
      *
      * @param  \Illuminate\Support\Collection<int, \App\Models\Booking>  $bookings
@@ -36,234 +46,7 @@ class InvoiceService
         int $month,
         int $year,
     ): \Illuminate\Support\Collection {
-        /** @var \Illuminate\Support\Collection<int, int> $roomIds */
-        $roomIds = $bookings
-            ->pluck('room_id')
-            ->filter()
-            ->map(fn ($id): int => (int) $id)
-            ->unique()
-            ->values();
-
-        $utilityData = collect();
-        if ($roomIds->isEmpty()) {
-            return $utilityData;
-        }
-
-        // months: current + previous
-        $prevMonth = $month === 1 ? 12 : $month - 1;
-        $prevYear = $month === 1 ? $year - 1 : $year;
-
-        // Dedupe + batch load meters and readings
-        /** @var \Illuminate\Support\Collection<int, \Illuminate\Support\Collection<int, \App\Models\Meter>> $meters */
-        $meters = \App\Models\Meter::query()
-            ->whereIn('room_id', $roomIds)
-            ->whereIn('type', ['electric', 'water'])
-            ->get()
-            ->groupBy(fn (\App\Models\Meter $m): int => (int) $m->room_id);
-
-        /** @var \Illuminate\Support\Collection<int, int> $meterIds */
-        $meterIds = $meters
-            ->flatten()
-            ->pluck('id')
-            ->filter()
-            ->unique()
-            ->values();
-
-        if ($meterIds->isEmpty()) {
-            return $utilityData;
-        }
-
-        /** @var \Illuminate\Support\Collection<int, \App\Models\MeterReading> $readings */
-        $readings = \App\Models\MeterReading::query()
-            ->whereIn('meter_id', $meterIds)
-            ->where(function ($q) use ($month, $year, $prevMonth, $prevYear): void {
-                $q->where(function ($sub) use ($month, $year): void {
-                    $sub->where('period_month', $month)
-                        ->where('period_year', $year);
-                })->orWhere(function ($sub) use ($prevMonth, $prevYear): void {
-                    $sub->where('period_month', $prevMonth)
-                        ->where('period_year', $prevYear);
-                });
-            })
-            ->get();
-
-        /** @var \Illuminate\Support\Collection<string, \Illuminate\Support\Collection<int, \App\Models\MeterReading>> $readingsByKey */
-        $readingsByKey = $readings->groupBy(function (\App\Models\MeterReading $r): string {
-            return $r->meter_id.':'.$r->period_month.':'.$r->period_year;
-        });
-
-        foreach ($bookings as $booking) {
-            $roomId = (int) $booking->room_id;
-
-            $electricData = $this->buildMeterBillDataFromBatch(
-                roomId: $roomId,
-                meterType: 'electric',
-                meterMap: $meters,
-                readingsByKey: $readingsByKey,
-                month: $month,
-                year: $year,
-                prevMonth: $prevMonth,
-                prevYear: $prevYear,
-            );
-
-            $waterData = $this->buildMeterBillDataFromBatch(
-                roomId: $roomId,
-                meterType: 'water',
-                meterMap: $meters,
-                readingsByKey: $readingsByKey,
-                month: $month,
-                year: $year,
-                prevMonth: $prevMonth,
-                prevYear: $prevYear,
-            );
-
-            $electricCost = (float) ($electricData['cost'] ?? 0);
-            $waterCost = (float) ($waterData['cost'] ?? 0);
-
-            $baseCost = round($electricCost + $waterCost, 2);
-            $tax = round($baseCost * self::DEFAULT_TAX_RATE, 2);
-            $total = round($baseCost + $tax, 2);
-
-            $hasReading = (bool) ($electricData['has_reading'] ?? false) || (bool) ($waterData['has_reading'] ?? false);
-
-            $utilityData->put($booking->id, [
-                'electric' => $electricData,
-                'water' => $waterData,
-                'base_cost' => $baseCost,
-                'tax' => $tax,
-                'total' => $total,
-                'has_reading' => $hasReading,
-            ]);
-        }
-
-        return $utilityData;
-    }
-
-    /**
-     * @param  \Illuminate\Support\Collection<int, \Illuminate\Support\Collection<int, \App\Models\Meter>>  $meterMap
-     * @param  \Illuminate\Support\Collection<string, \Illuminate\Support\Collection<int, \App\Models\MeterReading>>  $readingsByKey
-     * @return array<string, mixed>
-     */
-    private function buildMeterBillDataFromBatch(
-        int $roomId,
-        string $meterType,
-        \Illuminate\Support\Collection $meterMap,
-        \Illuminate\Support\Collection $readingsByKey,
-        int $month,
-        int $year,
-        int $prevMonth,
-        int $prevYear,
-    ): array {
-        /** @var \App\Models\Meter|null $meter */
-        $meter = $meterMap->get($roomId)?->first(function (\App\Models\Meter $m) use ($meterType): bool {
-            return $m->type === $meterType;
-        });
-
-        if (! $meter) {
-            return ['has_reading' => false, 'cost' => 0];
-        }
-
-        $currentKey = $meter->id.':'.$month.':'.$year;
-        $previousKey = $meter->id.':'.$prevMonth.':'.$prevYear;
-
-        /** @var \Illuminate\Support\Collection<int, \App\Models\MeterReading> $currentReadings */
-        $currentReadings = $readingsByKey->get($currentKey, collect());
-        /** @var \Illuminate\Support\Collection<int, \App\Models\MeterReading> $previousReadings */
-        $previousReadings = $readingsByKey->get($previousKey, collect());
-
-        /** @var \App\Models\MeterReading|null $current */
-        $current = $currentReadings->first();
-        if (! $current) {
-            return [
-                'has_reading' => false,
-                'cost' => 0,
-                'meter_number' => (string) ($meter->meter_number ?? '-'),
-            ];
-        }
-
-        /** @var \App\Models\MeterReading|null $previous */
-        $previous = $previousReadings->first();
-
-        $currentVal = (float) $current->reading_value;
-        $previousVal = $previous ? (float) $previous->reading_value : 0;
-        $isMeterReset = (bool) ($current->is_meter_reset ?? false);
-        // ✅ FIX (meter rollover): ใช้ helper กลางแทนสูตร max(0, current - previous)
-        // เดิม เพื่อรองรับกรณีมิเตอร์ถูกเปลี่ยนตัวใหม่ (ดู MeterUsageCalculator)
-        $usage = MeterUsageCalculator::calculate($previousVal, $currentVal, $isMeterReset);
-
-        $rate = (float) ($meter->rate_per_unit ?? 0);
-        $cost = round($usage * $rate, 2);
-
-        return [
-            'has_reading' => true,
-            'meter_number' => (string) ($meter->meter_number ?? '-'),
-            'previous_value' => $previousVal,
-            'current_value' => $currentVal,
-            'usage' => $usage,
-            'rate' => $rate,
-            'cost' => $cost,
-            'is_meter_reset' => $isMeterReset,
-            'unflagged_rollover' => MeterUsageCalculator::isUnflaggedRollover($previousVal, $currentVal, $isMeterReset),
-        ];
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    private function getMeterBillData(int $roomId, string $type, int $month, int $year): array
-    {
-        /** @var \App\Models\Meter|null $meter */
-        $meter = \App\Models\Meter::where('room_id', $roomId)
-            ->where('type', $type)
-            ->first();
-
-        if (! $meter) {
-            return ['has_reading' => false, 'cost' => 0];
-        }
-
-        /** @var \App\Models\MeterReading|null $current */
-        $current = \App\Models\MeterReading::where('meter_id', $meter->id)
-            ->where('period_month', $month)
-            ->where('period_year', $year)
-            ->first();
-
-        if (! $current) {
-            return ['has_reading' => false, 'cost' => 0, 'meter_number' => $meter->meter_number];
-        }
-
-        /** @var \App\Models\MeterReading|null $previous */
-        $previous = \App\Models\MeterReading::where('meter_id', $meter->id)
-            ->where(function ($q) use ($month, $year): void {
-                if ($month === 1) {
-                    $q->where('period_month', 12)
-                        ->where('period_year', $year - 1);
-                } else {
-                    $q->where('period_month', $month - 1)
-                        ->where('period_year', $year);
-                }
-            })
-            ->first();
-
-        $currentVal = (float) $current->reading_value;
-        $previousVal = $previous ? (float) $previous->reading_value : 0;
-        $isMeterReset = (bool) ($current->is_meter_reset ?? false);
-        // ✅ FIX (meter rollover): ใช้ helper กลางแทนสูตร max(0, current - previous) เดิม
-        $usage = MeterUsageCalculator::calculate($previousVal, $currentVal, $isMeterReset);
-
-        $rate = (float) ($meter->rate_per_unit ?? 0);
-        $cost = round($usage * $rate, 2);
-
-        return [
-            'has_reading' => true,
-            'meter_number' => (string) ($meter->meter_number ?? '-'),
-            'previous_value' => $previousVal,
-            'current_value' => $currentVal,
-            'usage' => $usage,
-            'rate' => $rate,
-            'cost' => $cost,
-            'is_meter_reset' => $isMeterReset,
-            'unflagged_rollover' => MeterUsageCalculator::isUnflaggedRollover($previousVal, $currentVal, $isMeterReset),
-        ];
+        return $this->utilityService->calculateUtilityBulkData($bookings, $month, $year);
     }
 
     /**
@@ -601,11 +384,7 @@ class InvoiceService
      */
     public function getOverdueInvoices(): Collection
     {
-        return Invoice::whereIn('status', ['sent', 'overdue'])
-            ->whereDate('due_date', '<', Carbon::today())
-            ->with(['booking.guest', 'booking.room', 'guest', 'room'])
-            ->orderBy('due_date', 'asc')
-            ->get();
+        return $this->reportService->getOverdueInvoices();
     }
 
     /**
@@ -613,59 +392,20 @@ class InvoiceService
      */
     public function getRevenueReport(Carbon $startDate, Carbon $endDate): array
     {
-        $invoices = Invoice::where('status', 'paid')
-            ->whereBetween('payment_date', [$startDate, $endDate])
-            ->get();
-
-        return [
-            'total_revenue' => (float) $invoices->sum('total'),
-            'total_amount' => (float) $invoices->sum('amount'),
-            'total_tax' => (float) $invoices->sum('tax'),
-            'total_late_fees' => (float) $invoices->sum('late_fee'),
-            'invoice_count' => $invoices->count(),
-            'average_invoice' => (float) ($invoices->avg('total') ?? 0),
-        ];
+        return $this->reportService->getRevenueReport($startDate, $endDate);
     }
 
     public function getPendingPaymentsTotal(): float
     {
-        return (float) Invoice::whereIn('status', ['sent', 'overdue'])
-            ->whereDate('due_date', '<', Carbon::today())
-            ->sum('total');
+        return $this->reportService->getPendingPaymentsTotal();
     }
 
     /**
-     * ✅ getStats — สถิติสำหรับ index page รองรับ invoice_type filter
-     *
      * @return array<string, int|float>
      */
     public function getStats(?string $invoiceType = null): array
     {
-        $base = Invoice::query();
-        if ($invoiceType) {
-            $base = $base->where('invoice_type', $invoiceType);
-        }
-
-        $now = now();
-        $prev = now()->subMonth();
-
-        $thisMonth = (clone $base)->whereYear('created_at', $now->year)
-            ->whereMonth('created_at', $now->month)->count();
-        $lastMonth = (clone $base)->whereYear('created_at', $prev->year)
-            ->whereMonth('created_at', $prev->month)->count();
-
-        return [
-            'total' => (clone $base)->count(),
-            'paid_count' => (clone $base)->where('status', 'paid')->count(),
-            'paid_amount' => (float) (clone $base)->where('status', 'paid')->sum('total'),
-            'sent_count' => (clone $base)->where('status', 'sent')->count(),
-            'sent_amount' => (float) (clone $base)->where('status', 'sent')->sum('total'),
-            'overdue_count' => (clone $base)->where('status', 'overdue')->count(),
-            'monthly_diff' => $thisMonth - $lastMonth,
-            // ✅ count แยกประเภทเสมอ (ไม่ขึ้นกับ filter)
-            'rent_count' => Invoice::where('invoice_type', 'rent')->count(),
-            'utility_count' => Invoice::where('invoice_type', 'utility')->count(),
-        ];
+        return $this->reportService->getStats($invoiceType);
     }
 
     /**
@@ -716,26 +456,6 @@ class InvoiceService
      */
     public function formatForExport(Collection $invoices): array
     {
-        $rows = [
-            ['Invoice Number', 'Type', 'Booking ID', 'Guest Name', 'Room', 'Amount', 'Tax', 'Total', 'Issue Date', 'Due Date', 'Status', 'Notes'],
-        ];
-        foreach ($invoices as $invoice) {
-            $rows[] = [
-                $invoice->invoice_number ?? '-',
-                $invoice->invoice_type === 'utility' ? 'ค่าน้ำ/ไฟ' : 'ค่าห้อง',
-                $invoice->booking_id ?? '-',
-                trim(($invoice->booking?->guest?->first_name ?? '').' '.($invoice->booking?->guest?->last_name ?? '')) ?: '-',
-                $invoice->booking?->room?->room_number ?? '-',
-                number_format((float) ($invoice->amount ?? 0), 2),
-                number_format((float) ($invoice->tax ?? 0), 2),
-                number_format((float) ($invoice->total ?? 0), 2),
-                $invoice->issue_date ?? '-',
-                $invoice->due_date ?? '-',
-                $invoice->status ?? '-',
-                $invoice->notes ?? '-',
-            ];
-        }
-
-        return $rows;
+        return $this->reportService->formatForExport($invoices);
     }
 }

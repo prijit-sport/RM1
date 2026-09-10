@@ -1,13 +1,13 @@
 <?php
- 
+
 namespace App\Http\Middleware;
- 
+
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\Response;
- 
+
 class SecurityHeaders
 {
     /**
@@ -30,16 +30,16 @@ class SecurityHeaders
         // ใส่ nonce="{{ $cspNonce }}" ใน <script> tag ของตัวเองได้
         $nonce = base64_encode(Str::random(24));
         View::share('cspNonce', $nonce);
- 
+
         /** @var Response $response */
         $response = $next($request);
- 
+
         $response->headers->set('X-Frame-Options', 'DENY');
         $response->headers->set('X-Content-Type-Options', 'nosniff');
         $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
         $response->headers->set('X-XSS-Protection', '0'); // deprecated header, explicitly disabled per OWASP guidance (CSP supersedes it)
         $response->headers->set('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
- 
+
         // Content-Security-Policy: same-origin by default, plus the CDNs
         // this app actually loads (Bootstrap/icons via jsdelivr, fonts via
         // Google Fonts). script-src uses the per-request nonce instead of
@@ -58,7 +58,7 @@ class SecurityHeaders
             "base-uri 'self'; ".
             "form-action 'self'"
         );
- 
+
         // Only send HSTS over an actual HTTPS connection, and only once the
         // app is confirmed to run on HTTPS in production (avoid locking
         // browsers into HTTPS during local/http development).
@@ -68,8 +68,7 @@ class SecurityHeaders
                 'max-age=31536000; includeSubDomains'
             );
         }
- 
+
         return $response;
     }
 }
- 
