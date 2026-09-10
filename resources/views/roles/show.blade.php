@@ -55,11 +55,6 @@
  
         <div class="btn-group">
             <a href="{{ route('roles.edit', $role->id) }}" class="btn btn-edit">✏️ แก้ไข</a>
-            <form method="POST" action="{{ route('roles.destroy', $role->id) }}" style="display:inline;" data-confirm="คุณแน่ใจหรือไม่ที่จะลบบทบาทนี้?">
-                @csrf
-                @method('DELETE')
-                <button type="submit" class="btn btn-delete">🗑️ ลบ</button>
-            </form>
             <a href="{{ route('roles.index') }}" class="btn btn-back">⬅️ กลับ</a>
         </div>
     </div>

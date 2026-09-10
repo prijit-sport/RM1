@@ -41,15 +41,6 @@
                                 <a href="{{ route('roles.edit', $role) }}" class="btn btn-sm btn-outline-warning">
                                     <i class="bi bi-pencil"></i>
                                 </a>
-                                @if($role->name !== 'Admin')
-                                <form action="{{ route('roles.destroy', $role) }}" method="POST" class="d-inline" data-confirm="แน่ใจหรือไม่ที่จะลบ?">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-outline-danger">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                </form>
-                                @endif
                             </div>
                         </td>
                     </tr>
