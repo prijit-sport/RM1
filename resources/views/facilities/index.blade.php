@@ -1,8 +1,8 @@
 @extends('layouts.app')
-
+ 
 @section('title', 'จัดการสิ่งอำนวยความสะดวก')
 @section('page-title', 'จัดการสิ่งอำนวยความสะดวก')
-
+ 
 @section('content')
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h4 class="mb-0">รายการสิ่งอำนวยความสะดวก</h4>
@@ -15,7 +15,7 @@
             </a>
         </div>
     </div>
-
+ 
     @php
         $typeMap = [
             'bed' => ['bi-moon-stars-fill', 'เตียง', 'bg-primary'],
@@ -25,7 +25,7 @@
             'tv_stand' => ['bi-tv-fill', 'ชั้นวางทีวี', 'bg-secondary'],
             'clothes_rack' => ['bi-handbag-fill', 'ราวแขวนผ้า', 'bg-dark'],
         ];
-
+ 
         $statusMap = [
             'active' => ['bi-check-circle-fill', 'ใช้งานได้', 'bg-success'],
             'good' => ['bi-check-circle-fill', 'ใช้งานได้', 'bg-success'],
@@ -35,7 +35,7 @@
             'damaged' => ['bi-x-circle-fill', 'ชำรุด', 'bg-danger'],
             'retired' => ['bi-trash-fill', 'ปลดประจำการ', 'bg-secondary'],
         ];
-
+ 
         $statCards = [
             [
                 'key' => 'total',
@@ -102,19 +102,19 @@
             ],
         ];
     @endphp
-
+ 
     <style>
         .stat-summary-card {
             cursor: pointer;
             transition: all 0.2s ease;
             border: none;
         }
-
+ 
         .stat-summary-card:hover {
             transform: translateY(-3px);
             box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
         }
-
+ 
         .stat-icon-wrap-sm {
             width: 40px;
             height: 40px;
@@ -125,14 +125,14 @@
             font-size: 1.2rem;
             flex-shrink: 0;
         }
-
+ 
         .stat-value {
             font-size: 1.3rem;
             font-weight: 700;
             line-height: 1.1;
             color: #1f2937;
         }
-
+ 
         .stat-label {
             font-size: 0.75rem;
             color: #6b7280;
@@ -140,39 +140,39 @@
             overflow: hidden;
             text-overflow: ellipsis;
         }
-
+ 
         @media (min-width: 1200px) {
             .row-cols-xl-7>* {
                 flex: 0 0 auto;
                 width: 14.2857%;
             }
         }
-
+ 
         .table-card {
             background: white;
             border-radius: 10px;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
             overflow: hidden;
         }
-
+ 
         .pagination {
             margin-bottom: 0;
             gap: 2px;
         }
-
+ 
         .page-link {
             border-radius: 6px !important;
             border: none;
             color: #4f46e5;
             padding: 0.5rem 0.85rem;
         }
-
+ 
         .page-item.active .page-link {
             background-color: #4f46e5;
             color: white;
         }
     </style>
-
+ 
     {{-- การ์ดสถิติ --}}
     <div class="row row-cols-2 row-cols-md-4 row-cols-xl-7 g-2 mb-4">
         @foreach ($statCards as $card)
@@ -197,7 +197,7 @@
             </div>
         @endforeach
     </div>
-
+ 
     {{-- Filter --}}
     <div class="card mb-4 border-0 shadow-sm">
         <div class="card-body">
@@ -206,7 +206,7 @@
                     <input type="text" name="search" class="form-control" placeholder="ค้นหาชื่อ/คำอธิบาย..."
                         value="{{ request('search') }}">
                 </div>
-
+ 
                 <div class="col-md-2">
                     <select name="type" class="form-select">
                         <option value="">ทุกประเภท</option>
@@ -217,7 +217,7 @@
                         @endforeach
                     </select>
                 </div>
-
+ 
                 <div class="col-md-2">
                     <select name="status" class="form-select">
                         <option value="">ทุกสถานะ</option>
@@ -230,7 +230,7 @@
                         @endforeach
                     </select>
                 </div>
-
+ 
                 <div class="col-md-2">
                     <select name="location" class="form-select">
                         <option value="">ทุกที่ตั้ง</option>
@@ -241,7 +241,7 @@
                         @endforeach
                     </select>
                 </div>
-
+ 
                 <div class="col-md-3 d-flex gap-2">
                     <button type="submit" class="btn btn-primary flex-grow-1">
                         <i class="bi bi-search me-1"></i>ค้นหา
@@ -253,7 +253,7 @@
             </form>
         </div>
     </div>
-
+ 
     {{-- ตาราง --}}
     <div class="table-card shadow-sm">
         <div class="table-responsive">
@@ -348,7 +348,7 @@
                                         <i class="bi bi-pencil"></i>
                                     </a>
                                     <form action="{{ route('facilities.destroy', $facility->id) }}" method="POST"
-                                        class="d-inline" onsubmit="return confirm('ยืนยันการลบ?')">
+                                        class="d-inline" data-confirm="ยืนยันการลบ?">
                                         @csrf @method('DELETE')
                                         <button type="submit" class="btn btn-sm btn-outline-danger" title="ลบ">
                                             <i class="bi bi-trash"></i>
@@ -368,7 +368,7 @@
                 </tbody>
             </table>
         </div>
-
+ 
         <div class="card-footer bg-white border-0 py-3">
             <div class="d-flex justify-content-between align-items-center">
                 <small class="text-muted">
@@ -382,3 +382,4 @@
         </div>
     </div>
 @endsection
+ 

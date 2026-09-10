@@ -1,8 +1,8 @@
 @extends('layouts.app')
-
+ 
 @section('title', 'สร้างใบแจ้งหนี้หลายใบ')
 @section('page-title', 'สร้างใบแจ้งหนี้หลายใบ')
-
+ 
 @section('content')
     <style>
         .bulk-header {
@@ -16,27 +16,27 @@
             flex-wrap: wrap;
             gap: 16px;
         }
-
+ 
         .bulk-header.rent {
             background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
         }
-
+ 
         .bulk-header.utility {
             background: linear-gradient(135deg, #0369a1 0%, #0ea5e9 100%);
         }
-
+ 
         .bulk-header h4 {
             margin: 0;
             font-weight: 700;
             font-size: 1.3rem;
         }
-
+ 
         .bulk-header p {
             margin: 4px 0 0;
             opacity: 0.85;
             font-size: 0.9rem;
         }
-
+ 
         .type-tabs {
             display: flex;
             gap: 0;
@@ -47,7 +47,7 @@
             margin-bottom: 20px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
         }
-
+ 
         .type-tab {
             flex: 1;
             padding: 14px 20px;
@@ -59,26 +59,26 @@
             border-right: 1px solid #e2e8f0;
             transition: all 0.2s;
         }
-
+ 
         .type-tab:last-child {
             border-right: none;
         }
-
+ 
         .type-tab:hover {
             background: #f8faff;
             color: #4f46e5;
         }
-
+ 
         .type-tab.active-rent {
             background: #ede9fe;
             color: #4f46e5;
         }
-
+ 
         .type-tab.active-utility {
             background: #e0f2fe;
             color: #0369a1;
         }
-
+ 
         .period-card {
             background: white;
             border-radius: 14px;
@@ -87,7 +87,7 @@
             padding: 20px 24px;
             margin-bottom: 20px;
         }
-
+ 
         .period-card h6 {
             font-weight: 700;
             color: #4f46e5;
@@ -96,7 +96,7 @@
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
-
+ 
         .summary-bar {
             background: #f8faff;
             border: 1px solid #e0e7ff;
@@ -108,24 +108,24 @@
             flex-wrap: wrap;
             align-items: center;
         }
-
+ 
         .s-item {
             text-align: center;
         }
-
+ 
         .s-label {
             font-size: 0.75rem;
             color: #64748b;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
-
+ 
         .s-value {
             font-size: 1.4rem;
             font-weight: 700;
             color: #4f46e5;
         }
-
+ 
         .rooms-table-card {
             background: white;
             border-radius: 14px;
@@ -134,12 +134,12 @@
             overflow: hidden;
             margin-bottom: 20px;
         }
-
+ 
         .rooms-table-card table {
             width: 100%;
             border-collapse: collapse;
         }
-
+ 
         .rooms-table-card thead th {
             background: #f8faff;
             padding: 12px 16px;
@@ -150,31 +150,31 @@
             letter-spacing: 0.5px;
             border-bottom: 2px solid #e2e8f0;
         }
-
+ 
         .rooms-table-card tbody td {
             padding: 10px 16px;
             border-bottom: 1px solid #f1f5f9;
             font-size: 0.88rem;
             vertical-align: middle;
         }
-
+ 
         .rooms-table-card tbody tr:last-child td {
             border-bottom: none;
         }
-
+ 
         .rooms-table-card tbody tr:hover {
             background: #fafbff;
         }
-
+ 
         .rooms-table-card tbody tr.excluded {
             opacity: 0.4;
             background: #fef2f2;
         }
-
+ 
         .rooms-table-card tbody tr.no-reading {
             background: #fffbeb;
         }
-
+ 
         .room-chip {
             display: inline-flex;
             align-items: center;
@@ -186,35 +186,35 @@
             font-weight: 600;
             font-size: 0.85rem;
         }
-
+ 
         .utility-chip {
             background: #e0f2fe;
             color: #0369a1;
         }
-
+ 
         .tenant-name {
             font-weight: 500;
             color: #1e293b;
         }
-
+ 
         .tenant-sub {
             font-size: 0.78rem;
             color: #94a3b8;
         }
-
+ 
         .amount-cell {
             font-weight: 700;
             color: #059669;
             font-family: monospace;
         }
-
+ 
         .include-toggle {
             width: 18px;
             height: 18px;
             cursor: pointer;
             accent-color: #4f46e5;
         }
-
+ 
         .no-reading-badge {
             display: inline-block;
             padding: 2px 8px;
@@ -224,7 +224,7 @@
             font-size: 0.75rem;
             font-weight: 600;
         }
-
+ 
         .action-footer {
             background: white;
             border-radius: 14px;
@@ -237,7 +237,7 @@
             flex-wrap: wrap;
             gap: 12px;
         }
-
+ 
         .btn-generate {
             color: white;
             border: none;
@@ -251,27 +251,27 @@
             gap: 8px;
             transition: all 0.2s;
         }
-
+ 
         .btn-generate.rent {
             background: linear-gradient(135deg, #4f46e5, #7c3aed);
         }
-
+ 
         .btn-generate.utility {
             background: linear-gradient(135deg, #0369a1, #0ea5e9);
         }
-
+ 
         .btn-generate:hover {
             transform: translateY(-1px);
             box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4);
         }
-
+ 
         .btn-generate:disabled {
             opacity: 0.6;
             cursor: not-allowed;
             transform: none;
         }
     </style>
-
+ 
     {{-- Header --}}
     <div class="bulk-header {{ $type }}">
         <div>
@@ -287,7 +287,7 @@
             <i class="bi bi-arrow-left me-1"></i> กลับ
         </a>
     </div>
-
+ 
     @if ($errors->any())
         <div class="alert alert-danger rounded-3 mb-4">
             <strong>กรุณาตรวจสอบข้อมูล:</strong>
@@ -298,7 +298,7 @@
             </ul>
         </div>
     @endif
-
+ 
     {{-- ✅ Type tabs --}}
     <div class="type-tabs">
         <a href="{{ route('invoices.bulk-create', ['type' => 'rent', 'month' => $month, 'year' => $year]) }}"
@@ -310,14 +310,14 @@
             ⚡ ใบแจ้งค่าน้ำ/ค่าไฟ
         </a>
     </div>
-
+ 
     {{-- ✅ เลือกเดือนและตั้งค่า --}}
     <div class="period-card">
         <h6><i class="bi bi-calendar3 me-2"></i>เลือกช่วงเวลา</h6>
         <div class="row g-3">
             <div class="col-md-2">
                 <label class="form-label fw-semibold">เดือน</label>
-                <select id="periodMonth" class="form-select" onchange="changePeriod()">
+                <select id="periodMonth" class="form-select">
                     @foreach (range(1, 12) as $m)
                         <option value="{{ $m }}" {{ $month == $m ? 'selected' : '' }}>
                             {{ \Carbon\Carbon::create()->month($m)->locale('th')->monthName }}
@@ -327,7 +327,7 @@
             </div>
             <div class="col-md-2">
                 <label class="form-label fw-semibold">ปี (ค.ศ.)</label>
-                <select id="periodYear" class="form-select" onchange="changePeriod()">
+                <select id="periodYear" class="form-select">
                     @for ($y = now()->year; $y >= now()->year - 2; $y--)
                         <option value="{{ $y }}" {{ $year == $y ? 'selected' : '' }}>
                             {{ $y + 543 }} ({{ $y }})
@@ -338,13 +338,12 @@
             <div class="col-md-3">
                 <label class="form-label fw-semibold">วันที่ออกเอกสาร</label>
                 <input type="date" id="globalIssueDate" class="form-control"
-                    value="{{ \Carbon\Carbon::create($year, $month, 1)->format('Y-m-d') }}" onchange="syncAllDates()">
+                    value="{{ \Carbon\Carbon::create($year, $month, 1)->format('Y-m-d') }}">
             </div>
             <div class="col-md-3">
                 <label class="form-label fw-semibold">วันครบกำหนดชำระ</label>
                 <input type="date" id="globalDueDate" class="form-control"
-                    value="{{ \Carbon\Carbon::create($year, $month, $type === 'utility' ? 21 : 7)->format('Y-m-d') }}"
-                    onchange="syncAllDates()">
+                    value="{{ \Carbon\Carbon::create($year, $month, $type === 'utility' ? 21 : 7)->format('Y-m-d') }}">
             </div>
             <div class="col-md-2 d-flex align-items-end">
                 <div class="text-muted small">
@@ -357,7 +356,7 @@
             </div>
         </div>
     </div>
-
+ 
     {{-- ✅ Summary --}}
     <div class="summary-bar">
         <div class="s-item">
@@ -381,33 +380,33 @@
             </div>
         @endif
         <div class="ms-auto d-flex gap-2">
-            <button type="button" class="btn btn-sm btn-outline-primary" onclick="selectAll(true)">
+            <button type="button" class="btn btn-sm btn-outline-primary" data-action="select-all-true">
                 <i class="bi bi-check-all me-1"></i>เลือกทั้งหมด
             </button>
-            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="selectAll(false)">
+            <button type="button" class="btn btn-sm btn-outline-secondary" data-action="select-all-false">
                 <i class="bi bi-x me-1"></i>ยกเลิกทั้งหมด
             </button>
         </div>
     </div>
-
+ 
     {{-- ✅ Form --}}
     <form method="POST" action="{{ route('invoices.bulk-store') }}" id="bulkForm">
         @csrf
         <input type="hidden" name="invoice_type" value="{{ $type }}">
-
+ 
         {{-- ลดจำนวน input ที่ต้อง submit เพื่อลดปัญหา max_input_vars>1000 --}}
         <input type="hidden" name="issue_date"
             value="{{ \Carbon\Carbon::create($year, $month, $type === 'utility' ? 21 : 1)->format('Y-m-d') }}">
         <input type="hidden" name="due_date"
             value="{{ \Carbon\Carbon::create($year, $month, $type === 'utility' ? 21 : 7)->format('Y-m-d') }}">
         <input type="hidden" name="status" value="sent">
-
-
+ 
+ 
         <div class="rooms-table-card">
             <table>
                 <thead>
                     <tr>
-                        <th><input type="checkbox" id="checkAll" class="include-toggle" onchange="toggleAll(this)"></th>
+                        <th><input type="checkbox" id="checkAll" class="include-toggle"></th>
                         <th>ห้อง</th>
                         <th>ผู้เช่า</th>
                         @if ($type === 'utility')
@@ -432,7 +431,7 @@
                             $guestName = $guest
                                 ? trim(($guest->first_name ?? '') . ' ' . ($guest->last_name ?? ''))
                                 : 'ไม่ระบุ';
-
+ 
                             if ($type === 'utility') {
                                 $ud = $utilityData->get($booking->id, []);
                                 $hasRead = $ud['has_reading'] ?? false;
@@ -447,7 +446,7 @@
                                 $tax = round($amount * 0.07, 2);
                                 $total = round($amount + $tax, 2);
                             }
-
+ 
                             $thaiMonths = [
                                 '',
                                 'มกราคม',
@@ -465,7 +464,7 @@
                             ];
                             $monthName = $thaiMonths[$month] ?? $month;
                             $buddhistYear = $year + 543;
-
+ 
                             $prefix = $type === 'utility' ? 'UTL' : 'INV';
                             $invNum =
                                 $prefix .
@@ -489,10 +488,9 @@
                             class="{{ !$hasRead && $type === 'utility' ? 'no-reading' : '' }}">
                             <td>
                                 <input type="checkbox" class="include-toggle room-check" value="{{ $booking->id }}"
-                                    {{ $hasRead || $type === 'rent' ? 'checked' : '' }}
-                                    onchange="toggleRow(this, {{ $i }})">
+                                    {{ $hasRead || $type === 'rent' ? 'checked' : '' }}>
                             </td>
-
+ 
                             <td>
                                 <span class="room-chip {{ $type === 'utility' ? 'utility-chip' : '' }}">
                                     <i class="bi bi-door-closed"></i>
@@ -503,7 +501,7 @@
                                 <div class="tenant-name">{{ $guestName }}</div>
                                 <div class="tenant-sub">Booking #{{ $booking->id }}</div>
                             </td>
-
+ 
                             @if ($type === 'utility')
                                 <td>
                                     @if (!empty($elec['has_reading']))
@@ -534,7 +532,7 @@
                                     @endif
                                 </td>
                             @endif
-
+ 
                             <td>
                                 {{-- NOTE: ลด input ที่ถูก submit เพื่อไม่ให้เกิน max_input_vars
                                  UI เดิมยังแสดงยอด แต่ค่าที่จำเป็นจะถูกคำนวณ/กำหนดฝั่ง server --}}
@@ -545,16 +543,16 @@
                             <td class="d-none"></td>
                             <td class="d-none"></td>
                             <td class="d-none"></td>
-
+ 
                             {{-- submit เฉพาะ booking_id ผ่าน checkbox --}}
                         </tr>
-
+ 
                         @php $i++; @endphp
                     @endforeach
                 </tbody>
             </table>
         </div>
-
+ 
         <div class="action-footer">
             <div class="text-muted small">
                 <i class="bi bi-info-circle me-1"></i>
@@ -573,18 +571,18 @@
                 </button>
             </div>
         </div>
-
+ 
     </form>
-
-    <script>
+ 
+    <script nonce="{{ $cspNonce ?? '' }}">
         const TYPE = '{{ $type }}';
-
+ 
         function changePeriod() {
             const month = document.getElementById('periodMonth').value;
             const year = document.getElementById('periodYear').value;
             window.location.href = `{{ route('invoices.bulk-create') }}?type=${TYPE}&month=${month}&year=${year}`;
         }
-
+ 
         function recalcRow(el, idx) {
             const row = document.querySelector(`tr[data-index="${idx}"]`);
             const amount = parseFloat(row.querySelector('.inv-amount').value) || 0;
@@ -594,7 +592,7 @@
             row.dataset.amount = total;
             updateSummary();
         }
-
+ 
         function syncAllDates() {
             const issue = document.getElementById('globalIssueDate').value;
             const due = document.getElementById('globalDueDate').value;
@@ -606,9 +604,9 @@
                 if (dueInput && !dueInput.disabled) dueInput.value = due;
             });
         }
-
-        function toggleRow(checkbox, idx) {
-            const row = document.querySelector(`tr[data-index="${idx}"]`);
+ 
+        function toggleRow(checkbox) {
+            const row = checkbox.closest('tr');
             // เมื่อเราไม่ submit input รายแถวแล้ว การ disable input จึงไม่จำเป็น
             if (checkbox.checked) {
                 row.classList.remove('excluded');
@@ -618,8 +616,8 @@
             updateSummary();
             updateCheckAll();
         }
-
-
+ 
+ 
         function toggleAll(masterCheckbox) {
             const isChecked = masterCheckbox.checked;
             document.querySelectorAll('.room-check').forEach(cb => {
@@ -643,21 +641,21 @@
             });
             updateSummary();
         }
-
+ 
         function selectAll(checked) {
             const master = document.getElementById('checkAll');
             master.checked = checked;
             master.indeterminate = false;
             toggleAll(master);
         }
-
+ 
         function updateCheckAll() {
             const all = document.querySelectorAll('.room-check');
             const checked = document.querySelectorAll('.room-check:checked');
             document.getElementById('checkAll').checked = all.length === checked.length;
             document.getElementById('checkAll').indeterminate = checked.length > 0 && checked.length < all.length;
         }
-
+ 
         function updateSummary() {
             const checkedRows = document.querySelectorAll('.room-check:checked');
             let total = 0;
@@ -669,21 +667,21 @@
                 minimumFractionDigits: 2
             });
         }
-
+ 
         // submit
         document.getElementById('bulkForm').addEventListener('submit', function() {
             const btn = document.getElementById('submitBtn');
             btn.disabled = true;
             document.getElementById('submitText').textContent = 'กำลังบันทึก...';
-
+ 
             // รวบรวม booking_id จาก checkbox ที่ติ๊กไว้
             const selected = Array.from(document.querySelectorAll('.room-check:checked'))
                 .map(cb => cb.value)
                 .filter(Boolean);
-
+ 
             // clear hidden เดิม (ถ้ามี)
             document.querySelectorAll('input[name="selected_bookings[]"]').forEach(el => el.remove());
-
+ 
             selected.forEach(id => {
                 const input = document.createElement('input');
                 input.type = 'hidden';
@@ -692,10 +690,31 @@
                 document.getElementById('bulkForm').appendChild(input);
             });
         });
-
-
+ 
+ 
+        // ✅ FIX (CSP nonce-based): ผูก event listener แทน inline onchange/onclick เดิม
+        document.getElementById('periodMonth')?.addEventListener('change', changePeriod);
+        document.getElementById('periodYear')?.addEventListener('change', changePeriod);
+        document.getElementById('globalIssueDate')?.addEventListener('change', syncAllDates);
+        document.getElementById('globalDueDate')?.addEventListener('change', syncAllDates);
+        document.getElementById('checkAll')?.addEventListener('change', function() {
+            toggleAll(this);
+        });
+        document.querySelector('[data-action="select-all-true"]')?.addEventListener('click', function() {
+            selectAll(true);
+        });
+        document.querySelector('[data-action="select-all-false"]')?.addEventListener('click', function() {
+            selectAll(false);
+        });
+        document.querySelectorAll('.room-check').forEach(cb => {
+            cb.addEventListener('change', function() {
+                toggleRow(this);
+            });
+        });
+ 
         // init
         updateSummary();
     </script>
-
+ 
 @endsection
+ 

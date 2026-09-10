@@ -1,9 +1,9 @@
 @extends('layouts.app')
-
+ 
 @section('title', 'จัดการบทบาท')
-
+ 
 @section('page-title', 'จัดการบทบาท')
-
+ 
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h4 class="mb-0">รายการบทบาท</h4>
@@ -16,7 +16,7 @@
         </a>
     </div>
 </div>
-
+ 
 <!-- Roles Table -->
 <div class="table-card">
     <div class="table-responsive">
@@ -42,10 +42,10 @@
                                     <i class="bi bi-pencil"></i>
                                 </a>
                                 @if($role->name !== 'Admin')
-                                <form action="{{ route('roles.destroy', $role) }}" method="POST" class="d-inline">
+                                <form action="{{ route('roles.destroy', $role) }}" method="POST" class="d-inline" data-confirm="แน่ใจหรือไม่ที่จะลบ?">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('แน่ใจหรือไม่ที่จะลบ?')">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 </form>
@@ -66,7 +66,7 @@
         </table>
     </div>
 </div>
-
+ 
 <!-- Pagination -->
 @if ($roles->hasPages())
     <div class="d-flex justify-content-center mt-4">
@@ -74,6 +74,7 @@
     </div>
 @endif
 @endsection
-
-
-
+ 
+ 
+ 
+ 

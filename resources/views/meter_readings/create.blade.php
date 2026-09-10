@@ -458,11 +458,11 @@
  
                 {{-- Tabs --}}
                 <div class="meter-tabs">
-                    <button class="meter-tab-btn active" onclick="switchTab('general', this)">
+                    <button class="meter-tab-btn active" data-tab="general">
                         <i class="bi bi-pencil-square"></i>
                         บันทึกทั่วไป
                     </button>
-                    <button class="meter-tab-btn" onclick="switchTab('monthly', this)">
+                    <button class="meter-tab-btn" data-tab="monthly">
                         <i class="bi bi-receipt"></i>
                         รายเดือน + ใบแจ้งหนี้
                     </button>
@@ -565,7 +565,7 @@
                                     เดือน <span class="required">*</span>
                                 </label>
                                 <select class="form-select @error('period_month') is-invalid @enderror" id="period_month"
-                                    name="period_month" onchange="updatePreview()" required>
+                                    name="period_month" required>
                                     @foreach (range(1, 12) as $m)
                                         <option value="{{ $m }}"
                                             {{ old('period_month', now()->month) == $m ? 'selected' : '' }}>
@@ -582,7 +582,7 @@
                                     ปี (พ.ศ.) <span class="required">*</span>
                                 </label>
                                 <select class="form-select @error('period_year') is-invalid @enderror" id="period_year"
-                                    name="period_year" onchange="updatePreview()" required>
+                                    name="period_year" required>
                                     @for ($y = now()->year; $y >= now()->year - 3; $y--)
                                         <option value="{{ $y }}"
                                             {{ old('period_year', now()->year) == $y ? 'selected' : '' }}>
@@ -606,8 +606,7 @@
                                 </span>
                                 <input class="form-control @error('reading_value') is-invalid @enderror"
                                     id="m_reading_value" name="reading_value" type="number" step="0.01"
-                                    min="0" value="{{ old('reading_value') }}" placeholder="เช่น 1234.00"
-                                    oninput="updatePreview()" required>
+                                    min="0" value="{{ old('reading_value') }}" placeholder="เช่น 1234.00" required>
                                 <span class="input-group-text bg-white text-muted">
                                     {{ $meter->type === 'electric' ? 'kWh' : 'Unit' }}
                                 </span>
@@ -631,7 +630,7 @@
  
                         <div class="mb-3 form-check">
                             <input class="form-check-input" type="checkbox" id="m_is_meter_reset"
-                                name="is_meter_reset" value="1" onchange="updatePreview()"
+                                name="is_meter_reset" value="1"
                                 {{ old('is_meter_reset') ? 'checked' : '' }}>
                             <label class="form-check-label" for="m_is_meter_reset">
                                 <i class="bi bi-arrow-repeat me-1"></i>
@@ -704,7 +703,7 @@
         </div>
     </div>
  
-    <script>
+    <script nonce="{{ $cspNonce ?? '' }}">
         const rate = {{ (float) ($meter->rate_per_unit ?? 0) }};
         const taxRate = {{ (float) ($meter->tax_rate ?? 0) }};
         const latestReading = {{ $meter->latestReading?->reading_value ?? 'null' }};
@@ -754,6 +753,17 @@
  
             document.getElementById('invoice-preview').style.display = 'block';
         }
+ 
+        // ✅ FIX (CSP nonce-based): ผูก event listener แทน inline onclick/onchange/oninput เดิม
+        document.querySelectorAll('.meter-tab-btn[data-tab]').forEach(btn => {
+            btn.addEventListener('click', function() {
+                switchTab(this.dataset.tab, this);
+            });
+        });
+        document.getElementById('period_month')?.addEventListener('change', updatePreview);
+        document.getElementById('period_year')?.addEventListener('change', updatePreview);
+        document.getElementById('m_reading_value')?.addEventListener('input', updatePreview);
+        document.getElementById('m_is_meter_reset')?.addEventListener('change', updatePreview);
  
         @if (old('period_month') || old('period_year'))
             document.addEventListener('DOMContentLoaded', () => {

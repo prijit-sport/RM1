@@ -1,9 +1,9 @@
 ﻿@extends('layouts.app')
-
+ 
 @section('title', 'มิเตอร์อ่านค่า')
-
+ 
 @section('page-title', 'มิเตอร์อ่านค่า')
-
+ 
 @section('content')
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
@@ -31,7 +31,7 @@
             </a>
         </div>
     </div>
-
+ 
     @if (isset($billing))
         <div class="card mb-4">
             <div class="card-body">
@@ -67,7 +67,7 @@
             </div>
         </div>
     @endif
-
+ 
     <!-- Search and Filter -->
     <div class="card mb-4">
         <div class="card-body">
@@ -87,7 +87,7 @@
             </form>
         </div>
     </div>
-
+ 
     <!-- Readings Table -->
     <div class="table-card">
         <div class="table-responsive">
@@ -115,11 +115,10 @@
                                         <i class="bi bi-pencil"></i>
                                     </a>
                                     <form action="{{ route('meters.readings.destroy', [$meter, $reading]) }}"
-                                        method="POST" class="d-inline">
+                                        method="POST" class="d-inline" data-confirm="ยืนยันการลบรายการ?">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-outline-danger"
-                                            onclick="return confirm('ยืนยันการลบรายการ?')">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">
                                             <i class="bi bi-trash"></i>
                                         </button>
                                     </form>
@@ -138,7 +137,7 @@
             </table>
         </div>
     </div>
-
+ 
     <!-- Pagination -->
     @if ($readings->hasPages())
         <div class="d-flex justify-content-center mt-4">
@@ -146,3 +145,4 @@
         </div>
     @endif
 @endsection
+ 

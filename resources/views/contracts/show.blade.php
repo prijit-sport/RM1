@@ -30,7 +30,7 @@
                     <i class="bi bi-pencil me-1"></i>แก้ไข
                 </a>
  
-                <form method="POST" action="{{ route('contracts.destroy', $contract) }}" style="display:inline;" onsubmit="return confirm('คุณแน่ใจหรือไม่ที่จะลบสัญญานี้?');">
+                <form method="POST" action="{{ route('contracts.destroy', $contract) }}" style="display:inline;" data-confirm="คุณแน่ใจหรือไม่ที่จะลบสัญญานี้?">
                     @csrf
                     @method('DELETE')
                     <button type="submit" class="btn btn-danger">

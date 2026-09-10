@@ -110,7 +110,7 @@
                                     </a>
                                     <form action="{{ route('guests.destroy', $guest->id) }}"
                                           method="POST" class="d-inline"
-                                          onsubmit="return confirm('ยืนยันการลบผู้เช่าท่านนี้?')">
+                                          data-confirm="ยืนยันการลบผู้เช่าท่านนี้?">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit"

@@ -346,7 +346,7 @@
 @endsection
  
 @push('scripts')
-    <script>
+    <script nonce="{{ $cspNonce ?? '' }}">
         // ⚠️ ห่อด้วย DOMContentLoaded เพราะ @@vite() compile เป็น <script type="module">
         // ซึ่งเบราว์เซอร์จะ defer การรันเสมอ (รอ parse HTML เสร็จก่อน) แต่ inline script
         // ธรรมดาแบบนี้จะรันทันทีตอน parse ถึง ทำให้ window.Chart (ที่ตั้งค่าใน

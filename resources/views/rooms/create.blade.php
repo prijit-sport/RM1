@@ -1,5 +1,5 @@
 @extends('layouts.app')
-
+ 
 @section('content')
     <div class="container py-4">
         <div class="row justify-content-center">
@@ -9,7 +9,7 @@
                         <h5 class="mb-0"><i class="bi bi-door-open"></i> เพิ่มห้องพักใหม่</h5>
                     </div>
                     <div class="card-body">
-
+ 
                         {{-- แสดง validation errors --}}
                         @if ($errors->any())
                             <div class="alert alert-danger">
@@ -21,10 +21,10 @@
                                 </ul>
                             </div>
                         @endif
-
+ 
                         <form action="{{ route('rooms.store') }}" method="POST">
                             @csrf
-
+ 
                             {{-- ── หมายเลขห้อง + ประเภทห้อง ── --}}
                             <div class="row mb-4">
                                 <div class="col-md-6">
@@ -53,7 +53,7 @@
                                     <small class="text-muted">เปลี่ยนประเภทห้อง ราคาจะอัปเดตอัตโนมัติ</small>
                                 </div>
                             </div>
-
+ 
                             {{-- ── ค่าเช่า + ความจุ ── --}}
                             <div class="row mb-4">
                                 <div class="col-md-6">
@@ -81,7 +81,7 @@
                                     @enderror
                                 </div>
                             </div>
-
+ 
                             {{-- ── ชั้น + อาคาร + สถานะ ── --}}
                             <div class="row mb-4">
                                 <div class="col-md-4">
@@ -106,7 +106,7 @@
                                     <label class="form-label required">สถานะ <span class="text-danger">*</span></label>
                                     <select name="status" class="form-select @error('status') is-invalid @enderror"
                                         required>
-
+ 
                                         <option value="available"
                                             {{ old('status', 'available') == 'available' ? 'selected' : '' }}>ว่าง
                                         </option>
@@ -120,13 +120,13 @@
                                     @enderror
                                 </div>
                             </div>
-
+ 
                             {{-- ── รายละเอียด ── --}}
                             <div class="mb-4">
                                 <label class="form-label">รายละเอียด</label>
                                 <textarea name="description" class="form-control" rows="3" placeholder="รายละเอียดเพิ่มเติม (ถ้ามี)">{{ old('description') }}</textarea>
                             </div>
-
+ 
                             {{-- ── ปุ่ม ── --}}
                             <div class="d-flex justify-content-between">
                                 <a href="{{ route('rooms.index') }}" class="btn btn-secondary">
@@ -137,29 +137,29 @@
                                 </button>
                             </div>
                         </form>
-
+ 
                     </div>
                 </div>
             </div>
         </div>
     </div>
-
-    <script>
+ 
+    <script nonce="{{ $cspNonce ?? '' }}">
         document.addEventListener('DOMContentLoaded', function() {
             const roomTypeEl = document.getElementById('room_type_select');
             const priceEl = document.getElementById('price_input');
             const priceHint = document.getElementById('price_hint');
-
+ 
             if (!roomTypeEl || !priceEl) return;
-
+ 
             // ── เมื่อเปลี่ยนประเภทห้อง → เติมราคาอัตโนมัติ ──
             roomTypeEl.addEventListener('change', function() {
                 const selectedOption = this.options[this.selectedIndex];
                 const price = selectedOption.getAttribute('data-price');
-
+ 
                 if (price) {
                     priceEl.value = price;
-
+ 
                     // แสดง hint + ไฮไลต์ช่องราคา
                     priceHint.style.display = 'block';
                     priceEl.style.transition = 'background-color 0.6s';
@@ -173,7 +173,7 @@
                     priceHint.style.display = 'none';
                 }
             });
-
+ 
             // ── ถ้าผู้ใช้แก้ราคาเองหลังจาก auto-fill → ซ่อน hint ──
             priceEl.addEventListener('input', function() {
                 priceHint.style.display = 'none';
@@ -181,3 +181,4 @@
         });
     </script>
 @endsection
+ 

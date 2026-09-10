@@ -1,14 +1,14 @@
 @extends('layouts.app')
-
+ 
 @section('title', 'จัดการใบแจ้งหนี้')
 @section('page-title', 'จัดการใบแจ้งหนี้')
-
+ 
 @push('styles')
     {{-- romar-theme.css include แล้วใน layouts.app --}}
 @endpush
-
+ 
 @section('content')
-
+ 
     {{-- PAGE HEADER --}}
     <div class="page-header-romar">
         <div class="page-title-wrap">
@@ -27,14 +27,14 @@
             </a>
         </div>
     </div>
-
+ 
     @if (session('success'))
         <div class="alert alert-success alert-dismissible fade show" role="alert">
             <i class="bi bi-check-circle me-2"></i>{{ session('success') }}
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     @endif
-
+ 
     {{-- ✅ TYPE TABS --}}
     <div class="mb-4">
         <ul class="nav nav-tabs" style="border-bottom: 2px solid #e2e8f0;">
@@ -64,7 +64,7 @@
             </li>
         </ul>
     </div>
-
+ 
     {{-- QUICK STATS --}}
     <div class="stats-grid">
         <div class="stat-card" style="--stat-color: var(--romar-primary); --stat-bg: var(--romar-soft);">
@@ -78,21 +78,21 @@
                 </div>
             @endif
         </div>
-
+ 
         <div class="stat-card" style="--stat-color: var(--success); --stat-bg: var(--success-soft);">
             <div class="stat-icon"><i class="bi bi-check-circle"></i></div>
             <div class="stat-label">ชำระแล้ว</div>
             <div class="stat-value">{{ number_format($stats['paid_count'] ?? 0) }}</div>
             <div class="stat-meta">มูลค่ารวม ฿ {{ number_format($stats['paid_amount'] ?? 0) }}</div>
         </div>
-
+ 
         <div class="stat-card" style="--stat-color: var(--warning); --stat-bg: var(--warning-soft);">
             <div class="stat-icon"><i class="bi bi-clock-history"></i></div>
             <div class="stat-label">รอชำระ</div>
             <div class="stat-value">{{ number_format($stats['sent_count'] ?? 0) }}</div>
             <div class="stat-meta">มูลค่ารวม ฿ {{ number_format($stats['sent_amount'] ?? 0) }}</div>
         </div>
-
+ 
         <div class="stat-card" style="--stat-color: var(--danger); --stat-bg: var(--danger-soft);">
             <div class="stat-icon"><i class="bi bi-exclamation-triangle"></i></div>
             <div class="stat-label">เกินกำหนด</div>
@@ -104,20 +104,20 @@
             @endif
         </div>
     </div>
-
+ 
     {{-- SEARCH & FILTER --}}
     <form method="GET" action="{{ route('invoices.index') }}" class="filter-bar">
         @if (request('invoice_type'))
             <input type="hidden" name="invoice_type" value="{{ request('invoice_type') }}">
         @endif
-
+ 
         <div class="search-input-romar">
             <i class="bi bi-search"></i>
             <input type="text" name="search" placeholder="ค้นหาเลขที่ใบแจ้งหนี้, ผู้เช่า, ห้อง..."
                 value="{{ request('search') }}">
         </div>
-
-        <select name="status" class="filter-select-romar" onchange="this.form.submit()">
+ 
+        <select name="status" class="filter-select-romar" data-auto-submit>
             <option value="">ทุกสถานะ</option>
             <option value="draft" {{ request('status') == 'draft' ? 'selected' : '' }}>Draft</option>
             <option value="sent" {{ request('status') == 'sent' ? 'selected' : '' }}>รอชำระ</option>
@@ -125,11 +125,11 @@
             <option value="overdue" {{ request('status') == 'overdue' ? 'selected' : '' }}>เกินกำหนด</option>
             <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>ยกเลิก</option>
         </select>
-
+ 
         <button type="submit" class="btn-romar">
             <i class="bi bi-funnel"></i> กรอง
         </button>
-
+ 
         @if (request()->hasAny(['search', 'status']))
             <a href="{{ route('invoices.index', request('invoice_type') ? ['invoice_type' => request('invoice_type')] : []) }}"
                 class="btn-outline-romar">
@@ -137,7 +137,7 @@
             </a>
         @endif
     </form>
-
+ 
     {{-- DATA TABLE --}}
     <div class="data-card">
         <div class="table-responsive">
@@ -171,7 +171,7 @@
                                 <div class="doc-num">{{ $invoice->invoice_number }}</div>
                                 <div class="doc-num-sub">Booking #{{ $invoice->booking_id }}</div>
                             </td>
-
+ 
                             {{-- ✅ ประเภท --}}
                             <td>
                                 @if ($invoiceType === 'utility')
@@ -186,7 +186,7 @@
                                     </span>
                                 @endif
                             </td>
-
+ 
                             {{-- ผู้เช่า / ห้อง --}}
                             <td>
                                 <div class="person">
@@ -201,20 +201,20 @@
                                     </div>
                                 </div>
                             </td>
-
+ 
                             {{-- ยอดรวม --}}
                             <td>
                                 <span class="amount">
                                     <span class="currency">฿</span>{{ number_format($invoice->total, 2) }}
                                 </span>
                             </td>
-
+ 
                             {{-- วันออก --}}
                             <td>{{ optional($invoice->issue_date)->format('d/m/Y') }}</td>
-
+ 
                             {{-- ครบกำหนด --}}
                             <td>{{ optional($invoice->due_date)->format('d/m/Y') }}</td>
-
+ 
                             {{-- สถานะ --}}
                             <td>
                                 @php
@@ -235,7 +235,7 @@
                                     @endif
                                 </span>
                             </td>
-
+ 
                             {{-- การกระทำ --}}
                             <td>
                                 <div class="action-bar">
@@ -249,11 +249,10 @@
                                     </a>
                                     @if (in_array($invoice->status, ['sent', 'overdue']))
                                         <form action="{{ route('invoices.markAsPaid', $invoice) }}" method="POST"
-                                            class="d-inline">
+                                            class="d-inline" data-confirm="ยืนยันการชำระเงิน?">
                                             @csrf
                                             <button type="submit" class="action-btn-romar paid"
-                                                title="ทำเครื่องหมายชำระแล้ว"
-                                                onclick="return confirm('ยืนยันการชำระเงิน?')">
+                                                title="ทำเครื่องหมายชำระแล้ว">
                                                 <i class="bi bi-check-lg"></i>
                                             </button>
                                         </form>
@@ -290,7 +289,7 @@
                 </tbody>
             </table>
         </div>
-
+ 
         @if ($invoices->hasPages())
             <div class="pagination-wrap">
                 <div class="pagination-info">
@@ -303,5 +302,6 @@
             </div>
         @endif
     </div>
-
+ 
 @endsection
+ 

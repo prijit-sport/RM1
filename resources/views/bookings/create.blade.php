@@ -1,8 +1,8 @@
 @extends('layouts.app')
-
+ 
 @section('content')
     <div class="container py-4">
-
+ 
         {{-- Header --}}
         <div class="d-flex align-items-center gap-2 mb-4">
             <a href="{{ route('bookings.index') }}" class="btn btn-sm btn-outline-secondary">
@@ -10,7 +10,7 @@
             </a>
             <h5 class="mb-0"><i class="bi bi-calendar-plus text-primary me-2"></i>สร้างการจองใหม่</h5>
         </div>
-
+ 
         @if (request('room_id') || request('room_type'))
             <div class="alert alert-info border-0 d-flex align-items-center mb-4" role="alert">
                 <i class="bi bi-info-circle-fill me-2 fs-5"></i>
@@ -33,15 +33,15 @@
                 </div>
             </div>
         @endif
-
+ 
         <form action="{{ route('bookings.store') }}" method="POST">
             @csrf
-
+ 
             <div class="row g-4">
-
+ 
                 {{-- ===== คอลัมน์ซ้าย ===== --}}
                 <div class="col-lg-6">
-
+ 
                     {{-- ผู้เช่า --}}
                     <div class="card border-0 shadow-sm mb-4">
                         <div class="card-header bg-white border-bottom py-3">
@@ -66,7 +66,7 @@
                             @enderror
                         </div>
                     </div>
-
+ 
                     {{-- ข้อมูลห้องพัก --}}
                     <div class="card border-0 shadow-sm">
                         <div class="card-header bg-white border-bottom py-3">
@@ -75,7 +75,7 @@
                             </h6>
                         </div>
                         <div class="card-body">
-
+ 
                             {{-- โซน --}}
                             <div class="mb-3">
                                 <label class="form-label fw-semibold">โซน <span class="text-danger">*</span></label>
@@ -87,7 +87,7 @@
                                     @endforeach
                                 </select>
                             </div>
-
+ 
                             {{-- ห้องหมายเลข --}}
                             <div class="mb-3">
                                 <label class="form-label fw-semibold">ห้องหมายเลข <span class="text-danger">*</span></label>
@@ -99,14 +99,14 @@
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
-
+ 
                             {{-- ประเภทห้อง --}}
                             <div class="mb-3">
                                 <label class="form-label fw-semibold">ประเภทห้อง</label>
                                 <input type="text" id="room_type_display" class="form-control bg-light" placeholder="—"
                                     readonly>
                             </div>
-
+ 
                             {{-- วันที่เข้าพัก --}}
                             <div class="mb-0">
                                 <label class="form-label fw-semibold">วันที่เข้าพัก <span
@@ -118,15 +118,15 @@
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
-
+ 
                         </div>
                     </div>
-
+ 
                 </div>{{-- end col-left --}}
-
+ 
                 {{-- ===== คอลัมน์ขวา ===== --}}
                 <div class="col-lg-6">
-
+ 
                     {{-- มัดจำและค่าใช้จ่าย --}}
                     <div class="card border-0 shadow-sm mb-4">
                         <div class="card-header bg-white border-bottom py-3">
@@ -166,7 +166,7 @@
                             <input type="hidden" name="deposit_amount" id="deposit_amount">
                         </div>
                     </div>
-
+ 
                     {{-- เลขมิเตอร์ --}}
                     <div class="card border-0 shadow-sm mb-4">
                         <div class="card-header bg-white border-bottom py-3">
@@ -201,7 +201,7 @@
                             </div>
                         </div>
                     </div>
-
+ 
                     {{-- สถานะ + หมายเหตุ --}}
                     <div class="card border-0 shadow-sm">
                         <div class="card-body">
@@ -226,11 +226,11 @@
                             </div>
                         </div>
                     </div>
-
+ 
                 </div>{{-- end col-right --}}
-
+ 
             </div>{{-- end row --}}
-
+ 
             <div class="d-flex justify-content-between mt-4">
                 <a href="{{ route('bookings.index') }}" class="btn btn-outline-secondary px-4">
                     <i class="bi bi-x-circle me-1"></i> ยกเลิก
@@ -239,13 +239,13 @@
                     <i class="bi bi-check-circle me-1"></i> บันทึกการจอง
                 </button>
             </div>
-
+ 
         </form>
     </div>
 @endsection
-
+ 
 @push('scripts')
-    <script>
+    <script nonce="{{ $cspNonce ?? '' }}">
         const allRooms = @json($rooms);
         const zoneSelect = document.getElementById('zone_select');
         const roomSelect = document.getElementById('room_select');
@@ -255,27 +255,27 @@
         const displayTotal = document.getElementById('display_total');
         const rentInput = document.getElementById('rent_amount');
         const depositInput = document.getElementById('deposit_amount');
-
+ 
         const typeLabel = {
             'fan': '🌀 พัดลม',
             'air': '❄️ แอร์'
         };
-
+ 
         // ─── เลือกโซน → โหลดห้องในโซนนั้น ───
         zoneSelect.addEventListener('change', function() {
             const zone = this.value;
             roomSelect.innerHTML = '<option value="">-- เลือกห้อง --</option>';
             roomTypeInput.value = '';
             resetPrices();
-
+ 
             if (!zone) {
                 roomSelect.disabled = true;
                 return;
             }
-
+ 
             // ✅ แก้: กรอง status === 'available' เฉพาะห้องที่ว่าง
             const filtered = allRooms.filter(r => r.zone === zone && r.status === 'available');
-
+ 
             filtered.forEach(room => {
                 const opt = document.createElement('option');
                 opt.value = room.id;
@@ -285,25 +285,25 @@
                     `${room.room_number} — ${typeLabel[room.room_type] ?? room.room_type} (${Number(room.price_per_month).toLocaleString()} ฿/เดือน)`;
                 roomSelect.appendChild(opt);
             });
-
+ 
             roomSelect.disabled = filtered.length === 0;
             if (filtered.length === 0) {
                 roomSelect.innerHTML = '<option value="">ไม่มีห้องว่างในโซนนี้</option>';
             }
         });
-
+ 
         // ─── เลือกห้อง → คำนวณค่าใช้จ่าย ───
         roomSelect.addEventListener('change', function() {
             if (!this.value) {
                 resetPrices();
                 return;
             }
-
+ 
             const selected = this.options[this.selectedIndex];
             const price = parseFloat(selected.dataset.price) || 0;
             const deposit = price * 1;
             const total = price + deposit;
-
+ 
             roomTypeInput.value = typeLabel[selected.dataset.type] ?? selected.dataset.type;
             displayRent.textContent = price.toLocaleString();
             displayDeposit.textContent = deposit.toLocaleString();
@@ -311,7 +311,7 @@
             rentInput.value = price;
             depositInput.value = deposit;
         });
-
+ 
         function resetPrices() {
             displayRent.textContent = '—';
             displayDeposit.textContent = '—';
@@ -319,19 +319,19 @@
             rentInput.value = '';
             depositInput.value = '';
         }
-
+ 
         // ─── Auto-select จาก URL ?room_id=... ───
         (function autoSelectFromUrl() {
             const params = new URLSearchParams(window.location.search);
             const preselectedRoomId = params.get('room_id');
             if (!preselectedRoomId) return;
-
+ 
             const room = allRooms.find(r => String(r.id) === String(preselectedRoomId));
             if (!room) return;
-
+ 
             zoneSelect.value = room.zone;
             zoneSelect.dispatchEvent(new Event('change'));
-
+ 
             setTimeout(() => {
                 roomSelect.value = String(preselectedRoomId);
                 roomSelect.dispatchEvent(new Event('change'));
@@ -340,3 +340,4 @@
         })();
     </script>
 @endpush
+ 

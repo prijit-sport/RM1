@@ -1,7 +1,7 @@
 @extends('layouts.app')
-
+ 
 @section('page-title', 'เพิ่มใบแจ้งหนี้ใหม่')
-
+ 
 @section('content')
     <div class="container py-5">
         <div class="row justify-content-center">
@@ -13,7 +13,7 @@
                         <i class="bi bi-arrow-left"></i> กลับสู่หน้ารายการ
                     </a>
                 </div>
-
+ 
                 {{-- ✅ METER SUMMARY CARD — แสดงเฉพาะเมื่อมาจาก meter reading --}}
                 @if (isset($meterData) && !empty($meterData))
                     <div class="card border-0 mb-4 shadow-sm rounded-3"
@@ -33,7 +33,7 @@
                                     @endif
                                 </span>
                             </div>
-
+ 
                             <div class="row g-3">
                                 {{-- ค่าไฟ --}}
                                 @if (isset($meterData['electric']))
@@ -77,7 +77,7 @@
                                         </div>
                                     </div>
                                 @endif
-
+ 
                                 {{-- ค่าน้ำ --}}
                                 @if (isset($meterData['water']))
                                     @php $w = $meterData['water']; @endphp
@@ -121,7 +121,7 @@
                                     </div>
                                 @endif
                             </div>
-
+ 
                             {{-- สรุปยอดรวมจากมิเตอร์ --}}
                             @php
                                 $meterTotal =
@@ -135,7 +135,7 @@
                                 </span>
                                 <span class="fw-bold fs-4 text-primary">฿{{ number_format($meterTotal, 2) }}</span>
                             </div>
-
+ 
                             <div class="mt-2 text-muted small">
                                 <i class="bi bi-info-circle me-1"></i>
                                 ยอดข้างต้นถูกกรอกลงในช่อง "จำนวนเงินก่อนภาษี" โดยอัตโนมัติ
@@ -144,17 +144,17 @@
                         </div>
                     </div>
                 @endif
-
+ 
                 <div class="card border-0 shadow-sm rounded-3">
                     <div class="card-body p-4 p-md-5">
                         <form action="{{ route('invoices.store') }}" method="POST" id="invoiceForm">
                             @csrf
-
+ 
                             {{-- ✅ hidden field: ถ้ามาจาก meter ให้ store() update draft แทน create ใหม่ --}}
                             @if (isset($draftInvoice))
                                 <input type="hidden" name="draft_invoice_id" value="{{ $draftInvoice->id }}">
                             @endif
-
+ 
                             <!-- ส่วนที่ 1: ข้อมูลอ้างอิง -->
                             <h6 class="text-uppercase text-muted fw-bold mb-3 border-bottom pb-2">
                                 <i class="bi bi-info-circle me-1"></i> ข้อมูลอ้างอิง (Reference Information)
@@ -195,7 +195,7 @@
                                     @enderror
                                 </div>
                             </div>
-
+ 
                             <!-- ส่วนที่ 2: รายละเอียดจำนวนเงิน -->
                             <h6 class="text-uppercase text-muted fw-bold mb-3 border-bottom pb-2">
                                 <i class="bi bi-currency-dollar me-1"></i> รายละเอียดทางการเงิน (Financial Details)
@@ -252,7 +252,7 @@
                                     </div>
                                 </div>
                             </div>
-
+ 
                             <!-- ส่วนที่ 3: กำหนดเวลาและสถานะ -->
                             <h6 class="text-uppercase text-muted fw-bold mb-3 border-bottom pb-2">
                                 <i class="bi bi-calendar-check me-1"></i> กำหนดเวลาและเงื่อนไข (Schedule & Terms)
@@ -300,7 +300,7 @@
                                     @enderror
                                 </div>
                             </div>
-
+ 
                             <!-- ส่วนที่ 4: หมายเหตุเพิ่มเติม -->
                             <div class="row mb-5">
                                 <div class="col-12">
@@ -310,11 +310,10 @@
                                         placeholder="ระบุเงื่อนไขการชำระเงิน หรือรายละเอียดเพิ่มเติมสำหรับเอกสารฉบับนี้...">{{ old('notes', $draftInvoice->notes ?? '') }}</textarea>
                                 </div>
                             </div>
-
+ 
                             <!-- Button Actions -->
                             <div class="d-flex justify-content-end gap-2 pt-3 border-top">
-                                <button type="button" class="btn btn-light border px-4"
-                                    onclick="window.history.back();">
+                                <button type="button" class="btn btn-light border px-4" id="cancelBtn">
                                     ยกเลิก
                                 </button>
                                 <button type="submit" class="btn btn-primary px-5">
@@ -328,30 +327,38 @@
             </div>
         </div>
     </div>
-
+ 
     @include('invoices._total-calculator')
-
+ 
     {{-- ✅ ถ้ามาจาก meter: คำนวณ total อัตโนมัติตอน load --}}
     @if (isset($meterData) && !empty($meterData))
-        <script>
+        <script nonce="{{ $cspNonce ?? '' }}">
             document.addEventListener('DOMContentLoaded', function() {
                 // trigger การคำนวณ total ทันทีที่หน้าโหลด
                 const amountInput = document.getElementById('amount');
                 const taxInput = document.getElementById('tax');
                 const totalInput = document.getElementById('total');
-
+ 
                 function recalcTotal() {
                     const amount = parseFloat(amountInput.value) || 0;
                     const tax = parseFloat(taxInput.value) || 0;
                     totalInput.value = (amount + tax).toFixed(2);
                 }
-
+ 
                 amountInput.addEventListener('input', recalcTotal);
                 taxInput.addEventListener('input', recalcTotal);
-
+ 
                 // คำนวณครั้งแรกเมื่อ load
                 recalcTotal();
             });
         </script>
     @endif
+ 
+    {{-- ✅ FIX (CSP nonce-based): แทนที่ onclick="window.history.back();" --}}
+    <script nonce="{{ $cspNonce ?? '' }}">
+        document.getElementById('cancelBtn')?.addEventListener('click', function() {
+            window.history.back();
+        });
+    </script>
 @endsection
+ 

@@ -1,8 +1,8 @@
 @extends('layouts.app')
-
+ 
 @section('content')
 <div class="container-fluid py-4">
-
+ 
     {{-- ── Header ── --}}
     <div class="d-flex align-items-center justify-content-between mb-4">
         <div>
@@ -20,7 +20,7 @@
             </a>
         </div>
     </div>
-
+ 
     {{-- Flash --}}
     @if(session('success'))
         <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -28,7 +28,7 @@
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     @endif
-
+ 
     {{-- ── Summary Stats ── --}}
     <div class="row g-3 mb-4">
         <div class="col-md-4">
@@ -47,7 +47,7 @@
                 </div>
             </div>
         </div>
-
+ 
         <div class="col-md-4">
             <div class="card border-0 shadow-sm">
                 <div class="card-body py-4">
@@ -64,7 +64,7 @@
                 </div>
             </div>
         </div>
-
+ 
         <div class="col-md-4">
             <div class="card border-0 shadow-sm">
                 <div class="card-body py-4">
@@ -82,7 +82,7 @@
             </div>
         </div>
     </div>
-
+ 
     {{-- ── Two columns: Pending + Recently completed ── --}}
     <div class="row g-3 mb-4">
         <div class="col-lg-7">
@@ -105,7 +105,7 @@
                                 str_contains($issue, 'แอร์') || str_contains($issue, 'พัดลม') => ['icon' => 'bi-wind', 'bg' => '#cffafe', 'color' => '#0891b2'],
                                 default => ['icon' => 'bi-tools', 'bg' => '#f3f4f6', 'color' => '#4b5563'],
                             };
-
+ 
                             $progress = match($item->status) {
                                 'pending'     => 20,
                                 'in_progress' => 65,
@@ -113,15 +113,15 @@
                                 default       => 10,
                             };
                         @endphp
-
+ 
                         <div class="d-flex align-items-start gap-3 p-3 mb-2 rounded-3"
                              style="background:#f8fafc; border:1px solid #f1f5f9;">
-
+ 
                             <div class="rounded-3 d-flex align-items-center justify-content-center flex-shrink-0"
                                  style="width:48px; height:48px; background:{{ $style['bg'] }};">
                                 <i class="bi {{ $style['icon'] }} fs-5" style="color:{{ $style['color'] }};"></i>
                             </div>
-
+ 
                             <div class="flex-grow-1" style="min-width:0;">
                                 <div class="fw-semibold text-dark">
                                     <a href="{{ route('maintenances.show', $item) }}" class="text-decoration-none text-dark">
@@ -147,7 +147,7 @@
                                     <div style="width: {{ $progress }}%; height:100%; background:{{ $style['color'] }}; border-radius:999px; transition:width 0.6s ease;"></div>
                                 </div>
                             </div>
-
+ 
                             <div class="flex-shrink-0">
                                 @if($item->status === 'pending')
                                     <form action="{{ route('maintenances.start', $item) }}" method="POST" class="d-inline">
@@ -178,7 +178,7 @@
                 </div>
             </div>
         </div>
-
+ 
         <div class="col-lg-5">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-header bg-white border-0 pt-3 pb-2">
@@ -223,7 +223,7 @@
             </div>
         </div>
     </div>
-
+ 
     {{-- ── Full table ── --}}
     <div class="card border-0 shadow-sm">
         <div class="card-header bg-white border-0 py-3 d-flex align-items-center justify-content-between">
@@ -232,7 +232,7 @@
                 รายการการบำรุงรักษาทั้งหมด
             </h6>
         </div>
-
+ 
         <div class="card-body py-3 border-bottom">
             <form method="GET" action="{{ route('maintenances.index') }}" class="row g-2 align-items-end">
                 <div class="col-md-6">
@@ -257,7 +257,7 @@
                 </div>
             </form>
         </div>
-
+ 
         <div class="table-responsive">
             <table class="table table-hover mb-0 align-middle">
                 <thead class="table-light">
@@ -312,7 +312,7 @@
                                         <i class="bi bi-pencil"></i>
                                     </a>
                                     <form action="{{ route('maintenances.destroy', $m) }}" method="POST" class="d-inline"
-                                          onsubmit="return confirm('ยืนยันการลบรายการนี้?');">
+                                          data-confirm="ยืนยันการลบรายการนี้?">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="btn btn-outline-danger btn-sm py-0 px-2" title="ลบ">
@@ -333,7 +333,7 @@
                 </tbody>
             </table>
         </div>
-
+ 
         @if($maintenances->hasPages())
             <div class="card-footer bg-white border-0 d-flex justify-content-center py-3">
                 {{ $maintenances->links() }}
@@ -341,7 +341,7 @@
         @endif
     </div>
 </div>
-
+ 
 <style>
     .table > :not(caption) > * > * { padding: 0.85rem 0.75rem; }
     .badge { padding: 0.45em 0.75em; font-weight: 500; }

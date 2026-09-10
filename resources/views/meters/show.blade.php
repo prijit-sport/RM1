@@ -40,7 +40,7 @@
         @if (session('success'))
             <div class="alert alert-success">{{ session('success') }}</div>
         @endif
-
+ 
         <div class="card">
             <div class="header">
                 <h1>รายละเอียดมิเตอร์</h1>
@@ -48,14 +48,14 @@
                     <a class="btn btn-secondary btn-small" href="{{ route('meters.index') }}">← กลับ</a>
                     <a class="btn btn-secondary btn-small" href="{{ route('meters.edit', $meter) }}">แก้ไข</a>
                     <a class="btn btn-small" href="{{ route('meters.readings.index', $meter) }}">บันทึกเลข</a>
-                    <form action="{{ route('meters.destroy', $meter) }}" method="POST" style="display:inline;">
+                    <form action="{{ route('meters.destroy', $meter) }}" method="POST" style="display:inline;" data-confirm="แน่ใจหรือ?">
                         @csrf
                         @method('DELETE')
-                        <button type="submit" class="btn btn-danger btn-small" onclick="return confirm('แน่ใจหรือ?')">ลบ</button>
+                        <button type="submit" class="btn btn-danger btn-small">ลบ</button>
                     </form>
                 </div>
             </div>
-
+ 
             <div class="grid">
                 <div>
                     <div class="label">ห้อง</div>
@@ -95,7 +95,7 @@
                 </div>
         </div>
         </div>
-
+ 
         <div class="card mb-4">
             <div class="header" style="margin-bottom: 12px;">
                 <h1 style="font-size: 1.1em;">สรุปการใช้งานล่าสุด</h1>
@@ -144,7 +144,7 @@
                 <div style="padding:16px;color:#475569;">ยังไม่มีข้อมูลเลขอ่านล่าสุด กรุณาบันทึกเลขก่อนเพื่อแสดงผลคำนวณ</div>
             @endif
         </div>
-
+ 
         @if($meter->notes)
                 <div style="margin-top: 14px;">
                     <div class="label">หมายเหตุ</div>
@@ -152,13 +152,13 @@
                 </div>
             @endif
         </div>
-
+ 
         <div class="card">
             <div class="header" style="margin-bottom: 10px;">
                 <h1 style="font-size: 1.2em;">เลขมิเตอร์ล่าสุด</h1>
                 <a class="btn btn-small" href="{{ route('meters.readings.create', $meter) }}">➕ เพิ่มเลข</a>
             </div>
-
+ 
             <table>
                 <thead>
                     <tr>
@@ -185,7 +185,7 @@
                     @endforelse
                 </tbody>
             </table>
-
+ 
             <div style="margin-top: 14px;">
                 <a class="btn btn-secondary btn-small" href="{{ route('meters.readings.index', $meter) }}">ดูทั้งหมด →</a>
             </div>
@@ -193,4 +193,5 @@
     </div>
 </body>
 </html>
-
+ 
+ 

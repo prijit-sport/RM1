@@ -27,17 +27,17 @@
 <body>
     <div class="container">
         <h1>👤 รายละเอียดบทบาท</h1>
-
+ 
         <div class="detail-row">
             <div class="detail-label">ชื่อบทบาท:</div>
             <div class="detail-value">{{ $role->name }}</div>
         </div>
-
+ 
         <div class="detail-row">
             <div class="detail-label">คำอธิบาย:</div>
             <div class="detail-value">{{ $role->description ?? '-' }}</div>
         </div>
-
+ 
         <div class="detail-row">
             <div class="detail-label">สิทธิ์การใช้งาน:</div>
             <div class="detail-value">
@@ -52,10 +52,10 @@
                 @endif
             </div>
         </div>
-
+ 
         <div class="btn-group">
             <a href="{{ route('roles.edit', $role->id) }}" class="btn btn-edit">✏️ แก้ไข</a>
-            <form method="POST" action="{{ route('roles.destroy', $role->id) }}" style="display:inline;" onsubmit="return confirm('คุณแน่ใจหรือไม่ที่จะลบบทบาทนี้?');">
+            <form method="POST" action="{{ route('roles.destroy', $role->id) }}" style="display:inline;" data-confirm="คุณแน่ใจหรือไม่ที่จะลบบทบาทนี้?">
                 @csrf
                 @method('DELETE')
                 <button type="submit" class="btn btn-delete">🗑️ ลบ</button>
@@ -65,3 +65,4 @@
     </div>
 </body>
 </html>
+ 

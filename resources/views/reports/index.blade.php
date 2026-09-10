@@ -1,7 +1,7 @@
 @extends('layouts.app')
-
+ 
 @section('title', 'รายงานประสิทธิภาพธุรกิจ')
-
+ 
 @section('content')
     <style>
         .report-card {
@@ -10,11 +10,11 @@
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
             transition: transform 0.2s;
         }
-
+ 
         .report-card:hover {
             transform: translateY(-3px);
         }
-
+ 
         .kpi-icon {
             width: 48px;
             height: 48px;
@@ -24,7 +24,7 @@
             justify-content: center;
             font-size: 1.4rem;
         }
-
+ 
         .report-tabs .nav-link {
             color: #6c757d;
             font-weight: 500;
@@ -32,29 +32,29 @@
             padding: 12px 18px;
             border-radius: 10px 10px 0 0;
         }
-
+ 
         .report-tabs .nav-link.active {
             color: #4f46e5;
             background: white;
             border-bottom: 3px solid #4f46e5;
         }
-
+ 
         .report-tabs .nav-link:hover:not(.active) {
             color: #4f46e5;
             background: #f8f9fa;
         }
-
+ 
         .chart-container {
             position: relative;
             height: 320px;
         }
-
+ 
         .chart-container-sm {
             position: relative;
             height: 240px;
         }
     </style>
-
+ 
     <div class="container-fluid py-2">
         {{-- ════════ Header ════════ --}}
         <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
@@ -66,7 +66,7 @@
                 <i class="bi bi-file-earmark-excel me-2"></i>Export
             </a>
         </div>
-
+ 
         {{-- ════════ Tabs ════════ --}}
         <ul class="nav nav-tabs report-tabs mb-4 flex-nowrap" style="overflow-x: auto;" id="reportTabs" role="tablist">
             <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-overview"
@@ -86,9 +86,9 @@
             <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-facilities"
                     type="button">📦 เฟอร์นิเจอร์</button></li>
         </ul>
-
+ 
         <div class="tab-content">
-
+ 
             {{-- ════════════════════════════════════════════════════════ --}}
             {{--  📈 Tab 1: ภาพรวม (Overview)                            --}}
             {{-- ════════════════════════════════════════════════════════ --}}
@@ -156,7 +156,7 @@
                         </div>
                     </div>
                 </div>
-
+ 
                 {{-- Chart รายได้ 12 เดือน --}}
                 <div class="card report-card">
                     <div class="card-body">
@@ -168,7 +168,7 @@
                     </div>
                 </div>
             </div>
-
+ 
             {{-- ════════════════════════════════════════════════════════ --}}
             {{--  💰 Tab 2: การเงิน (Financial)                          --}}
             {{-- ════════════════════════════════════════════════════════ --}}
@@ -202,7 +202,7 @@
                         </div>
                     </div>
                 </div>
-
+ 
                 <div class="row g-3 mb-4">
                     <div class="col-lg-8">
                         <div class="card report-card h-100">
@@ -227,7 +227,7 @@
                         </div>
                     </div>
                 </div>
-
+ 
                 {{-- Top 10 ผู้เช่าค้างชำระ --}}
                 <div class="card report-card">
                     <div class="card-header bg-white">
@@ -273,7 +273,7 @@
                     </div>
                 </div>
             </div>
-
+ 
             {{-- ════════════════════════════════════════════════════════ --}}
             {{--  🏠 Tab 3: ห้องพัก (Rooms)                              --}}
             {{-- ════════════════════════════════════════════════════════ --}}
@@ -312,7 +312,7 @@
                         </div>
                     </div>
                 </div>
-
+ 
                 <div class="row g-3 mb-4">
                     <div class="col-lg-6">
                         <div class="card report-card h-100">
@@ -332,7 +332,7 @@
                         </div>
                     </div>
                 </div>
-
+ 
                 <div class="card report-card">
                     <div class="card-header bg-white">
                         <h5 class="fw-bold mb-0"><i class="bi bi-trophy me-2 text-warning"></i>Top 5 ห้องทำรายได้สูงสุด
@@ -376,7 +376,7 @@
                     </div>
                 </div>
             </div>
-
+ 
             {{-- ════════════════════════════════════════════════════════ --}}
             {{--  👥 Tab 4: ผู้เช่า (Guests)                              --}}
             {{-- ════════════════════════════════════════════════════════ --}}
@@ -409,7 +409,7 @@
                         </div>
                     </div>
                 </div>
-
+ 
                 <div class="row g-3">
                     <div class="col-lg-7">
                         <div class="card report-card h-100">
@@ -453,7 +453,7 @@
                     </div>
                 </div>
             </div>
-
+ 
             {{-- ════════════════════════════════════════════════════════ --}}
             {{--  📝 Tab 5: สัญญา (Contracts)                            --}}
             {{-- ════════════════════════════════════════════════════════ --}}
@@ -493,7 +493,7 @@
                         </div>
                     </div>
                 </div>
-
+ 
                 <div class="card report-card">
                     <div class="card-header bg-white">
                         <h5 class="fw-bold mb-0"><i
@@ -538,7 +538,7 @@
                     </div>
                 </div>
             </div>
-
+ 
             {{-- ════════════════════════════════════════════════════════ --}}
             {{--  ⚡ Tab 6: มิเตอร์ (Meters)                              --}}
             {{-- ════════════════════════════════════════════════════════ --}}
@@ -571,7 +571,7 @@
                         </div>
                     </div>
                 </div>
-
+ 
                 <div class="card report-card">
                     <div class="card-header bg-white">
                         <h5 class="fw-bold mb-0"><i class="bi bi-bar-chart-line me-2 text-warning"></i>Top 5
@@ -609,7 +609,7 @@
                     </div>
                 </div>
             </div>
-
+ 
             {{-- ════════════════════════════════════════════════════════ --}}
             {{--  🔧 Tab 7: ซ่อมบำรุง (Maintenance)                      --}}
             {{-- ════════════════════════════════════════════════════════ --}}
@@ -648,7 +648,7 @@
                         </div>
                     </div>
                 </div>
-
+ 
                 <div class="row g-3">
                     <div class="col-lg-6">
                         <div class="card report-card h-100">
@@ -671,7 +671,7 @@
                     </div>
                 </div>
             </div>
-
+ 
             {{-- ════════════════════════════════════════════════════════ --}}
             {{--  📦 Tab 8: เฟอร์นิเจอร์ (Facilities)                    --}}
             {{-- ════════════════════════════════════════════════════════ --}}
@@ -724,13 +724,13 @@
                     </div>
                 </div>
             </div>
-
+ 
         </div>{{-- /.tab-content --}}
     </div>
-
+ 
     @push('scripts')
         <script src="{{ asset('js/chart.umd.min.js') }}"></script>
-        <script>
+        <script nonce="{{ $cspNonce ?? '' }}">
             // ───── Data จาก Controller ─────
             const monthlyRevenue = @json($monthly_revenue);
             const revenueByType = @json($revenue_by_room_type);
@@ -739,7 +739,7 @@
             const guestsPerMonth = @json($guests_per_month);
             const maintTypes = @json($maint_types);
             const facStatus = @json($fac_status);
-
+ 
             // ───── Mapping ไทย ─────
             const roomTypeLabels = {
                 fan: '🌀 พัดลม',
@@ -753,9 +753,9 @@
                 damaged: '❌ ชำรุด',
                 retired: '🗑️ ปลดประจำการ'
             };
-
+ 
             const palette = ['#4f46e5', '#10b981', '#f59e0b', '#ef4444', '#3b82f6', '#8b5cf6', '#ec4899', '#14b8a6', '#6b7280'];
-
+ 
             // ───── Chart 1: รายได้ 12 เดือน (Overview) ─────
             new Chart(document.getElementById('chartOverviewRevenue'), {
                 type: 'line',
@@ -783,7 +783,7 @@
                     }
                 }
             });
-
+ 
             // ───── Chart 2: รายได้รายเดือน (Financial) ─────
             new Chart(document.getElementById('chartMonthlyRevenue'), {
                 type: 'bar',
@@ -806,7 +806,7 @@
                     }
                 }
             });
-
+ 
             // ───── Chart 3: รายได้แยกประเภท (Financial) ─────
             new Chart(document.getElementById('chartRevenueByType'), {
                 type: 'doughnut',
@@ -822,7 +822,7 @@
                     maintainAspectRatio: false
                 }
             });
-
+ 
             // ───── Chart 4: ห้องตามประเภท (Rooms) ─────
             new Chart(document.getElementById('chartRoomsByType'), {
                 type: 'pie',
@@ -838,7 +838,7 @@
                     maintainAspectRatio: false
                 }
             });
-
+ 
             // ───── Chart 5: ห้องตามโซน (Rooms) ─────
             new Chart(document.getElementById('chartRoomsByZone'), {
                 type: 'bar',
@@ -861,7 +861,7 @@
                     }
                 }
             });
-
+ 
             // ───── Chart 6: ผู้เช่า 6 เดือน (Guests) ─────
             new Chart(document.getElementById('chartGuestsTrend'), {
                 type: 'line',
@@ -888,7 +888,7 @@
                     }
                 }
             });
-
+ 
             // ───── Chart 7: ประเภทการซ่อม (Maintenance) ─────
             new Chart(document.getElementById('chartMaintTypes'), {
                 type: 'doughnut',
@@ -904,7 +904,7 @@
                     maintainAspectRatio: false
                 }
             });
-
+ 
             // ───── Chart 8: สถานะเฟอร์นิเจอร์ (Facilities) ─────
             new Chart(document.getElementById('chartFacilityStatus'), {
                 type: 'doughnut',
@@ -923,3 +923,4 @@
         </script>
     @endpush
 @endsection
+ 

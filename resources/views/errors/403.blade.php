@@ -1,13 +1,13 @@
 <!doctype html>
 <html lang="th">
-
+ 
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>คุณไม่มีสิทธิ์เข้าถึง</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-
+ 
 <body class="bg-light">
     <div class="container py-5">
         <div class="row justify-content-center">
@@ -24,17 +24,25 @@
                                 <p class="text-muted mb-0">โปรดตรวจสอบบทบาทผู้ใช้งาน หรือกลับไปที่หน้า Dashboard</p>
                             </div>
                         </div>
-
+ 
                         <div class="d-flex gap-2 flex-wrap">
                             <a href="{{ route('dashboard') }}" class="btn btn-primary px-4">กลับหน้า Dashboard</a>
-                            <button class="btn btn-outline-secondary" onclick="history.back()">ย้อนกลับ</button>
+                            <button class="btn btn-outline-secondary" id="backBtn">ย้อนกลับ</button>
                         </div>
-
+ 
                     </div>
                 </div>
             </div>
         </div>
     </div>
+ 
+    {{-- ✅ FIX (CSP nonce-based): แทนที่ onclick="history.back()" --}}
+    <script nonce="{{ $cspNonce ?? '' }}">
+        document.getElementById('backBtn')?.addEventListener('click', function() {
+            history.back();
+        });
+    </script>
 </body>
-
+ 
 </html>
+ 

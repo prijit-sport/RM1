@@ -1,8 +1,8 @@
 @extends('layouts.app')
-
+ 
 @section('title', 'รายละเอียดใบแจ้งหนี้')
 @section('page-title', 'รายละเอียดใบแจ้งหนี้')
-
+ 
 @push('styles')
     <style>
         .back-link {
@@ -15,11 +15,11 @@
             margin-bottom: 14px;
             transition: color 0.15s;
         }
-
+ 
         .back-link:hover {
             color: var(--romar-primary);
         }
-
+ 
         .invoice-header {
             display: flex;
             justify-content: space-between;
@@ -28,7 +28,7 @@
             gap: 16px;
             margin-bottom: 22px;
         }
-
+ 
         .invoice-header-left h1 {
             font-size: 1.6rem;
             font-weight: 700;
@@ -38,13 +38,13 @@
             gap: 10px;
             color: var(--text-primary);
         }
-
+ 
         .invoice-number-big {
             font-family: 'Inter', monospace;
             color: var(--romar-primary);
             font-weight: 700;
         }
-
+ 
         .invoice-meta {
             font-size: 0.85rem;
             color: var(--text-secondary);
@@ -53,11 +53,11 @@
             gap: 14px;
             flex-wrap: wrap;
         }
-
+ 
         .invoice-meta .dot-sep {
             color: var(--border);
         }
-
+ 
         .info-bar {
             background: white;
             border: 1px solid var(--border);
@@ -68,16 +68,16 @@
             margin-bottom: 22px;
             overflow: hidden;
         }
-
+ 
         .info-bar-item {
             padding: 18px 20px;
             border-right: 1px solid var(--border);
         }
-
+ 
         .info-bar-item:last-child {
             border-right: none;
         }
-
+ 
         .info-bar-label {
             font-size: 0.75rem;
             color: var(--text-secondary);
@@ -86,18 +86,18 @@
             margin-bottom: 6px;
             font-weight: 500;
         }
-
+ 
         .info-bar-value {
             font-size: 1.25rem;
             font-weight: 700;
             color: var(--text-primary);
         }
-
+ 
         .info-bar-value.amount-big {
             color: var(--romar-primary);
             font-family: 'Inter', sans-serif;
         }
-
+ 
         .section-card {
             background: white;
             border-radius: 14px;
@@ -106,7 +106,7 @@
             margin-bottom: 18px;
             overflow: hidden;
         }
-
+ 
         .section-card-head {
             padding: 16px 20px;
             border-bottom: 1px solid var(--border);
@@ -117,50 +117,50 @@
             color: var(--text-primary);
             font-size: 0.95rem;
         }
-
+ 
         .section-card-head i {
             color: var(--romar-primary);
             font-size: 1.05rem;
         }
-
+ 
         .section-card-body {
             padding: 20px;
         }
-
+ 
         .detail-row-romar {
             display: flex;
             padding: 12px 0;
             border-bottom: 1px solid var(--border);
             font-size: 0.9rem;
         }
-
+ 
         .detail-row-romar:last-child {
             border-bottom: none;
             padding-bottom: 0;
         }
-
+ 
         .detail-row-romar:first-child {
             padding-top: 0;
         }
-
+ 
         .detail-label-romar {
             color: var(--text-secondary);
             width: 160px;
             flex-shrink: 0;
             font-weight: 500;
         }
-
+ 
         .detail-value-romar {
             color: var(--text-primary);
             flex: 1;
             font-weight: 500;
         }
-
+ 
         .items-table {
             width: 100%;
             border-collapse: collapse;
         }
-
+ 
         .items-table th {
             text-align: left;
             padding: 10px 0;
@@ -171,33 +171,33 @@
             border-bottom: 2px solid var(--border);
             font-weight: 600;
         }
-
+ 
         .items-table th:last-child {
             text-align: right;
         }
-
+ 
         .items-table td {
             padding: 14px 0;
             border-bottom: 1px solid var(--border);
             font-size: 0.9rem;
         }
-
+ 
         .items-table td:last-child {
             text-align: right;
             font-family: 'Inter', sans-serif;
             font-weight: 600;
         }
-
+ 
         .items-table tr:last-child td {
             border-bottom: none;
         }
-
+ 
         .total-summary {
             margin-top: 8px;
             padding-top: 16px;
             border-top: 2px solid var(--border);
         }
-
+ 
         .total-row {
             display: flex;
             justify-content: space-between;
@@ -205,7 +205,7 @@
             font-size: 0.9rem;
             color: var(--text-secondary);
         }
-
+ 
         .total-row.grand {
             margin-top: 10px;
             padding-top: 14px;
@@ -214,43 +214,43 @@
             color: var(--text-primary);
             font-weight: 700;
         }
-
+ 
         .total-row.grand .amount-big {
             color: var(--romar-primary);
             font-family: 'Inter', sans-serif;
         }
-
+ 
         .tenant-block {
             display: flex;
             align-items: center;
             gap: 14px;
             margin-bottom: 18px;
         }
-
+ 
         .tenant-block .person-avatar {
             width: 54px;
             height: 54px;
             font-size: 1.05rem;
         }
-
+ 
         .tenant-block-name {
             font-size: 1.02rem;
             font-weight: 600;
             color: var(--text-primary);
             margin-bottom: 2px;
         }
-
+ 
         .tenant-block-sub {
             font-size: 0.8rem;
             color: var(--text-secondary);
         }
-
+ 
         .contact-list {
             list-style: none;
             margin: 0;
             padding: 0;
         }
-
+ 
         .contact-list li {
             display: flex;
             align-items: center;
@@ -260,16 +260,16 @@
             color: var(--text-primary);
             border-bottom: 1px solid var(--border);
         }
-
+ 
         .contact-list li:last-child {
             border-bottom: none;
         }
-
+ 
         .contact-list li i {
             color: var(--romar-primary);
             width: 18px;
         }
-
+ 
         .notes-box {
             background: #fefce8;
             border-left: 3px solid #facc15;
@@ -280,12 +280,12 @@
             line-height: 1.6;
             white-space: pre-wrap;
         }
-
+ 
         .status-pill-lg {
             padding: 6px 16px;
             font-size: 0.85rem;
         }
-
+ 
         .danger-zone {
             margin-top: 24px;
             padding: 18px 20px;
@@ -298,18 +298,18 @@
             flex-wrap: wrap;
             gap: 12px;
         }
-
+ 
         .danger-zone-text {
             font-size: 0.85rem;
             color: #7f1d1d;
         }
-
+ 
         .danger-zone-text strong {
             color: var(--danger);
             display: block;
             margin-bottom: 2px;
         }
-
+ 
         .btn-danger-romar {
             background: var(--danger);
             color: white;
@@ -325,13 +325,13 @@
             cursor: pointer;
             transition: all 0.2s;
         }
-
+ 
         .btn-danger-romar:hover {
             background: #dc2626;
             transform: translateY(-1px);
             box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3);
         }
-
+ 
         /* ✅ Meter breakdown card */
         .meter-breakdown-card {
             border-radius: 12px;
@@ -340,7 +340,7 @@
             padding: 16px 20px;
             margin-bottom: 16px;
         }
-
+ 
         .meter-breakdown-title {
             font-size: 0.8rem;
             font-weight: 700;
@@ -352,29 +352,29 @@
             align-items: center;
             gap: 6px;
         }
-
+ 
         .meter-type-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 10px;
             margin-bottom: 12px;
         }
-
+ 
         .meter-type-box {
             border-radius: 10px;
             padding: 12px 14px;
         }
-
+ 
         .meter-type-box.electric {
             background: #fffbeb;
             border: 1px solid #fde68a;
         }
-
+ 
         .meter-type-box.water {
             background: #eff6ff;
             border: 1px solid #bfdbfe;
         }
-
+ 
         .meter-type-label {
             font-size: 0.8rem;
             font-weight: 600;
@@ -383,35 +383,35 @@
             align-items: center;
             gap: 5px;
         }
-
+ 
         .meter-type-box.electric .meter-type-label {
             color: #92400e;
         }
-
+ 
         .meter-type-box.water .meter-type-label {
             color: #1e40af;
         }
-
+ 
         .meter-stat-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 4px;
             margin-bottom: 6px;
         }
-
+ 
         .meter-stat-item {
             font-size: 0.78rem;
         }
-
+ 
         .meter-stat-item .stat-label {
             color: #6b7280;
         }
-
+ 
         .meter-stat-item .stat-value {
             font-weight: 600;
             color: #1f2937;
         }
-
+ 
         .meter-type-total {
             display: flex;
             justify-content: space-between;
@@ -422,15 +422,15 @@
             font-size: 0.85rem;
             font-weight: 700;
         }
-
+ 
         .meter-type-box.electric .meter-type-total {
             color: #92400e;
         }
-
+ 
         .meter-type-box.water .meter-type-total {
             color: #1e40af;
         }
-
+ 
         .meter-grand-total {
             display: flex;
             justify-content: space-between;
@@ -442,29 +442,29 @@
             font-weight: 600;
             color: #0369a1;
         }
-
+ 
         @media (max-width: 768px) {
             .info-bar {
                 grid-template-columns: repeat(2, 1fr);
             }
-
+ 
             .info-bar-item:nth-child(2) {
                 border-right: none;
             }
-
+ 
             .detail-label-romar {
                 width: 130px;
             }
-
+ 
             .meter-type-grid {
                 grid-template-columns: 1fr;
             }
         }
     </style>
 @endpush
-
+ 
 @section('content')
-
+ 
     @php
         $guest = $invoice->booking?->guest;
         $room = $invoice->booking?->room;
@@ -480,43 +480,43 @@
                     ->diffInDays($invoice->due_date->startOfDay(), false),
             );
         }
-
+ 
         // ✅ ดึง meter readings ของห้องนี้ในเดือนที่ออก invoice
         $meterBreakdown = [];
         if ($invoice->booking && $invoice->issue_date) {
             $issueMonth = $invoice->issue_date->month;
             $issueYear = $invoice->issue_date->year;
             $booking = $invoice->booking;
-
+ 
             foreach (['electric', 'water'] as $type) {
                 $meter = \App\Models\Meter::where('room_id', $booking->room_id)->where('type', $type)->first();
-
+ 
                 if (!$meter) {
                     continue;
                 }
-
+ 
                 // reading เดือนนี้
                 $current = \App\Models\MeterReading::where('meter_id', $meter->id)
                     ->where('period_month', $issueMonth)
                     ->where('period_year', $issueYear)
                     ->first();
-
+ 
                 if (!$current) {
                     continue;
                 }
-
+ 
                 // reading ก่อนหน้า
                 $previous = \App\Models\MeterReading::where('meter_id', $meter->id)
                     ->whereDate('reading_date', '<', $current->reading_date)
                     ->orderByDesc('reading_date')
                     ->first();
-
+ 
                 $currentVal = (float) $current->reading_value;
                 $previousVal = $previous ? (float) $previous->reading_value : null;
                 $usage = $previousVal !== null ? max(0, $currentVal - $previousVal) : 0;
                 $rate = (float) ($meter->rate_per_unit ?? 0);
                 $cost = round($usage * $rate, 2);
-
+ 
                 $meterBreakdown[$type] = [
                     'meter_number' => $meter->meter_number ?? '-',
                     'current_value' => $currentVal,
@@ -528,11 +528,11 @@
             }
         }
     @endphp
-
+ 
     <a href="{{ route('invoices.index') }}" class="back-link">
         <i class="bi bi-arrow-left"></i> กลับไปยังรายการใบแจ้งหนี้
     </a>
-
+ 
     <div class="invoice-header">
         <div class="invoice-header-left">
             <h1>
@@ -556,11 +556,11 @@
         </div>
         <div class="page-actions">
             @if (in_array($invoice->status, ['sent', 'overdue']))
-                <form action="{{ route('invoices.markAsPaid', $invoice) }}" method="POST" class="d-inline">
+                <form action="{{ route('invoices.markAsPaid', $invoice) }}" method="POST" class="d-inline"
+                    data-confirm="ยืนยันการชำระเงิน?">
                     @csrf
                     <button type="submit" class="btn-outline-romar"
-                        style="border-color: var(--success); color: var(--success);"
-                        onclick="return confirm('ยืนยันการชำระเงิน?')">
+                        style="border-color: var(--success); color: var(--success);">
                         <i class="bi bi-check-circle"></i> ทำเครื่องหมายชำระแล้ว
                     </button>
                 </form>
@@ -570,14 +570,14 @@
             </a>
         </div>
     </div>
-
+ 
     @if (session('success'))
         <div class="alert alert-success alert-dismissible fade show" role="alert">
             <i class="bi bi-check-circle me-2"></i>{{ session('success') }}
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     @endif
-
+ 
     <div class="info-bar">
         <div class="info-bar-item">
             <div class="info-bar-label">ยอดรวม</div>
@@ -600,10 +600,10 @@
             </div>
         </div>
     </div>
-
+ 
     <div class="row g-3">
         <div class="col-lg-8">
-
+ 
             {{-- ✅ Meter Breakdown Card (แสดงเฉพาะเมื่อมีข้อมูล meter) --}}
             @if (!empty($meterBreakdown))
                 <div class="section-card">
@@ -617,7 +617,7 @@
                                 <i class="bi bi-speedometer2"></i>
                                 ข้อมูลมิเตอร์ประจำเดือน {{ optional($invoice->issue_date)->isoFormat('MMMM YYYY') }}
                             </div>
-
+ 
                             <div class="meter-type-grid">
                                 {{-- ค่าไฟ --}}
                                 @if (isset($meterBreakdown['electric']))
@@ -654,7 +654,7 @@
                                         </div>
                                     </div>
                                 @endif
-
+ 
                                 {{-- ค่าน้ำ --}}
                                 @if (isset($meterBreakdown['water']))
                                     @php $w = $meterBreakdown['water']; @endphp
@@ -691,7 +691,7 @@
                                     </div>
                                 @endif
                             </div>
-
+ 
                             @php
                                 $meterGrand =
                                     ($meterBreakdown['electric']['cost'] ?? 0) +
@@ -705,7 +705,7 @@
                     </div>
                 </div>
             @endif
-
+ 
             {{-- Card: รายการในใบแจ้งหนี้ --}}
             <div class="section-card">
                 <div class="section-card-head">
@@ -740,7 +740,7 @@
                                         <td>฿ {{ number_format($e['cost'], 2) }}</td>
                                     </tr>
                                 @endif
-
+ 
                                 @if (isset($meterBreakdown['water']) && $meterBreakdown['water']['cost'] > 0)
                                     @php $w = $meterBreakdown['water']; @endphp
                                     <tr>
@@ -758,7 +758,7 @@
                                         <td>฿ {{ number_format($w['cost'], 2) }}</td>
                                     </tr>
                                 @endif
-
+ 
                                 {{-- fallback ถ้าไม่มี breakdown --}}
                                 @if (empty($meterBreakdown))
                                     <tr>
@@ -773,7 +773,7 @@
                                         <td>฿ {{ number_format($invoice->amount, 2) }}</td>
                                     </tr>
                                 @endif
-
+ 
                                 @if ($invoice->tax > 0)
                                     <tr>
                                         <td>
@@ -848,7 +848,7 @@
                     </div>
                 </div>
             </div>
-
+ 
             @if (!empty($invoice->notes))
                 <div class="section-card">
                     <div class="section-card-head">
@@ -861,7 +861,7 @@
                 </div>
             @endif
         </div>
-
+ 
         <div class="col-lg-4">
             <div class="section-card">
                 <div class="section-card-head">
@@ -911,7 +911,7 @@
                     @endif
                 </div>
             </div>
-
+ 
             <div class="section-card">
                 <div class="section-card-head">
                     <i class="bi bi-door-closed"></i>
@@ -945,7 +945,7 @@
             </div>
         </div>
     </div>
-
+ 
     @can('delete', $invoice)
         <div class="danger-zone">
             <div class="danger-zone-text">
@@ -953,7 +953,7 @@
                 การลบจะนำใบแจ้งหนี้นี้ออกจากระบบอย่างถาวร ไม่สามารถกู้คืนได้
             </div>
             <form method="POST" action="{{ route('invoices.destroy', $invoice->id) }}"
-                onsubmit="return confirm('คุณแน่ใจหรือไม่ที่จะลบใบแจ้งหนี้ {{ $invoice->invoice_number }} ?\nการกระทำนี้ไม่สามารถยกเลิกได้');">
+                data-confirm="คุณแน่ใจหรือไม่ที่จะลบใบแจ้งหนี้ {{ $invoice->invoice_number }} ?&#10;การกระทำนี้ไม่สามารถยกเลิกได้">
                 @csrf
                 @method('DELETE')
                 <button type="submit" class="btn-danger-romar">
@@ -962,5 +962,6 @@
             </form>
         </div>
     @endcan
-
+ 
 @endsection
+ 

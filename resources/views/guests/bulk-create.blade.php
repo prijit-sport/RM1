@@ -120,7 +120,7 @@
     </div>
 </div>
  
-<script>
+<script nonce="{{ $cspNonce ?? '' }}">
     document.addEventListener('DOMContentLoaded', function () {
         const tbody  = document.getElementById('guestRows');
         const addBtn = document.getElementById('addRowBtn');

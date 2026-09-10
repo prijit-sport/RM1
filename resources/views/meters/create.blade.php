@@ -230,13 +230,13 @@
         </div>
         <div class="type-buttons">
             <label class="type-btn" id="electric-btn">
-                <input type="radio" name="type" value="electric" {{ old('type') == 'electric' ? 'checked' : '' }} onchange="setTypeActive()">
+                <input type="radio" name="type" value="electric" {{ old('type') == 'electric' ? 'checked' : '' }} class="type-radio">
                 <div class="type-icon">⚡</div>
                 <div class="type-label">ไฟฟ้า</div>
             </label>
  
             <label class="type-btn" id="water-btn">
-                <input type="radio" name="type" value="water" {{ old('type') == 'water' ? 'checked' : '' }} onchange="setTypeActive()">
+                <input type="radio" name="type" value="water" {{ old('type') == 'water' ? 'checked' : '' }} class="type-radio">
                 <div class="type-icon">💧</div>
                 <div class="type-label">น้ำประปา</div>
             </label>
@@ -374,7 +374,7 @@
     </div>{{-- end card --}}
 </div>
  
-<script>
+<script nonce="{{ $cspNonce ?? '' }}">
     // ── Set active type on load ──
     function setTypeActive() {
         const electricBtn = document.getElementById('electric-btn');
@@ -387,6 +387,12 @@
  
     // ── Initialize on page load ──
     document.addEventListener('DOMContentLoaded', setTypeActive);
+ 
+    // ✅ FIX (CSP nonce-based): แทนที่ onchange="setTypeActive()" บน radio
+    // input ทั้งสองปุ่ม ด้วย addEventListener ตรงนี้
+    document.querySelectorAll('input[name="type"]').forEach(function(radio) {
+        radio.addEventListener('change', setTypeActive);
+    });
 </script>
  
 </body>

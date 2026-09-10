@@ -98,61 +98,62 @@
     <div class="container">
         <div class="card">
             <h1>👥 {{ $guest->first_name }} {{ $guest->last_name }}</h1>
-
+ 
             <div class="info-group">
                 <div class="info-item">
                     <div class="info-label">ชื่อแรก</div>
                     <div class="info-value">{{ $guest->first_name }}</div>
                 </div>
-
+ 
                 <div class="info-item">
                     <div class="info-label">นามสกุล</div>
                     <div class="info-value">{{ $guest->last_name }}</div>
                 </div>
-
+ 
                 <div class="info-item">
                     <div class="info-label">อีเมล</div>
                     <div class="info-value">{{ $guest->email }}</div>
                 </div>
-
+ 
                 <div class="info-item">
                     <div class="info-label">เบอร์โทร</div>
                     <div class="info-value">{{ $guest->phone }}</div>
                 </div>
-
+ 
                 <div class="info-item">
                     <div class="info-label">หมายเลขประจำตัว</div>
                     <div class="info-value">{{ $guest->id_number }}</div>
                 </div>
-
+ 
                 <div class="info-item">
                     <div class="info-label">ที่อยู่</div>
                     <div class="info-value">{{ $guest->address ?? '-' }}</div>
                 </div>
-
+ 
                 @if ($guest->city || $guest->country)
                     <div class="info-item">
                         <div class="info-label">สถานที่</div>
                         <div class="info-value">{{ $guest->city }}, {{ $guest->country }}</div>
                     </div>
                 @endif
-
+ 
                 <div class="info-item">
                     <div class="info-label">สร้างเมื่อ</div>
                     <div class="info-value">{{ $guest->created_at->format('d/m/Y H:i') }}</div>
                 </div>
             </div>
-
+ 
             <div class="btn-group">
                 <a href="{{ route('guests.edit', $guest) }}" class="btn btn-primary">✏️ แก้ไข</a>
                 <a href="{{ route('guests.index') }}" class="btn btn-secondary">← กลับไป</a>
-                <form action="{{ route('guests.destroy', $guest) }}" method="POST" style="display:inline;">
+                <form action="{{ route('guests.destroy', $guest) }}" method="POST" style="display:inline;" data-confirm="แน่ใจหรือ?">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" class="btn btn-danger" onclick="return confirm('แน่ใจหรือ?')">🗑️ ลบ</button>
+                    <button type="submit" class="btn btn-danger">🗑️ ลบ</button>
                 </form>
             </div>
         </div>
     </div>
 </body>
 </html>
+ 

@@ -1,8 +1,8 @@
 @extends('layouts.app')
-
+ 
 @section('content')
     <div class="container py-4">
-
+ 
         {{-- Header --}}
         <div class="d-flex align-items-center gap-2 mb-4">
             <a href="{{ route('bookings.index') }}" class="btn btn-sm btn-outline-secondary">
@@ -11,12 +11,12 @@
             <h5 class="mb-0"><i class="bi bi-calendar-check text-success me-2"></i>รายละเอียดการเข้าพัก #{{ $booking->id }}
             </h5>
         </div>
-
+ 
         <div class="row g-4">
-
+ 
             {{-- ===== คอลัมน์ซ้าย ===== --}}
             <div class="col-lg-6">
-
+ 
                 {{-- ผู้เช่า --}}
                 <div class="card border-0 shadow-sm mb-4">
                     <div class="card-header bg-white border-bottom py-3">
@@ -35,7 +35,7 @@
                                 @endif
                             </p>
                         </div>
-
+ 
                         <div class="mb-3">
                             <label class="form-label fw-semibold text-muted">ผู้เช่าคนที่ 2</label>
                             <p class="fs-5 fw-bold mb-0">
@@ -46,7 +46,7 @@
                                 @endif
                             </p>
                         </div>
-
+ 
                         <div class="mb-0">
                             <label class="form-label fw-semibold text-muted">ผู้เช่าคนที่ 3</label>
                             <p class="fs-5 fw-bold mb-0">
@@ -59,7 +59,7 @@
                         </div>
                     </div>
                 </div>
-
+ 
                 {{-- ข้อมูลห้องพัก --}}
                 <div class="card border-0 shadow-sm">
                     <div class="card-header bg-white border-bottom py-3">
@@ -68,7 +68,7 @@
                         </h6>
                     </div>
                     <div class="card-body">
-
+ 
                         {{-- ห้องหมายเลข --}}
                         <div class="mb-3">
                             <label class="form-label fw-semibold text-muted">ห้องหมายเลข</label>
@@ -80,7 +80,7 @@
                                 @endif
                             </p>
                         </div>
-
+ 
                         {{-- ประเภทห้อง --}}
                         <div class="mb-3">
                             <label class="form-label fw-semibold text-muted">ประเภทห้อง</label>
@@ -101,7 +101,7 @@
                                 @endif
                             </p>
                         </div>
-
+ 
                         {{-- โซน --}}
                         <div class="mb-3">
                             <label class="form-label fw-semibold text-muted">โซน</label>
@@ -113,7 +113,7 @@
                                 @endif
                             </p>
                         </div>
-
+ 
                         {{-- วันที่เข้าพัก --}}
                         <div class="mb-0">
                             <label class="form-label fw-semibold text-muted">วันที่เข้าพัก</label>
@@ -125,16 +125,16 @@
                                 @endif
                             </p>
                         </div>
-
+ 
                     </div>
                 </div>
-
+ 
             </div>{{-- end col-left --}}
-
-
+ 
+ 
             {{-- ===== คอลัมน์ขวา ===== --}}
             <div class="col-lg-6">
-
+ 
                 {{-- มัดจำและค่าใช้จ่ายแรกเข้า --}}
                 <div class="card border-0 shadow-sm mb-4">
                     <div class="card-header bg-white border-bottom py-3">
@@ -143,7 +143,7 @@
                         </h6>
                     </div>
                     <div class="card-body">
-
+ 
                         {{-- ค่าเช่าเดือนแรก --}}
                         <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
                             <div>
@@ -155,7 +155,7 @@
                                 <span class="text-muted ms-1">฿</span>
                             </div>
                         </div>
-
+ 
                         {{-- เงินมัดจำ --}}
                         <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
                             <div>
@@ -168,7 +168,7 @@
                                 <span class="text-muted ms-1">฿</span>
                             </div>
                         </div>
-
+ 
                         {{-- ยอดรวมที่ต้องชำระ --}}
                         <div class="d-flex justify-content-between align-items-center pt-3 mt-1">
                             <div class="fw-bold fs-6">ยอดรวมที่ต้องชำระ</div>
@@ -178,10 +178,10 @@
                                 <span class="text-primary ms-1 fw-semibold">฿</span>
                             </div>
                         </div>
-
+ 
                     </div>
                 </div>
-
+ 
                 {{-- เลขมิเตอร์เริ่มต้น --}}
                 <div class="card border-0 shadow-sm mb-4">
                     <div class="card-header bg-white border-bottom py-3">
@@ -210,7 +210,7 @@
                         </div>
                     </div>
                 </div>
-
+ 
                 {{-- สถานะการจอง --}}
                 <div class="card border-0 shadow-sm mb-4">
                     <div class="card-body">
@@ -231,7 +231,7 @@
                         </p>
                     </div>
                 </div>
-
+ 
                 {{-- หมายเหตุ --}}
                 <div class="card border-0 shadow-sm">
                     <div class="card-body">
@@ -245,46 +245,45 @@
                         </p>
                     </div>
                 </div>
-
+ 
             </div>{{-- end col-right --}}
-
+ 
         </div>{{-- end row --}}
-
+ 
         {{-- ===== Action Buttons ===== --}}
         <div class="d-flex justify-content-between mt-4">
             <a href="{{ route('bookings.index') }}" class="btn btn-outline-secondary px-4">
                 <i class="bi bi-arrow-left me-1"></i> กลับ
             </a>
-
+ 
             <div class="d-flex gap-2">
                 {{-- Edit Button --}}
                 <a href="{{ route('bookings.edit', $booking) }}" class="btn btn-outline-primary px-4">
                     <i class="bi bi-pencil me-1"></i> Edit
                 </a>
-
+ 
                 {{-- Confirm Button (pending only) --}}
                 @if ($booking->status == 'pending')
-                    <form action="{{ route('bookings.confirm', $booking) }}" method="POST" class="d-inline">
+                    <form action="{{ route('bookings.confirm', $booking) }}" method="POST" class="d-inline" data-confirm="ยืนยันการเข้าพักนี้?">
                         @csrf
-                        <button type="submit" class="btn btn-success px-4"
-                            onclick="return confirm('ยืนยันการเข้าพักนี้?')">
+                        <button type="submit" class="btn btn-success px-4">
                             <i class="bi bi-check-circle me-1"></i> ยืนยัน
                         </button>
                     </form>
                 @endif
-
+ 
                 {{-- Cancel Button (not cancelled or checked_out) --}}
                 @if ($booking->status != 'cancelled' && $booking->status != 'checked_out')
-                    <form action="{{ route('bookings.cancel', $booking) }}" method="POST" class="d-inline">
+                    <form action="{{ route('bookings.cancel', $booking) }}" method="POST" class="d-inline" data-confirm="ยกเลิกการเข้าพักนี้?">
                         @csrf
-                        <button type="submit" class="btn btn-danger px-4"
-                            onclick="return confirm('ยกเลิกการเข้าพักนี้?')">
+                        <button type="submit" class="btn btn-danger px-4">
                             <i class="bi bi-x-circle me-1"></i> ยกเลิก
                         </button>
                     </form>
                 @endif
             </div>
         </div>
-
+ 
     </div>
 @endsection
+ 

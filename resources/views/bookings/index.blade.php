@@ -1,10 +1,10 @@
 @extends('layouts.app')
-
+ 
 @section('title', 'เข้าพัก')
-
+ 
 @section('page-title', 'เข้าพัก')
-
-
+ 
+ 
 @section('content')
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h4 class="mb-0">รายการเข้าพัก</h4>
@@ -17,7 +17,7 @@
             </a>
         </div>
     </div>
-
+ 
     <style>
         .room-chip {
             display: inline-block;
@@ -33,39 +33,39 @@
             transition: all 0.2s ease;
             backdrop-filter: blur(4px);
         }
-
+ 
         .room-chip:hover {
             background: white;
             color: #2c3e50 !important;
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
         }
-
+ 
         .room-chip small {
             opacity: 0.85;
             font-weight: 400;
             margin-left: 4px;
         }
-
+ 
         .room-chip:hover small {
             opacity: 0.7;
         }
-
+ 
         .summary-card {
             transition: transform 0.2s ease;
         }
-
+ 
         .summary-card:hover {
             transform: translateY(-2px);
         }
-
+ 
         .stat-number {
             font-size: 2.8rem;
             font-weight: 700;
             line-height: 1;
         }
     </style>
-
+ 
     {{-- ===== สรุปห้องทั้งหมด + รายการห้องว่าง (คลิกเพื่อจองได้เลย) ===== --}}
     <div class="row g-3 mb-4">
         {{-- 🌀 ห้องพัดลม --}}
@@ -73,7 +73,7 @@
             <div class="card border-0 shadow-sm h-100 summary-card"
                 style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
                 <div class="card-body text-white">
-
+ 
                     {{-- Header: ชื่อประเภท + ตัวเลขรวม --}}
                     <div class="d-flex align-items-center justify-content-between mb-3 pb-3"
                         style="border-bottom: 1px solid rgba(255,255,255,0.3);">
@@ -90,7 +90,7 @@
                             <small class="opacity-75">ห้องทั้งหมด</small>
                         </div>
                     </div>
-
+ 
                     {{-- Body: รายการห้องว่าง (คลิกเพื่อจอง) --}}
                     <div class="mb-3">
                         <div class="small mb-2 opacity-90">
@@ -115,7 +115,7 @@
                             </div>
                         @endif
                     </div>
-
+ 
                     {{-- Footer: ปุ่มเพิ่มจอง --}}
                     <a href="{{ route('bookings.create', ['room_type' => 'fan']) }}"
                         class="btn btn-light btn-sm w-100 fw-bold">
@@ -124,13 +124,13 @@
                 </div>
             </div>
         </div>
-
+ 
         {{-- ❄️ ห้องแอร์ --}}
         <div class="col-md-6">
             <div class="card border-0 shadow-sm h-100 summary-card"
                 style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
                 <div class="card-body text-white">
-
+ 
                     <div class="d-flex align-items-center justify-content-between mb-3 pb-3"
                         style="border-bottom: 1px solid rgba(255,255,255,0.3);">
                         <div>
@@ -146,7 +146,7 @@
                             <small class="opacity-75">ห้องทั้งหมด</small>
                         </div>
                     </div>
-
+ 
                     <div class="mb-3">
                         <div class="small mb-2 opacity-90">
                             <i class="bi bi-check2-circle"></i>
@@ -170,7 +170,7 @@
                             </div>
                         @endif
                     </div>
-
+ 
                     <a href="{{ route('bookings.create', ['room_type' => 'air']) }}"
                         class="btn btn-light btn-sm w-100 fw-bold">
                         <i class="bi bi-plus-lg"></i> เพิ่มการจองห้องแอร์
@@ -179,7 +179,7 @@
             </div>
         </div>
     </div>
-
+ 
     {{-- ===== Search and Filter ===== --}}
     <div class="card mb-4">
         <div class="card-body">
@@ -219,7 +219,7 @@
             </form>
         </div>
     </div>
-
+ 
     {{-- ===== Bookings Table ===== --}}
     <div class="table-card">
         <div class="table-responsive">
@@ -290,26 +290,26 @@
                                     <a href="{{ route('bookings.show', $booking) }}" class="btn btn-sm btn-outline-info">
                                         <i class="bi bi-eye"></i> ดู
                                     </a>
-
+ 
                                     {{-- ✅ ปุ่ม Confirm (ยืนยัน) - แสดงเฉพาะ pending --}}
                                     @if ($booking->status == 'pending')
                                         <form action="{{ route('bookings.confirm', $booking) }}" method="POST"
-                                            class="d-inline">
+                                            class="d-inline" data-confirm="ยืนยันการเข้าพักนี้?">
                                             @csrf
                                             <button type="submit" class="btn btn-sm btn-outline-success"
-                                                onclick="return confirm('ยืนยันการเข้าพักนี้?')" title="ยืนยันการเข้าพัก"
+                                                title="ยืนยันการเข้าพัก">
                                                 <i class="bi bi-check-lg"></i> ยืนยัน
                                             </button>
                                         </form>
                                     @endif
-
+ 
                                     {{-- ✅ ปุ่ม Cancel (ยกเลิก) - แสดงเฉพาะสถานะที่ไม่ได้ cancelled หรือ checked_out --}}
                                     @if ($booking->status != 'cancelled' && $booking->status != 'checked_out')
                                         <form action="{{ route('bookings.cancel', $booking) }}" method="POST"
-                                            class="d-inline">
+                                            class="d-inline" data-confirm="ยกเลิกการเข้าพักนี้?">
                                             @csrf
                                             <button type="submit" class="btn btn-sm btn-outline-danger"
-                                                onclick="return confirm('ยกเลิกการเข้าพักนี้?')" title="ยกเลิกการเข้าพัก"
+                                                title="ยกเลิกการเข้าพัก">
                                                 <i class="bi bi-x-lg"></i> ยกเลิก
                                             </button>
                                         </form>
@@ -331,10 +331,11 @@
             </table>
         </div>
     </div>
-
+ 
     @if ($bookings->hasPages())
         <div class="d-flex justify-content-center mt-4">
             {{ $bookings->links('pagination::bootstrap-5') }}
         </div>
     @endif
 @endsection
+ 
