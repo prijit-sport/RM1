@@ -1,59 +1,59 @@
 <?php
- 
+
 namespace Tests\Feature;
- 
+
 use App\Models\Meter;
 use App\Models\Role;
 use App\Models\Room;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
- 
+
 class MeterControllerTest extends TestCase
 {
     use RefreshDatabase;
- 
+
     public function test_index_returns_ok_for_admin_and_shows_room_meter_numbers(): void
     {
         $this->actingAs($this->createUserWithRole('Admin'));
- 
+
         $room = $this->createRoomForMeters('101', 'A', 1);
         $electricMeter = $this->createMeterForRoom($room, 'electric');
         $waterMeter = $this->createMeterForRoom($room, 'water');
- 
+
         $response = $this->get(route('meters.index'));
- 
+
         $response->assertOk();
         $response->assertViewIs('meters.index');
         $response->assertSeeText('ห้อง '.$room->room_number);
         // index page อาจไม่แสดง meter_number ในตาราง ต้อง assert จากส่วนที่ blade แสดงจริง
         $response->assertSeeText('ไฟฟ้า');
     }
- 
+
     public function test_index_returns_ok_for_staff(): void
     {
         // ✅ FIX: Staff เข้าหน้ามิเตอร์น้ำ/ไฟได้แล้ว (เดิมจำกัดแค่ Admin)
         $this->actingAs($this->createUserWithRole('Staff'));
- 
+
         $response = $this->get(route('meters.index'));
         $response->assertOk();
     }
- 
+
     public function test_index_returns_forbidden_for_user_without_role(): void
     {
         $user = \App\Models\User::factory()->create(['role_id' => null]);
         $this->actingAs($user);
- 
+
         $response = $this->get(route('meters.index'));
         $response->assertStatus(403);
     }
- 
+
     public function test_store_validation_fail_returns_500_when_payload_invalid(): void
     {
         $this->actingAs($this->createUserWithRole('Admin'));
- 
+
         $room = $this->createRoomForMeters('102', 'B', 2);
- 
+
         // invalid: type=invalid (Rule::in(['water','electric']))
         $response = $this->from(route('meters.create'))
             ->post(route('meters.store'), [
@@ -67,37 +67,37 @@ class MeterControllerTest extends TestCase
                 'is_active' => true,
                 'notes' => 'note',
             ]);
- 
+
         $response->assertRedirect(route('meters.create'));
- 
+
         $response->assertSessionHasErrors();
- 
+
         $this->assertSame(0, Meter::count());
     }
- 
+
     public function test_show_displays_meter_details_for_admin(): void
     {
         $this->actingAs($this->createUserWithRole('Admin'));
- 
+
         $room = $this->createRoomForMeters('103', 'C', 3);
         $meter = $this->createMeterForRoom($room, 'water');
- 
+
         $response = $this->get(route('meters.show', $meter));
- 
+
         $response->assertOk();
         $response->assertViewIs('meters.show');
         $response->assertSeeText($meter->meter_number);
         $response->assertSeeText('ห้อง '.$room->room_number);
         $response->assertSeeText('น้ำ');
     }
- 
+
     private function createUserWithRole(string $roleName): User
     {
         $role = Role::firstOrCreate(['name' => $roleName], ['description' => $roleName]);
- 
+
         return User::factory()->create(['role_id' => $role->id]);
     }
- 
+
     private function createRoomForMeters(string $roomNumber, string $zone, ?int $floor): Room
     {
         return Room::create([
@@ -111,7 +111,7 @@ class MeterControllerTest extends TestCase
             'status' => 'available',
         ]);
     }
- 
+
     private function createMeterForRoom(Room $room, string $type): Meter
     {
         return Meter::create([
@@ -127,4 +127,3 @@ class MeterControllerTest extends TestCase
         ]);
     }
 }
- 

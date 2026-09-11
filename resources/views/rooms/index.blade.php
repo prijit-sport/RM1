@@ -133,12 +133,12 @@
  
             {{-- ค้นหาหมายเลขห้อง --}}
             <div class="col-md-3">
-                <label class="form-label small text-muted mb-1">หมายเลขห้อง</label>
+                <label for="room-search" class="form-label small text-muted mb-1">หมายเลขห้อง</label>
                 <div class="input-group">
                     <span class="input-group-text bg-transparent border-end-0">
                         <i class="bi bi-search"></i>
                     </span>
-                    <input type="text" name="search"
+                    <input type="text" name="search" id="room-search"
                         class="form-control border-start-0"
                         placeholder="เช่น A101, B202..."
                         value="{{ request('search') }}">
@@ -147,8 +147,8 @@
  
             {{-- กรองตามสถานะ --}}
             <div class="col-md-2">
-                <label class="form-label small text-muted mb-1">สถานะ</label>
-                <select name="status" class="form-select">
+                <label for="room-status" class="form-label small text-muted mb-1">สถานะ</label>
+                <select name="status" id="room-status" class="form-select">
                     <option value="">ทุกสถานะ</option>
                     <option value="available"   {{ request('status') == 'available'   ? 'selected' : '' }}>ว่าง</option>
                     <option value="occupied"    {{ request('status') == 'occupied'    ? 'selected' : '' }}>ใช้งานอยู่</option>
@@ -158,8 +158,8 @@
  
             {{-- กรองตามชั้น --}}
             <div class="col-md-2">
-                <label class="form-label small text-muted mb-1">ชั้น</label>
-                <select name="floor" class="form-select">
+                <label for="room-floor" class="form-label small text-muted mb-1">ชั้น</label>
+                <select name="floor" id="room-floor" class="form-select">
                     <option value="">ทุกชั้น</option>
                     @for ($f = 1; $f <= 5; $f++)
                         <option value="{{ $f }}" {{ request('floor') == $f ? 'selected' : '' }}>
@@ -171,8 +171,8 @@
  
             {{-- กรองตามโซน --}}
             <div class="col-md-2">
-                <label class="form-label small text-muted mb-1">โซน</label>
-                <select name="zone" class="form-select">
+                <label for="room-zone" class="form-label small text-muted mb-1">โซน</label>
+                <select name="zone" id="room-zone" class="form-select">
                     <option value="">ทุกโซน</option>
                     <option value="A" {{ request('zone') == 'A' ? 'selected' : '' }}>โซน A</option>
                     <option value="B" {{ request('zone') == 'B' ? 'selected' : '' }}>โซน B</option>
@@ -181,7 +181,10 @@
  
             {{-- ปุ่ม --}}
             <div class="col-md-3">
-                <label class="form-label small text-muted mb-1 invisible">ค้นหา</label>
+                {{-- ✅ FIX: เดิมใช้ <label> เปล่า ๆ เพื่อจัดระยะให้ตรงแถว ทำให้
+                     DevTools แจ้งเตือน "no label associated" — เปลี่ยนเป็น <div>
+                     ธรรมดาแทน เพราะจุดนี้ไม่ใช่ label ของ input จริง ๆ --}}
+                <div class="form-label small text-muted mb-1 invisible">ค้นหา</div>
                 <div class="d-flex gap-2">
                     <button type="submit" class="btn btn-primary flex-grow-1">
                         <i class="bi bi-search me-1"></i>ค้นหา
