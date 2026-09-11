@@ -357,7 +357,10 @@
                 <span>เข้าพัก</span>
             </a>
  
-            @if (auth()->check() && auth()->user() && auth()->user()->hasRole('Admin'))
+            {{-- ✅ FIX: เมนูเหล่านี้ Admin และ Staff เข้าถึงได้ทั้งคู่แล้ว (ตรงกับ
+                 สิทธิ์จริงที่ตั้งไว้ใน routes/web.php + Policy ต่าง ๆ) — เดิม sidebar
+                 ซ่อนไว้ให้ Admin เห็นอย่างเดียว ทั้งที่ backend อนุญาต Staff ด้วยแล้ว --}}
+            @if (auth()->check() && auth()->user() && auth()->user()->isManagerOrAdmin())
                 <a href="{{ route('contracts.index') }}"
                     class="sidebar-menu-item {{ request()->routeIs('contracts.*') ? 'active' : '' }}">
                     <i class="bi bi-file-earmark-text"></i>
@@ -393,7 +396,10 @@
                     <i class="bi bi-building"></i>
                     <span>สิ่งอำนวยความสะดวก</span>
                 </a>
+            @endif
  
+            {{-- Admin เท่านั้น --}}
+            @if (auth()->check() && auth()->user() && auth()->user()->hasRole('Admin'))
                 <a href="{{ route('roles.index') }}"
                     class="sidebar-menu-item {{ request()->routeIs('roles.*') ? 'active' : '' }}">
                     <i class="bi bi-shield-lock"></i>
