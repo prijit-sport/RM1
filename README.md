@@ -68,13 +68,15 @@ Backup และ Rollback Plan
 
 โปรเจกต์มีสคริปต์สำรองฐานข้อมูลให้พร้อมใช้งานที่ scripts/backup-database.sh — อ่านค่า DB_* จาก .env โดยตรง ไม่ต้อง hardcode credentials
 
+บน Windows ที่ไม่มี bash ติดตั้งไว้ (เช่น XAMPP ทั่วไป) ใช้ scripts\backup-database.bat แทนได้ — ทำงานเทียบเท่ากันทุกจุด (อ่าน .env, ตั้งชื่อไฟล์ตาม timestamp, ลบไฟล์เก่าเกิน retention) เพียงแต่ output เป็น .sql ธรรมดา ไม่บีบอัด .gz
+
 รันด้วยมือก่อน deploy/migrate ทุกครั้ง:
 
 bash bash scripts/backup-database.sh
 
 ไฟล์ backup จะถูกเก็บไว้ที่ storage/app/backups/ ในรูปแบบ <ชื่อฐานข้อมูล>_<วันที่เวลา>.sql.gz และไฟล์ที่เก่ากว่า 30 วันจะถูกลบอัตโนมัติทุกครั้งที่สคริปต์รัน (ปรับค่า RETENTION_DAYS ในสคริปต์ได้ตามต้องการ)
 
-แนะนำให้ตั้งเป็น cron รายวันด้วย เพื่อให้มี backup สำรองไว้เสมอแม้ไม่มีการ deploy:
+แนะนำให้ตั้งเป็น cron รายวันด้วย เพื่อให้มี backup สำรองไว้เสมอแม้ไม่มีการ deploy (บน Windows ใช้ Task Scheduler ตั้งให้รัน scripts\backup-database.bat แทน cron ได้):
 
 bash crontab -e
 
@@ -101,7 +103,19 @@ bash php artisan migrate:rollback --step=1
 
 bash bash scripts/restore-database.sh storage/app/backups/<ชื่อไฟล์ backup>.sql.gz
 
+บน Windows ที่ไม่มี bash ติดตั้งไว้ ใช้ scripts\restore-database.bat แทนได้ (รับ argument เป็น path ไฟล์ .sql ธรรมดา ไม่บีบอัด .gz)
+
 สคริปต์จะถามยืนยันชื่อฐานข้อมูลก่อนเขียนทับเสมอ ป้องกันการกู้คืนผิดฐานข้อมูลโดยไม่ตั้งใจ
+
+⚠️ รัน migrate ทันทีหลัง restore เสมอ — ห้ามข้ามขั้นตอนนี้
+
+bash php artisan migrate
+
+ไฟล์ backup เก็บภาพโครงสร้างฐานข้อมูล ณ วันที่สร้าง backup เท่านั้น ถ้าโค้ดปัจจุบันมี migration ใหม่กว่าวันที่นั้น (เช่น เพิ่มคอลัมน์ใหม่ในตารางที่มีอยู่แล้ว) ตาราง migrations ที่ถูก restore มาด้วยจะทำให้ Laravel เข้าใจผิดว่า migration เหล่านั้น "รันไปแล้ว" ทั้งที่คอลัมน์จริงไม่มีอยู่ในข้อมูลที่กู้คืนมา ทำให้หน้าเว็บที่ใช้คอลัมน์เหล่านั้น error 500 ทันที (เคยเกิดขึ้นจริงกับคอลัมน์ invoice_type และ period_month มาแล้ว)
+
+ถ้ารัน migrate แล้วยังมี migration ที่ขึ้น Pending ไม่ครบตามที่คาด ให้เช็คด้วย php artisan migrate:status ก่อน — ถ้าเจอ migration ที่ขึ้น Ran ทั้งที่คอลัมน์จริงไม่มีอยู่ (เช็คด้วย Schema::hasColumn() ผ่าน tinker) ให้ลบแถวนั้นออกจากตาราง migrations ด้วยมือก่อน แล้วรัน migrate ใหม่อีกครั้ง:
+
+bash php artisan tinker --execute="DB::table('migrations')->where('migration', '<ชื่อ migration ที่ผิดปกติ>')->delete();" php artisan migrate
 
 ล้าง cache หลัง rollback เสมอ
 
