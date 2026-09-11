@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -20,11 +21,10 @@ class DatabaseSeeder extends Seeder
         $this->call(RoleSeeder::class);
 
         // Get admin role
-        $adminRole = \App\Models\Role::where('name', 'Admin')->first();
+        $adminRole = Role::where('name', 'Admin')->first();
 
-        // Determine default passwords from .env, or generate if missing
+        // Determine default password from .env, or generate if missing
         $adminPassword = env('ADMIN_DEFAULT_PASSWORD');
-        $userPassword = env('USER_DEFAULT_PASSWORD');
 
         $generated = [];
 
@@ -33,36 +33,30 @@ class DatabaseSeeder extends Seeder
             $generated['ADMIN_DEFAULT_PASSWORD'] = $adminPassword;
         }
 
-        if (empty($userPassword)) {
-            $userPassword = Str::random(16);
-            $generated['USER_DEFAULT_PASSWORD'] = $userPassword;
-        }
-
-        // Show generated passwords in console (only when random is used)
+        // Show generated password in console (only when random is used)
         if (! empty($generated)) {
-            $this->command->line('🔐 Generated default passwords (missing in .env):');
+            $this->command->line('🔐 Generated default password (missing in .env):');
             foreach ($generated as $key => $value) {
                 $this->command->line(sprintf(' - %s=%s', $key, $value));
             }
         }
 
-        // Create admin user
-        User::create([
-            'name' => 'Administrator',
-            'email' => 'admin@example.com',
-            'password' => bcrypt($adminPassword),
-            'role_id' => $adminRole?->id,
-            'is_active' => true,
-        ]);
-
-        // Create regular user
-        $userRole = \App\Models\Role::where('name', 'User')->first();
-        User::create([
-            'name' => 'Test User',
-            'email' => 'user@example.com',
-            'password' => bcrypt($userPassword),
-            'role_id' => $userRole?->id,
-            'is_active' => true,
-        ]);
+        // ✅ FIX (production readiness): เดิมมีการสร้าง "Test User" อีกคนที่
+        // ค้นหา role ชื่อ 'User' ซึ่งไม่เคยถูกสร้างเลยในระบบนี้ (RoleSeeder สร้างแค่
+        // 'Admin' กับ 'Staff') ทำให้ user นั้นได้ role_id = null เสมอ — เป็นบั๊ก
+        // แบบเดียวกับที่เคยเกิดขึ้นจริงกับ Staff account มาก่อน ตัดออกเพราะ
+        // user@example.com ไม่ใช่บัญชีที่ควรมีอยู่จริงบน production อยู่แล้ว
+        //
+        // ใช้ firstOrCreate() แทน create() ตรง ๆ เพื่อให้รัน `db:seed` ซ้ำได้
+        // อย่างปลอดภัย (idempotent) — ไม่ error เรื่อง email ซ้ำถ้าเผลอรันซ้ำ
+        User::firstOrCreate(
+            ['email' => 'admin@example.com'],
+            [
+                'name' => 'Administrator',
+                'password' => bcrypt($adminPassword),
+                'role_id' => $adminRole?->id,
+                'is_active' => true,
+            ]
+        );
     }
 }

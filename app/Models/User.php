@@ -27,6 +27,11 @@ class User extends Authenticatable
         // protection) ไม่ error ให้เห็นเลย — เคยทำให้สร้าง Staff user แล้วไม่มี
         // role ผูกอยู่โดยไม่รู้ตัวมาแล้วครั้งหนึ่ง เพิ่มไว้กันไม่ให้เกิดซ้ำ
         'role_id',
+        // ✅ FIX (production readiness): same class of bug as role_id above —
+        // is_active ก็ไม่เคยอยู่ใน fillable มาก่อน (DatabaseSeeder เคยส่งค่านี้
+        // ผ่าน create() แล้วถูกเมินทิ้งเงียบ ๆ เหมือนกัน — บังเอิญไม่กระทบจริง
+        // เพราะคอลัมน์มี DB default(true) อยู่แล้ว แต่เป็น code smell แบบเดียวกัน)
+        'is_active',
     ];
 
     /**
